@@ -1,0 +1,99 @@
+APP.JS:
+65: await window.db.collection('groups').doc(currentChat.id).update({
+69: await window.db.collection('groups').doc(currentChat.id).update({
+79: await window.db.collection('groups').doc(currentChat.id).update({
+101: await window.db.collection('groups').doc(currentChat.id).update({
+150: if (['fa', 'ar'].includes(lang)) document.body.classList.add('rtl-mode'); else document.body.classList.remove('rtl-mode');
+167: EMOJIS.forEach(e => { const s = document.createElement('span'); s.textContent = e; s.onclick = () => { messageInput.value += e; emojiPicker.classList.add('hidden'); }; emojiPicker.appendChild(s); });
+168: GIFS.forEach(url => { const img = document.createElement('img'); img.src = url; img.onclick = () => { sendMessage('', 'gif', url); gifPicker.classList.add('hidden'); }; document.getElementById('gif-grid').appendChild(img); });
+171: emojiBtn.addEventListener('click', (e) => { e.stopPropagation(); emojiPicker.classList.toggle('hidden'); gifPicker.classList.add('hidden'); });
+172: gifBtn.addEventListener('click', (e) => { e.stopPropagation(); gifPicker.classList.toggle('hidden'); emojiPicker.classList.add('hidden'); });
+174: if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.classList.add('hidden');
+175: if (!gifPicker.contains(e.target) && e.target !== gifBtn) gifPicker.classList.add('hidden');
+176: if (!sendOptionsPopup.contains(e.target) && e.target !== sendBtn) sendOptionsPopup.classList.add('hidden');
+228: users.set(currentUser, { avatarUrl: uData.avatarUrl || null, status: 'Online', searchable: uData.searchable !== false, avatarVisibility: uData.avatarVisibility || 'all', callPrivacy: uData.callPrivacy || 'all' });
+238: if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, status: 'Online' });
+244: if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, status: 'Online' });
+268: await window.db.collection('groups').doc(groupId).update({
+319: if (!messages.has(chatId)) messages.set(chatId, []);
+326: unreadChats.add(chatId);
+361: if (!messages.has(chatId)) messages.set(chatId, []);
+368: unreadChats.add(chatId);
+454: window.db.collection('userData').doc(currentUser.toLowerCase()).set(dataToSave, { merge: true })
+462: window.db.collection('users').doc(currentUser.toLowerCase()).set({ avatarUrl: p.avatarUrl || null, searchable: isSearchable, avatarVisibility: avatarVis, callPrivacy: callPriv }, { merge: true })
+496: domNodes.set(child.dataset.id, child);
+503: currentIds.add(msg.id);
+638: if (e.target === ctxOverlay) ctxOverlay.classList.add('hidden');
+643: ctxOverlay.classList.add('hidden');
+651: replyBanner.classList.add('hidden');
+652: ctxOverlay.classList.add('hidden');
+659: ctxOverlay.classList.add('hidden');
+669: ctxOverlay.classList.add('hidden');
+674: replyBanner.classList.add('hidden');
+698: await window.db.collection('messages').doc(contextMessageId).update({ reactions: currentReactions });
+701: ctxOverlay.classList.add('hidden');
+712: window.db.collection('messages').doc(editingMessageId).update({ text: text, edited: true });
+733: replyBanner.classList.add('hidden');
+750: await window.db.collection('messages').doc(msgObj.id).set(docData);
+796: function cleanupRecording() { clearInterval(recordingInterval); recordingPreview.classList.add('hidden'); messageForm.style.display = 'block'; recordingTimeEl.textContent = '00:00'; }
+806: pollBtn.addEventListener('click', () => pollModal.classList.remove('hidden')); closePollModalBtn.addEventListener('click', () => pollModal.classList.add('hidden'));
+811: if(q && opts.length >= 2) { const pollObj = { question: q, options: opts, isQuiz: pollQuizMode.checked, correctOption: parseInt(pollCorrectOption.value)||0, votes: {} }; sendMessage('', 'poll', JSON.stringify(pollObj)); pollModal.classList.add('hidden'); pollQuestion.value = ''; Array.from(pollOptionsContainer.querySelectorAll('input')).forEach((i, idx) => { if(idx>=2) i.remove(); else i.value=''; }); pollQuizMode.checked = false; document.getElementById('poll-correct-option-container').classList.add('hidden'); }
+856: const activeEl = document.querySelector(`.chat-item[data-id="${id}"]`); if (activeEl) { activeEl.classList.add('active'); activeEl.classList.remove('unread'); }
+929: blockChatBtn.addEventListener('click', () => { if(!currentChat || currentChat.type !== 'dm') return; if(blockedContacts.has(currentChat.id)) blockedContacts.delete(currentChat.id); else blockedContacts.add(currentChat.id); saveUserData(); selectChat(currentChat.id, currentChat.type); });
+943: settingsModal.classList.add('hidden');
+970: document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active');
+972: document.getElementById(e.target.dataset.tab).classList.add('active');
+979: if(!users.has(currentUser)) users.set(currentUser, {});
+990: closeGroupModalBtn.addEventListener('click', () => createGroupModal.classList.add('hidden'));
+1005: await window.db.collection('groups').doc(id).set(newGroup);
+1015: createGroupModal.classList.add('hidden');
+1116: sendSilentBtn.addEventListener('click', () => { const text = messageInput.value.trim(); if(text) { sendMessage(text, null, null, true); messageInput.value = ''; sendOptionsPopup.classList.add('hidden'); } });
+1117: sendScheduleBtn.addEventListener('click', () => { scheduleModal.classList.remove('hidden'); sendOptionsPopup.classList.add('hidden'); });
+1118: closeScheduleModalBtn.addEventListener('click', () => scheduleModal.classList.add('hidden'));
+1119: scheduleSubmitBtn.addEventListener('click', () => { const text = messageInput.value.trim(); const dt = new Date(scheduleDatetime.value).getTime(); if(text && dt > Date.now()) { sendMessage(text, null, null, false, dt); messageInput.value = ''; scheduleModal.classList.add('hidden'); } });
+1126: emailInput.classList.add('hidden'); emailInput.removeAttribute('required');
+1127: verificationInfo.classList.add('hidden');
+1129: loginError.classList.add('hidden');
+1137: verificationInfo.classList.add('hidden');
+1139: loginError.classList.add('hidden');
+1144: loginError.classList.add('hidden');
+1178: await userDocRef.set({
+1191: loginError.classList.add('hidden');
+1259: screens.chat.classList.add('active');
+1300: if (!data.seen && data.type === 'missed') el.classList.add('unread');
+1316: doc.ref.update({seen: true}).catch(e=>{});
+1415: selectedMembers.add(username);
+1487: groupInfoSidebar.classList.add('hidden');
+1501: groupInfoSidebar.classList.add('hidden');
+1523: adminActions.classList.add('hidden');
+1566: await window.db.collection('groups').doc(currentChat.id).update({
+1623: document.getElementById('invite-modal').classList.add('hidden');
+1649: await msgRef.set(msg);
+1665: await msgRef.set(msg);
+1670: await window.db.collection('groups').doc(groupId).update({
+1673: await window.db.collection('messages').doc(msgId).update({
+1682: await window.db.collection('messages').doc(msgId).update({
+
+WEBRTC.JS:
+257: currentCallDocRef.collection('callerCandidates').add(event.candidate.toJSON());
+276: await currentCallDocRef.set(callData);
+307: callModal.classList.add('hidden');
+338: currentCallDocRef.collection('receiverCandidates').add(event.candidate.toJSON());
+356: await currentCallDocRef.update({ answer: answer, status: 'connected' });
+378: currentCallDocRef.update({ status: isCaller ? 'ended' : 'rejected' }).catch(() => {});
+408: callModal.classList.add('hidden');
+434: window.db.collection('users').doc(rtcCurrentUser).collection('callHistory').doc(myDocId).set(callRecord).catch(e => console.error("Call history error", e));
+446: window.db.collection('users').doc(currentCallPeer).collection('callHistory').doc(peerDocId).set(receiverRecord, {merge: true}).catch(e => console.error("Call history error", e));
+510: await window.db.collection('groups').doc(group.id).update({
+542: groupCallActiveContainer.classList.add('hidden');
+546: groupMuteBtn.classList.add('hidden');
+547: if (groupSpeakerBtn) groupSpeakerBtn.classList.add('hidden');
+548: groupLeaveBtn.classList.add('hidden');
+581: groupCallRingingContainer.classList.add('hidden');
+612: await participantsRef.doc(rtcCurrentUser).set({
+678: signalsRef.add({ from: rtcCurrentUser, to: peerId, type: 'answer', data: JSON.stringify(answer) });
+734: signalsRef.add({
+764: signalsRef.add({
+810: await window.db.collection('groups').doc(groupId).update({
+817: groupCallModal.classList.add('hidden');
+834: await window.db.collection('groups').doc(activeGroupCallId).collection('call_participants').doc(rtcCurrentUser).update({

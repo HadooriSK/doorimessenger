@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Delete All Users</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+    <h2>Alle Benutzer aus Firestore löschen</h2>
+    <p>Achtung: Dies löscht ALLE Dokumente in der 'users'-Sammlung unwiderruflich!</p>
+    <button id="deleteBtn" style="padding: 10px 20px; background: red; color: white; border: none; cursor: pointer;">Benutzer löschen</button>
+    <div id="log" style="margin-top: 20px; font-family: monospace;"></div>
+
+    <script>
+        const deleteBtn = document.getElementById('deleteBtn');
+        const log = document.getElementById('log');
+
+        function logMsg(msg) {
+            log.innerHTML += msg + '<br>';
+        }
+
+        deleteBtn.addEventListener('click', async () => {
+            if (!confirm('Bist du sicher? Alle Benutzernamen werden freigegeben!')) return;
+            
+            deleteBtn.disabled = true;
+            logMsg("Lösche Benutzer...");
+
+            try {
+                const snapshot = await db.collection('users').get();
+                if (snapshot.empty) {
+                    logMsg("Keine Benutzer gefunden. Die Sammlung ist bereits leer.");
+                    return;
+                }
+
+                logMsg(`${snapshot.size} Benutzer gefunden. Starte Löschvorgang...`);
+                let count = 0;
+
+                for (const doc of snapshot.docs) {
+                    await db.collection('users').doc(doc.id).delete();
+                    logMsg(`Gelöscht: ${doc.id}`);
+                    count++;
+                }
+
+                logMsg(`<b>Fertig! ${count} Benutzer wurden aus der Datenbank gelöscht.</b>`);
+            } catch (error) {
+                logMsg(`<span style="color:red">Fehler: ${error.message}</span>`);
+                logMsg("Hast du die Firestore Rules auf 'allow read, write: if true;' gesetzt?");
+            }
+        });
+    </script>
+</body>
+</html>

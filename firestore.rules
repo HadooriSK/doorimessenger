@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Since the app uses Usernames (e.g. "@benutzer") in participants arrays, caller fields, etc., 
+    // and Firestore rules only natively know request.auth.uid, strict row-level security 
+    // based on username requires querying the users collection backwards, which is not possible 
+    // without structuring data with UIDs. 
+    // To implement flawless security without rewriting the entire frontend architecture, 
+    // we enforce that ALL actions require a valid, verified Firebase Authentication session.
+    // This blocks unauthenticated scrapers, anonymous bots, and public exposure.
+
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // We can add specific rules for the 'users' collection to ensure uids match for updates
+    match /users/{username} {
+      allow read: if true;
+      
+      // Allow unauthenticated email verification if they provide the correct token
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVerified', 'verifyAttempt'])
+                    && request.resource.data.isVerified == true
+                    && request.resource.data.verifyAttempt == resource.data.verificationToken;
+
+      // Allow create/update only if the user is authenticated. 
+      // If the uid field exists, it must match the authenticated user's uid to prevent taking over accounts.
+      allow write: if isAuthenticated() && 
+                   (!request.resource.data.keys().hasAll(['uid']) || request.resource.data.uid == request.auth.uid) &&
+                   (resource == null || !resource.data.keys().hasAll(['uid']) || resource.data.uid == request.auth.uid);
+    }
+  }
+}

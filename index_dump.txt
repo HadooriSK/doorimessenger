@@ -1,0 +1,385 @@
+﻿<!DOCTYPE html>
+<html lang="de" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doori Messenger</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00d2d3">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        #global-error-banner {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: red; color: white;
+            padding: 20px; z-index: 999999;
+            font-family: monospace;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            max-height: 50vh; overflow-y: auto;
+        }
+    </style>
+    <script>
+        window.addEventListener('error', function(e) {
+            var banner = document.getElementById('global-error-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.innerText += 'ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno + ':' + e.colno + '\n';
+                if (e.error && e.error.stack) {
+                    banner.innerText += e.error.stack + '\n';
+                }
+            }
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            var banner = document.getElementById('global-error-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                banner.innerText += 'PROMISE ERROR: ' + (e.reason ? e.reason.stack || e.reason.message || e.reason : e) + '\n';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="global-error-banner"></div>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-card glass-panel">
+                <div class="logo-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Faravahar_neu.svg" alt="Farvahar" style="width: 80px; height: 40px; margin: 0 auto 15px;">
+                </div>
+                <h1 data-i18n="login_title">Doori Messenger</h1>
+                <p id="login-subtitle" data-i18n="login_subtitle">Bitte logge dich ein oder registriere dich.</p>
+                
+                <div id="auth-tabs" style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
+                    <span id="tab-login" style="cursor:pointer; font-weight:bold; color:var(--accent); border-bottom:2px solid var(--accent);">Login</span>
+                    <span id="tab-register" style="cursor:pointer; color:var(--text-secondary);">Registrieren</span>
+                </div>
+
+                <form id="login-form">
+                    <input type="text" id="username-input" placeholder="@benutzername" required autocomplete="username">
+                    <input type="email" id="email-input" class="hidden" placeholder="deine@email.com" autocomplete="email">
+                    <input type="password" id="password-input" placeholder="Passwort" required autocomplete="current-password">
+                    <div id="verification-info" class="hidden" style="margin-top:10px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; font-size:13px; color:var(--success);">
+                        Ein BestÃ¤tigungslink wurde an deine E-Mail gesendet. Bitte klicke auf den Link in der E-Mail, bevor du dich einloggst.
+                    </div>
+                    <button type="submit" id="login-submit-btn" data-i18n="login_btn">Weiter</button>
+                    <p id="login-error" class="error-text hidden"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="chat-screen" class="screen">
+            <div class="chat-container glass-panel">
+                
+                <!-- Mobile Menu Toggle -->
+                <button id="mobile-menu-btn" class="mobile-only">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+
+                <!-- Sidebar -->
+                <div class="sidebar" id="sidebar">
+                    <div class="sidebar-header">
+                        <div class="user-info">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Faravahar_neu.svg" alt="Farvahar" style="width: 40px; height: 20px; margin-right: 10px;">
+                            <span id="current-user-display" class="username"></span>
+                        </div>
+                        <div class="header-actions">
+                            <button id="settings-btn" class="icon-btn">âš™ï¸</button>
+                            <button id="new-group-btn" class="icon-btn">âž•</button>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-search" style="padding: 10px; border-bottom: 1px solid var(--panel-border); display: flex; gap: 5px;">
+                        <input type="text" id="user-search-input" placeholder="Benutzer suchen (@name)..." data-i18n="placeholder_search" autocomplete="off" style="flex: 1; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); outline: none;">
+                        <button id="user-search-btn" class="icon-btn" style="background: var(--accent); color: #000; border-radius: 8px;">ðŸ”</button>
+                    </div>
+                    
+                    <div class="chat-list" id="chat-list">
+                        <!-- Sections will be populated by JS -->
+                        <div class="chat-section" id="section-personal">
+                            <h3 data-i18n="sec_personal">PersÃ¶nlich</h3>
+                            <div class="chat-items-container" id="list-personal">
+                                <div class="chat-item" data-id="saved" data-type="saved">
+                                    <div class="avatar">ðŸ’¾</div>
+                                    <div class="chat-item-info">
+                                        <span class="chat-item-name" data-i18n="chat_saved">Gespeichertes</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-section" id="section-rooms">
+                            <h3 data-i18n="sec_rooms">Gruppen & KanÃ¤le</h3>
+                            <div class="chat-items-container" id="list-rooms">
+                                <div class="chat-item active" data-id="general" data-type="room">
+                                    <div class="avatar room-avatar">#</div>
+                                    <div class="chat-item-info">
+                                        <span class="chat-item-name" data-i18n="chat_general">Allgemein</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-section" id="section-contacts">
+                            <h3 data-i18n="sec_contacts">Kontakte</h3>
+                            <div class="chat-items-container" id="list-contacts"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Chat Area -->
+                <div class="main-chat" id="main-chat">
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <div class="avatar" id="current-chat-avatar">#</div>
+                            <div>
+                                <h2 id="current-chat-name">Allgemein</h2>
+                                <span id="current-chat-status" class="status-text" data-i18n="status_online">Online</span>
+                            </div>
+                        </div>
+                        <div class="chat-actions" id="chat-actions">
+                            <button id="secret-chat-btn" class="icon-btn" title="Geheimer Chat" style="display:none;">ðŸ”’</button>
+                            <button id="block-chat-btn" class="icon-btn" style="display:none;" data-i18n="btn_block">Blockieren</button>
+                            <span id="secret-lock" style="display:none; color: var(--accent); margin-right: 10px;">ðŸ”’ VerschlÃ¼sselt</span>
+                        </div>
+                    </div>
+                    <div class="messages-container" id="messages-container">
+                        <!-- Messages will appear here -->
+                    </div>
+
+                    <div id="blocked-notice" class="notice-banner hidden">
+                        <span data-i18n="err_blocked">Du hast diesen Kontakt blockiert.</span>
+                        <button id="unblock-btn" class="text-btn" data-i18n="btn_unblock">Entblocken</button>
+                    </div>
+                    
+                    <div id="channel-notice" class="notice-banner hidden" data-i18n="err_channel">
+                        Nur Administratoren kÃ¶nnen hier schreiben.
+                    </div>
+
+                    <div class="chat-input-area" id="chat-input-area">
+                        <button id="emoji-btn" class="icon-btn" type="button">ðŸ˜€</button>
+                        <button id="gif-btn" class="icon-btn" type="button">GIF</button>
+                        <button id="poll-btn" class="icon-btn" type="button">ðŸ“Š</button>
+                        
+                        <div class="attachment-controls">
+                            <input type="file" id="media-upload" class="hidden" accept="image/*,video/*,audio/*">
+                            <button class="icon-btn" onclick="document.getElementById('media-upload').click()">ðŸ“Ž</button>
+                        </div>
+                        
+                        <div id="reply-banner" class="reply-banner hidden">
+                            <div class="reply-banner-content">
+                                <span id="reply-banner-title">Antwort auf...</span>
+                                <span id="reply-banner-text">Text</span>
+                            </div>
+                            <button id="cancel-reply-btn" class="icon-btn danger">âœ–</button>
+                        </div>
+                        
+                        <form id="message-form">
+                            <div style="display: flex; flex-direction: column; width: 100%;">
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="message-input" placeholder="Nachricht schreiben..." data-i18n="placeholder_msg" autocomplete="off">
+                                    <select id="ttl-select" class="ttl-select" title="ZerstÃ¶rungstimer">
+                                        <option value="0" data-i18n="ttl_off">â³ Aus</option>
+                                        <option value="5">5s</option>
+                                        <option value="10">10s</option>
+                                        <option value="30">30s</option>
+                                        <option value="60">1m</option>
+                                    </select>
+                                    <div class="send-btn-container">
+                                        <button type="submit" id="send-btn" class="icon-btn primary">âž¤</button>
+                                        <div id="send-options-popup" class="popup-menu hidden">
+                                            <div class="popup-item" id="send-silent-btn">ðŸ”• Lautlos senden</div>
+                                            <div class="popup-item" id="send-schedule-btn">ðŸ•’ SpÃ¤ter senden</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="record-audio-btn" class="icon-btn record-btn">ðŸŽ¤</button>
+                                    <button type="button" id="record-video-btn" class="icon-btn record-btn">ðŸ“¹</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="selection-action-bar" class="selection-action-bar hidden">
+                        <span id="selection-count">0 ausgewÃ¤hlt</span>
+                        <div class="selection-actions">
+                            <button id="selection-forward-btn" class="icon-btn" title="Weiterleiten">â†ªï¸</button>
+                            <button id="selection-delete-btn" class="icon-btn text-danger" title="LÃ¶schen">ðŸ—‘ï¸</button>
+                            <button id="selection-cancel-btn" class="icon-btn" title="Abbrechen">âœ–</button>
+                        </div>
+                    </div>
+
+                    <div id="recording-preview" class="recording-preview hidden">
+                        <span id="recording-time" class="pulse">00:00</span>
+                        <div style="display:flex; gap:10px;">
+                            <button id="cancel-recording-btn" class="icon-btn danger" data-i18n="btn_cancel">âœ–</button>
+                            <button id="stop-recording-btn" class="icon-btn primary" data-i18n="btn_stop_send">â–  Senden</button>
+                        </div>
+                    </div>
+
+                    <!-- Pickers -->
+                    <div id="emoji-picker" class="picker glass-panel hidden"></div>
+                    <div id="gif-picker" class="picker glass-panel hidden">
+                        <div class="gif-grid" id="gif-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="create-group-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <h3 data-i18n="modal_new_room">Neuer Raum</h3>
+                <input type="text" id="new-group-name" placeholder="Name der Gruppe / des Kanals" data-i18n="lbl_room_name">
+                <select id="new-group-type">
+                    <option value="room" data-i18n="opt_group">Gruppe (Jeder kann schreiben)</option>
+                    <option value="channel" data-i18n="opt_channel">Kanal (Nur Admins)</option>
+                </select>
+                <div class="modal-actions">
+                    <button id="close-group-modal-btn" class="text-btn" data-i18n="btn_cancel">Abbrechen</button>
+                    <button id="create-group-submit-btn" data-i18n="btn_create">Erstellen</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content glass-panel settings-content">
+                <div class="settings-header">
+                    <h3 data-i18n="modal_settings">Einstellungen</h3>
+                    <button id="close-settings-btn" class="icon-btn">âœ–</button>
+                </div>
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="tab-profile" data-i18n="tab_profile">Profil</button>
+                    <button class="tab-btn" data-tab="tab-privacy" data-i18n="tab_privacy">PrivatsphÃ¤re</button>
+                    <button class="tab-btn" data-tab="tab-chats" data-i18n="tab_chats">Chats</button>
+                </div>
+                
+                <div class="settings-body">
+                    <div id="tab-profile" class="settings-tab-content active">
+                        <div class="profile-edit">
+                            <div class="avatar-large" id="settings-avatar"></div>
+                            <input type="file" id="avatar-upload" class="hidden" accept="image/*">
+                            <button class="text-btn" onclick="document.getElementById('avatar-upload').click()" data-i18n="btn_change_pic">Bild Ã¤ndern</button>
+                        </div>
+                        <div class="setting-item">
+                            <label data-i18n="lbl_language">Sprache / Language</label>
+                            <select id="lang-select">
+                                <option value="de">Deutsch</option>
+                                <option value="en">English</option>
+                                <option value="fa">فارسی (Persian)</option>
+                                <option value="ar">العربية (Arabic)</option>
+                                <option value="fr">Français</option>
+                                <option value="es">Español</option>
+                                <option value="pt">Português</option>
+                                <option value="zh">中文 (Chinese)</option>
+                                <option value="ja">日本語 (Japanese)</option>
+                                <option value="ru">Русский (Russian)</option>
+                                <option value="tr">Türkçe</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Media Player Farbe</label>
+                            <input type="color" id="player-color-picker" value="#00d2d3">
+                        </div>
+                        <div class="setting-item">
+                            <label>Media Player Glass-Effekt</label>
+                            <input type="checkbox" id="player-glass-toggle" checked>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-privacy" class="settings-tab-content">
+                        <div class="setting-item">
+                            <label>"Zuletzt online" anzeigen</label>
+                            <input type="checkbox" id="setting-last-seen" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label>LesebestÃ¤tigungen</label>
+                            <input type="checkbox" id="setting-read-receipts" checked>
+                        </div>
+                    </div>
+
+                    <div id="tab-chats" class="settings-tab-content">
+                        <div class="setting-item">
+                            <label>BenachrichtigungstÃ¶ne</label>
+                            <input type="checkbox" id="setting-sound" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label>Lokaler Speicher genutzt:</label>
+                            <span id="storage-usage">0 MB</span>
+                        </div>
+                        <button class="danger-btn" id="clear-cache-btn">Cache leeren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="schedule-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <h3>Nachricht planen</h3>
+                <input type="datetime-local" id="schedule-datetime">
+                <div class="modal-actions">
+                    <button id="close-schedule-modal-btn" class="text-btn">Abbrechen</button>
+                    <button id="schedule-submit-btn">Planen</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="poll-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <h3>Umfrage / Quiz erstellen</h3>
+                <input type="text" id="poll-question" placeholder="Frage..." style="margin-bottom:10px;">
+                <div id="poll-options-container">
+                    <input type="text" class="poll-option-input" placeholder="Option 1">
+                    <input type="text" class="poll-option-input" placeholder="Option 2">
+                </div>
+                <button id="add-poll-option-btn" class="text-btn" style="margin-bottom:10px;">+ Option hinzufÃ¼gen</button>
+                <div class="setting-item" style="margin-bottom:10px;">
+                    <label>Quiz-Modus</label>
+                    <input type="checkbox" id="poll-quiz-mode">
+                </div>
+                <div id="poll-correct-option-container" class="setting-item hidden" style="margin-bottom:10px;">
+                    <label>Richtige Option (Index 0,1,2...)</label>
+                    <input type="number" id="poll-correct-option" value="0" min="0" style="width:50px;">
+                </div>
+                <div class="modal-actions">
+                    <button id="close-poll-modal-btn" class="text-btn">Abbrechen</button>
+                    <button id="create-poll-submit-btn">Senden</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div id="message-context-overlay" class="overlay hidden">
+            <div id="message-context-menu" class="context-menu glass-panel">
+                <div class="emoji-reaction-bar" id="emoji-reaction-bar">
+                    <span class="reaction-emoji">â¤ï¸</span>
+                    <span class="reaction-emoji">ðŸ‘</span>
+                    <span class="reaction-emoji">ðŸ˜‚</span>
+                    <span class="reaction-emoji">ðŸ‘Ž</span>
+                    <span class="reaction-emoji">ðŸ”¥</span>
+                </div>
+                <div class="context-menu-options">
+                    <div class="context-option" id="ctx-reply">Antworten</div>
+                    <div class="context-option" id="ctx-copy">Kopieren</div>
+                    <div class="context-option" id="ctx-edit">Bearbeiten</div>
+                    <div class="context-option text-danger" id="ctx-delete">LÃ¶schen</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script src="firebase-config.js?v=2"></script>
+    <script src="app.js?v=639166312352499958"></script>
+</body>
+</html>
+

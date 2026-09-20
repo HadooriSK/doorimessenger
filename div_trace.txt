@@ -1,0 +1,356 @@
+49: <div id="global-error-banner"></div>
+50: <div id="app">
+  52: <div id="login-screen" class="screen active">
+    53: <div class="login-card glass-panel">
+      54: <div style="position: absolute; top: 15px; right: 15px;">
+      62: </div>
+      63: <div class="logo-container">
+      65: </div>
+      69: <div id="auth-tabs" style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
+      72: </div>
+      81: <div id="verification-info" class="hidden" style="margin-top:10px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; font-size:13px; color:var(--success);">
+      84: </div>
+      86: <div id="forgot-links" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin-bottom:15px; font-size:12px; padding: 0 5px;">
+      89: </div>
+      90: <div id="remember-me-container" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:15px; font-size:13px; color:var(--text-secondary);">
+      93: </div>
+      97: <div id="resend-verification-container" style="display: none; text-align: center; margin-top: 15px;">
+      99: </div>
+    101: </div>
+  102: </div>
+  105: <div id="chat-screen" class="screen">
+    106: <div class="chat-container glass-panel">
+      113: <div id="start-page" class="view-page active">
+        117: <div class="top-nav" style="flex-direction: column; align-items: stretch; padding: 0;">
+          118: <div style="display: flex; justify-content: center; align-items: center; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          120: </div>
+          121: <div class="scrollable-nav" style="display: flex; align-items: center; padding: 10px 5px; width: 100%; box-sizing: border-box;">
+            122: <div class="nav-tabs" style="display: flex; justify-content: space-between; align-items: stretch; gap: 4px; width: 100%; margin: 0; flex-wrap: nowrap;">
+            133: </div>
+          134: </div>
+        135: </div>
+        137: <div class="sidebar-search" style="padding: 10px; border-bottom: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 5px;">
+          138: <div style="font-size: 11px; color: var(--text-secondary); text-align: right; padding-right: 5px;">
+          140: </div>
+          141: <div style="display: flex; gap: 5px;">
+          144: </div>
+          145: <div id="message-search-results" style="display:none; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; flex-direction: column; gap: 10px;"></div>
+        147: </div>
+        149: <div class="chat-list" id="chat-list" style="flex: 1; overflow-y: auto;">
+          150: <div class="chat-items-container" id="list-contacts" style="display: block;"></div>
+          151: <div class="chat-items-container" id="list-chats" style="display: none;"></div>
+          152: <div class="chat-items-container" id="list-calls" style="display: none;"></div>
+          153: <div class="chat-items-container" id="list-rooms" style="display: none;">
+            154: <div class="chat-item active" data-id="general" data-type="room">
+              155: <div class="avatar room-avatar">#</div>
+              156: <div class="chat-item-info">
+              158: </div>
+            159: </div>
+          160: </div>
+          161: <div class="chat-items-container" id="list-personal" style="display: none;">
+            162: <div class="chat-item" data-id="saved" data-type="saved">
+              163: <div class="avatar">💾</div>
+              164: <div class="chat-item-info">
+              166: </div>
+            167: </div>
+          168: </div>
+        169: </div>
+      170: </div>
+      172: <div id="chat-page" class="view-page">
+        174: <div class="main-chat" id="main-chat" style="flex:1; display:flex; flex-direction:column; height: 100%;">
+          175: <div class="chat-header" style="display: flex; align-items: center; padding: 10px 15px; flex-wrap: nowrap; overflow: visible; z-index: 10;">
+            178: <div class="chat-header-info" id="chat-header-profile-btn" style="display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative;">
+              179: <div class="avatar" id="current-chat-avatar" style="width: 45px; height: 45px; font-size: 20px;"></div>
+              180: <div style="display: flex; flex-direction: column;">
+              183: </div>
+              186: <div id="chat-header-dropdown" class="hidden" style="position: absolute; top: 55px; left: 0; background: rgba(30, 30, 35, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--panel-border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 9999; min-width: 220px; overflow: hidden; display: flex; flex-direction: column;">
+              191: </div>
+            192: </div>
+            194: <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0;">
+              195: <div id="call-buttons-container" style="display: none; align-items: center; gap: 24px; flex-shrink: 0; background: #ffffff; border-radius: 24px; padding: 8px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+              202: </div>
+              204: <div class="chat-actions" id="chat-actions" style="display: flex; align-items: center; flex-shrink: 0;">
+              206: </div>
+            207: </div>
+          208: </div>
+          209: <div id="doodle-container" class="doodle-widget hidden" style="display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: var(--panel-bg); box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            210: <div class="doodle-header" id="doodle-header" style="padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--panel-border); cursor: grab; user-select: none;">
+              212: <div style="display: flex; gap: 8px; align-items: center;">
+                214: <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 5px;"></div>
+              218: </div>
+            219: </div>
+            221: <div id="doodle-canvas-wrapper" style="flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+            223: </div>
+            225: <div class="doodle-bottom-bar" id="doodle-bottom-bar" style="padding: 10px 15px; display: flex; gap: 12px; align-items: center; justify-content: space-between; background: var(--panel-bg); border-top: 1px solid var(--panel-border);">
+              226: <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+              229: </div>
+              230: <div style="display: flex; gap: 5px;">
+              233: </div>
+            234: </div>
+            235: <div class="doodle-resizer" id="doodle-resizer"></div>
+          236: </div>
+          237: <div id="pinned-message-banner" class="pinned-banner hidden">
+            238: <div class="pinned-icon">📌</div>
+            239: <div class="pinned-content">
+              241: <div class="pinned-text" id="pinned-text-preview"></div>
+            242: </div>
+          244: </div>
+          245: <div class="messages-container" id="messages-container">
+          247: </div>
+          249: <div id="blocked-notice" class="notice-banner hidden">
+          252: </div>
+          254: <div id="channel-notice" class="notice-banner hidden" data-i18n="err_channel">
+          256: </div>
+          258: <div class="chat-input-area" id="chat-input-area">
+            259: <div style="position: relative;">
+              261: <div id="plus-menu-dropdown" class="popup-menu hidden" style="position: absolute; bottom: calc(100% + 10px); left: 0; min-width: 200px; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                262: <div class="popup-item" id="emoji-btn" style="display: flex; gap: 10px; padding: 12px 15px;">😀 <span data-i18n="lbl_emoji">Smilies</span></div>
+                263: <div class="popup-item" id="gif-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🖼️ <span data-i18n="lbl_gif">GIF</span></div>
+                264: <div class="popup-item" id="doodle-btn" style="display: flex; gap: 10px; padding: 12px 15px; display: none;">🎨 <span data-i18n="lbl_doodle">Doodle</span></div>
+                265: <div class="popup-item" onclick="document.getElementById('media-upload').click()" style="display: flex; gap: 10px; padding: 12px 15px;">📎 <span data-i18n="lbl_file">Datei senden</span></div>
+                266: <div class="popup-item" id="menu-location-btn" style="display: flex; gap: 10px; padding: 12px 15px;">📍 <span data-i18n="lbl_location">Standort teilen</span></div>
+              267: </div>
+            268: </div>
+            272: <div id="reply-banner" class="reply-banner hidden">
+              273: <div class="reply-banner-content">
+              276: </div>
+            278: </div>
+            281: <div style="display: flex; flex-direction: column; width: 100%;">
+              282: <div style="display: flex; gap: 10px;">
+                291: <div class="send-btn-container">
+                  293: <div id="send-options-popup" class="popup-menu hidden">
+                    294: <div class="popup-item" id="send-silent-btn">🔕 Lautlos senden</div>
+                    295: <div class="popup-item" id="send-schedule-btn">🕘 Später senden</div>
+                  296: </div>
+                297: </div>
+              300: </div>
+            301: </div>
+            306: <div id="recording-preview" class="recording-preview hidden" style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: var(--panel-bg); z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-radius: inherit; touch-action: none;">
+              307: <div style="display: flex; align-items: center; gap: 15px;">
+                308: <div class="recording-dot pulse" style="width: 12px; height: 12px; background: #ff4757; border-radius: 50%; box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);"></div>
+              310: </div>
+              311: <div id="slide-to-cancel" style="flex: 1; text-align: center; color: var(--text-secondary); opacity: 0.7; font-size: 14px; user-select: none; display: flex; align-items: center; justify-content: center; gap: 10px; overflow: hidden; white-space: nowrap;">
+              313: </div>
+              314: <div style="display: flex; gap: 10px; align-items: center;">
+              317: </div>
+            318: </div>
+          319: </div>
+          321: <div id="selection-action-bar" class="selection-action-bar hidden">
+            323: <div class="selection-actions">
+            327: </div>
+          328: </div>
+          331: <div id="emoji-picker" class="picker glass-panel hidden"></div>
+          332: <div id="gif-picker" class="picker glass-panel hidden">
+            333: <div class="gif-grid" id="gif-grid"></div>
+          334: </div>
+        335: </div>
+        338: <div class="group-info-sidebar hidden" id="group-info-sidebar">
+          339: <div class="sidebar-header">
+          342: </div>
+          343: <div class="group-info-content">
+            344: <div class="group-info-details">
+              345: <div class="avatar-large" id="group-info-avatar">#</div>
+              348: <div style="display:flex; flex-direction:column; gap:10px; margin-top: 15px; width: 100%;">
+              351: </div>
+              353: <div id="group-info-actions" class="group-actions" style="display:none; flex-direction:column; gap:10px; margin-top: 15px;">
+              356: </div>
+            357: </div>
+            358: <div id="group-admin-actions" class="hidden" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 20px;">
+              361: <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+              367: </div>
+            368: </div>
+            370: <div class="group-members-section">
+              372: <div id="group-members-list" class="members-list"></div>
+            375: </div>
+          376: </div>
+        377: </div>
+      378: </div>
+    379: </div>
+    382: <div id="create-group-modal" class="modal hidden">
+      383: <div class="modal-content glass-panel" style="max-height: 90vh; overflow-y: auto;">
+        386: <div style="display: flex; align-items: flex-start; gap: 15px; margin-bottom: 15px;">
+          389: <div id="new-group-avatar-preview" style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden;">📷</div>
+          391: <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+          394: </div>
+        395: </div>
+        399: <div style="margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+          402: <div style="flex: 1; min-width: 0;">
+          405: </div>
+          409: <div style="flex: 1; min-width: 0;">
+          412: </div>
+        414: </div>
+        416: <div class="group-member-selection">
+          418: <div class="search-bar" style="margin: 10px 0; display: flex; gap: 5px;">
+          422: </div>
+          423: <div id="group-member-search-result" style="display: none; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; margin-bottom: 10px; align-items: center; justify-content: space-between;"></div>
+          425: <div class="chat-items-container" id="group-contacts-list" style="max-height: 200px; overflow-y: auto;">
+          427: </div>
+          429: <div id="selected-members-container" class="selected-members">
+          431: </div>
+        432: </div>
+        434: <div class="modal-actions">
+        437: </div>
+      438: </div>
+    439: </div>
+    441: <div id="settings-modal" class="modal hidden">
+      442: <div class="modal-content glass-panel settings-content">
+        443: <div class="settings-header">
+        446: </div>
+        447: <div class="settings-tabs">
+        452: </div>
+        454: <div class="settings-body">
+          455: <div id="tab-profile" class="settings-tab-content active">
+            456: <div class="profile-edit">
+              457: <div class="avatar-large" id="settings-avatar"></div>
+            460: </div>
+            461: <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+            464: </div>
+            465: <div class="setting-item">
+            474: </div>
+            475: <div style="margin-top: 30px; text-align: center;">
+            477: </div>
+          478: </div>
+          480: <div id="tab-design" class="settings-tab-content">
+            481: <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+              483: <div style="display: flex; gap: 10px; width: 100%; overflow-x: auto; padding-bottom: 5px; align-items: center;">
+              489: </div>
+            491: </div>
+            492: <div class="setting-group" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+              494: <div class="setting-item">
+              502: </div>
+              503: <div class="setting-item">
+              511: </div>
+              512: <div class="setting-item">
+              519: </div>
+              520: <div style="margin-top: 15px; padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.3);">
+                522: <div class="msg-sent" style="display: flex; justify-content: flex-end;">
+                  523: <div class="msg-bubble" style="margin: 0; padding: 8px 12px; border-radius: 15px 15px 0 15px; max-width: 80%;">
+                  525: </div>
+                526: </div>
+              527: </div>
+            528: </div>
+          529: </div>
+          531: <div id="tab-privacy" class="settings-tab-content">
+            532: <div class="setting-item">
+            535: </div>
+            536: <div class="setting-item">
+            539: </div>
+            540: <div class="setting-item">
+            543: </div>
+            544: <div class="setting-item">
+            551: </div>
+            552: <div class="setting-item">
+            559: </div>
+            561: <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              563: <div id="blocked-contacts-list" style="width: 100%; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; font-size: 13px;">
+              565: </div>
+            566: </div>
+            567: <div id="tab-chats" class="settings-tab-content">
+              568: <div class="setting-item">
+              571: </div>
+              572: <div class="setting-item">
+              575: </div>
+              576: <div class="setting-item">
+              579: </div>
+            581: </div>
+          582: </div>
+          583: <div class="modal-actions" style="border-top: 1px solid var(--panel-border); padding-top: 15px; margin-top: 15px; justify-content: flex-end;">
+          586: </div>
+        587: </div>
+      588: </div>
+      590: <div id="schedule-modal" class="modal hidden">
+        591: <div class="modal-content glass-panel">
+          594: <div class="modal-actions">
+          597: </div>
+        598: </div>
+      599: </div>
+      602: <div id="call-modal" class="modal hidden">
+        603: <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 350px;">
+          605: <div class="avatar-large" id="call-avatar" style="margin: 0 auto 15px;">#</div>
+          607: <div class="modal-actions" id="call-controls" style="justify-content: center; gap: 15px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
+          612: </div>
+        613: </div>
+      614: </div>
+      616: <div id="video-call-modal" class="modal hidden">
+        617: <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 800px; padding: 20px; position: relative;">
+          620: <div style="position: relative; width: 100%; height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            628: <div id="video-call-ringing-ui" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; z-index: 5;">
+              629: <div class="avatar-large" id="video-call-avatar" style="margin-bottom: 15px;">#</div>
+            631: </div>
+          632: </div>
+          634: <div class="modal-actions" id="video-call-controls" style="justify-content: center; gap: 15px; margin-top: 20px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
+          640: </div>
+        641: </div>
+      642: </div>
+      644: <div id="group-call-modal" class="modal hidden">
+        645: <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 450px; padding: 30px;">
+          649: <div id="group-call-ringing-container" class="hidden" style="margin-bottom: 20px;">
+          651: </div>
+          653: <div id="group-call-active-container" class="hidden">
+            654: <div id="group-call-participants" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0; max-height: 250px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+            656: </div>
+          657: </div>
+          659: <div class="modal-actions" id="group-call-controls" style="justify-content: center; gap: 15px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
+          668: </div>
+        669: </div>
+      670: </div>
+      671: <div id="invite-modal" class="modal hidden">
+        672: <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 350px;">
+          674: <div class="avatar-large" id="invite-avatar" style="margin: 0 auto 15px;">#</div>
+          677: <div class="modal-actions" style="justify-content: center; gap: 15px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
+          680: </div>
+        681: </div>
+      682: </div>
+      683: <div id="forward-modal" class="modal hidden">
+        684: <div class="modal-content glass-panel" style="max-width: 400px; padding: 20px;">
+          687: <div id="forward-contacts-list" class="chat-list" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px;">
+          689: </div>
+          690: <div class="modal-actions" style="justify-content: flex-end; margin-top: 15px;">
+          692: </div>
+        693: </div>
+      694: </div>
+      698: <div id="group-remote-audios" class="hidden"></div>
+      700: <div id="message-context-overlay" class="overlay hidden">
+        701: <div id="message-context-menu" class="context-menu glass-panel">
+          702: <div class="emoji-reaction-bar" id="emoji-reaction-bar">
+          708: </div>
+          709: <div class="context-menu-options">
+            710: <div class="context-option" id="ctx-reply" data-i18n="ctx_reply">Antworten</div>
+            711: <div class="context-option" id="ctx-copy" data-i18n="ctx_copy">Kopieren</div>
+            712: <div class="context-option" id="ctx-edit" data-i18n="ctx_edit">Bearbeiten</div>
+            713: <div class="context-option" id="ctx-select" data-i18n="ctx_select">Auswählen</div>
+            714: <div class="context-option" id="ctx-forward" data-i18n="ctx_forward">Weiterleiten</div>
+            715: <div class="context-option" id="ctx-pin" data-i18n="ctx_pin">Anheften</div>
+            716: <div class="context-option" id="ctx-share" data-i18n="ctx_share">Teilen</div>
+            717: <div class="context-option text-danger" id="ctx-delete" data-i18n="ctx_delete">Löschen</div>
+          718: </div>
+        719: </div>
+      720: </div>
+      722: <div id="chat-list-context-overlay" class="overlay hidden">
+        723: <div id="chat-list-context-menu" class="context-menu glass-panel">
+          724: <div class="context-menu-options">
+            725: <div class="context-option" id="ctx-chat-pin">📌 <span data-i18n="ctx_pin">Anheften</span></div>
+          726: </div>
+        727: </div>
+      728: </div>
+    730: </div>
+    733: <div id="doodle-invite-modal" class="modal hidden" style="z-index: 10000;">
+      734: <div class="modal-content glass-panel" style="max-width: 350px; text-align: center; padding: 30px; border-radius: 20px; background: rgba(15, 20, 25, 0.95); box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);">
+        737: <div style="display: flex; justify-content: center; gap: 20px;">
+        744: </div>
+      745: </div>
+    746: </div>
+    760: <div id="add-contact-modal" class="modal hidden">
+      761: <div class="modal-content glass-panel" style="max-width: 400px; padding: 30px;">
+        763: <div style="display: flex; gap: 5px; margin-bottom: 20px;">
+        767: </div>
+        768: <div id="user-search-result" style="display: none; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-bottom: 20px;"></div>
+        769: <div class="modal-actions" style="justify-content: flex-end;">
+        771: </div>
+      772: </div>
+    773: </div>
+    776: <div id="global-invite-popup" class="hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(30, 30, 35, 0.95); border: 1px solid var(--accent); border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 100000; width: 90%; max-width: 400px; text-align: center; backdrop-filter: blur(10px);">
+      777: <div style="font-size: 24px; margin-bottom: 10px;">💌</div>
+      780: <div style="display: flex; gap: 10px; justify-content: center;">
+      783: </div>
+    785: </div>
