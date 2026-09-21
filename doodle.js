@@ -428,7 +428,7 @@ function getSessionId(userA, userB) {
 // INITIATOR SENDS INVITE
 async function initDoodleInvite(peerId) {
     if(!window.currentUser) return;
-    const peerClean = peerId.replace('@', '').toLowerCase();
+    const peerClean = normalizeUsername(peerId);
     
     const sessionId = getSessionId(window.currentUser, peerClean);
     const docRef = window.db.collection('doodle_sessions').doc(sessionId);
@@ -437,12 +437,6 @@ async function initDoodleInvite(peerId) {
         currentDoodlePeer = peerClean;
         currentDoodleDocRef = docRef;
         
-        // Clear old strokes just in case FIRST
-        const snap = await currentDoodleDocRef.collection('strokes').get();
-        const batch = window.db.batch();
-        snap.forEach(d => batch.delete(d.ref));
-        await batch.commit();
-
         // THEN set invite
         doodleSessionStartTime = Date.now();
         await currentDoodleDocRef.set({
@@ -452,6 +446,12 @@ async function initDoodleInvite(peerId) {
             receiver: peerClean
         }, {merge: true});
         
+        // Clear old strokes just in case FIRST
+        const snap = await currentDoodleDocRef.collection('strokes').get();
+        const batch = window.db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+
         // THEN send message
         if(window.sendMessage) {
             window.sendMessage('', 'doodle_invite', null);

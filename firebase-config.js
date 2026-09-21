@@ -12,7 +12,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 // db.settings({ experimentalForceLongPolling: true });
 
 // Lösche alte ausstehende offline-Uploads, die den Browser einfrieren lassen
@@ -21,4 +20,4 @@ db.clearPersistence().catch(e => console.log("Clear persistence error:", e));
 // Make them globally available for app.js
 window.auth = auth;
 window.db = db;
-window.storage = storage;
+window.accountFunctions = firebase.app().functions('europe-west3');

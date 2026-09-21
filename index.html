@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=318">
+    <link rel="stylesheet" href="style.css?v=322">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -79,18 +79,24 @@
                 <div class="logo-container">
                     <img src="logo.png?v=7" alt="Doori Logo" class="app-logo" style="height: 120px; width: auto; margin: 0 auto 15px;">
                 </div>
-                <p id="login-subtitle" data-i18n="login_subtitle">Bitte logge dich ein oder registriere dich.</p>
+                <p id="login-subtitle">Melde dich mit deinen Zugangsdaten an.</p>
                 
                 <div id="auth-tabs" style="display:flex; justify-content:center; gap:20px; margin-bottom:15px;">
-                    <span id="tab-login" data-i18n="tab_login" style="cursor:pointer; font-weight:bold; color:var(--accent); border-bottom:2px solid var(--accent);">Login</span>
-                    <span id="tab-register" data-i18n="tab_register" style="cursor:pointer; color:var(--text-secondary);">Registrieren</span>
+                    <button type="button" id="tab-login" class="auth-tab active" data-i18n="tab_login" aria-selected="true">Login</button>
+                    <button type="button" id="tab-register" class="auth-tab" data-i18n="tab_register" aria-selected="false">Registrieren</button>
                 </div>
 
                 <form id="login-form">
+                    <label id="username-label" class="auth-field-label" for="username-input">Benutzername oder E-Mail-Adresse</label>
                     <input type="text" id="username-input" data-i18n="ph_username" placeholder="Benutzername (mind. 10 Zeichen)" required autocomplete="username">
-                    <p id="username-hint" style="font-size: 11px; color: #aaa; margin: -10px 0 10px 5px;" data-i18n="hint_username">Mindestens 10 Zeichen erforderlich.</p>
+                    <p id="username-hint" class="hidden" style="font-size: 11px; color: #aaa; margin: -10px 0 10px 5px;" data-i18n="hint_username">Mindestens 10 Zeichen erforderlich.</p>
+                    <label id="email-label" class="auth-field-label hidden" for="email-input">E-Mail-Adresse</label>
                     <input type="email" id="email-input" data-i18n="ph_email" class="hidden" placeholder="deine@email.com" autocomplete="email">
+                    <p id="registration-email-hint" class="auth-field-hint hidden">Wir senden dir anschließend eine E-Mail zur Bestätigung.</p>
+                    <p id="alias-email-hint" class="hidden" data-i18n="security_alias_hint" style="font-size:12px; color:var(--text-secondary); margin:0 0 12px;"></p>
+                    <label id="password-label" class="auth-field-label" for="password-input">Passwort</label>
                     <input type="password" id="password-input" data-i18n="ph_password" placeholder="Passwort" required autocomplete="current-password">
+                    <label id="id-label" class="auth-field-label" for="id-input">Kontakt-ID</label>
                     <input type="text" id="id-input" placeholder="6-stellige ID-Nummer" data-i18n="ph_id_number" required pattern="\d{6}" maxlength="6" style="margin-top:10px;">
                     <p id="id-hint" style="font-size: 11px; color: #aaa; margin: 0 0 10px 5px;" data-i18n="hint_id_number">6-stellige ID (wird per E-Mail gesendet).</p>
                     <div id="verification-info" class="hidden" style="margin-top:10px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px; font-size:13px; color:var(--success);">
@@ -99,8 +105,7 @@
                     </div>
                     
                     <div id="forgot-links" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin-bottom:15px; font-size:12px; padding: 0 5px;">
-                        <a href="#" id="forgot-password-link" data-i18n="lnk_forgot_pwd" style="color:var(--accent); text-decoration:none;">Passwort vergessen?</a>
-                        <a href="#" id="forgot-username-id-link" data-i18n="lnk_forgot_user_id" style="color:var(--accent); text-decoration:none;">Benutzername / ID vergessen?</a>
+                        <a href="#" id="forgot-username-id-link" data-i18n="security_recovery_link" style="color:var(--accent); text-decoration:none;">Zugangsdaten vergessen?</a>
                     </div>
                     <div id="remember-me-container" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:15px; font-size:13px; color:var(--text-secondary);">
                         <input type="checkbox" id="remember-me-checkbox" checked style="width:auto; margin:0; cursor:pointer;">
@@ -295,25 +300,31 @@
                         </div>
                         
                         <form id="message-form" style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin: 0;">
-                            <!-- Top Row: Plus Button and Textarea -->
-                            <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
-                                <div style="position: relative; flex-shrink: 0;">
-                                    <button id="plus-menu-btn" class="icon-btn" type="button" style="font-size: 22px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); border-radius: 50%;">+</button>
-                                    <div id="plus-menu-dropdown" class="popup-menu hidden" style="position: absolute; bottom: calc(100% + 10px); left: 0; min-width: 200px; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                            <!-- Main row: message field and prominent send button -->
+                            <div class="composer-main-row">
+                                <textarea id="message-input" placeholder="Nachricht schreiben..." data-i18n="placeholder_msg" style="flex-grow: 1; resize: none; min-height: 40px; max-height: 100px; font-family: inherit; font-size: inherit; border-radius: 20px; padding: 10px 15px; border: 1px solid rgba(128,128,128,0.2); background: transparent; color: var(--text);"></textarea>
+                                <div class="send-btn-container composer-send">
+                                    <button type="submit" id="send-btn" class="icon-btn primary" data-i18n-title="title_send_message" title="Nachricht senden">➤</button>
+                                    <div id="send-options-popup" class="popup-menu hidden">
+                                        <div class="popup-item" id="send-silent-btn">🔕 Lautlos senden</div>
+                                        <div class="popup-item" id="send-schedule-btn">⏱️ Später senden</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bottom row: additional options -->
+                            <div class="composer-tools-row">
+                                <div class="plus-menu-container">
+                                    <button id="plus-menu-btn" class="icon-btn" type="button" data-i18n-title="title_more_options" title="Weitere Optionen">+</button>
+                                    <div id="plus-menu-dropdown" class="popup-menu hidden">
                                         <div class="popup-item" id="emoji-btn" style="display: flex; gap: 10px; padding: 12px 15px;">😀 <span data-i18n="lbl_emoji">Smilies</span></div>
                                         <div class="popup-item" id="gif-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎞️ <span data-i18n="lbl_gif">GIF</span></div>
-                                        <div class="popup-item" id="games-menu-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎮 <span data-i18n="lbl_games">Spiele</span></div>
                                         <div class="popup-item" id="doodle-btn" style="display: flex; gap: 10px; padding: 12px 15px; display: none;">🖍️ <span data-i18n="lbl_doodle">Doodle</span></div>
                                         <div class="popup-item" onclick="document.getElementById('media-upload').click()" style="display: flex; gap: 10px; padding: 12px 15px;">📁 <span data-i18n="lbl_file">Datei senden</span></div>
                                         <div class="popup-item" id="menu-location-btn" style="display: flex; gap: 10px; padding: 12px 15px;">📍 <span data-i18n="lbl_location">Standort teilen</span></div>
                                     </div>
                                 </div>
-                                <textarea id="message-input" placeholder="Nachricht schreiben..." data-i18n="placeholder_msg" style="flex-grow: 1; resize: none; min-height: 40px; max-height: 100px; font-family: inherit; font-size: inherit; border-radius: 20px; padding: 10px 15px; border: 1px solid rgba(128,128,128,0.2); background: transparent; color: var(--text);"></textarea>
-                            </div>
-                            
-                            <!-- Bottom Row: Other Options -->
-                            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; padding-left: 50px;">
-                                <div style="display: flex; gap: 10px; align-items: center;">
+                                <div class="composer-tool-group">
                                     <select id="ttl-select" class="ttl-select" title="Zerstörungstimer">
                                         <option value="0" data-i18n="ttl_off">⏱️ Aus</option>
                                         <option value="5">5s</option>
@@ -324,17 +335,9 @@
                                     <button id="buzz-btn" class="icon-btn" type="button" title="Buzz (Anklopfen)" style="font-size: 20px;">⚡</button>
                                     <input type="file" id="media-upload" class="hidden" accept="image/*,video/*,audio/*">
                                 </div>
-                                
-                                <div style="display: flex; gap: 10px; align-items: center;">
+                                <div class="composer-tool-group">
                                     <button type="button" id="record-audio-btn" class="icon-btn record-btn">🎤</button>
                                     <button type="button" id="record-video-btn" class="icon-btn record-btn">📹</button>
-                                    <div class="send-btn-container" style="margin-left: 5px;">
-                                        <button type="submit" id="send-btn" class="icon-btn primary">➤</button>
-                                        <div id="send-options-popup" class="popup-menu hidden">
-                                            <div class="popup-item" id="send-silent-btn">🔕 Lautlos senden</div>
-                                            <div class="popup-item" id="send-schedule-btn">⏱️ Später senden</div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -375,7 +378,7 @@
                         <div class="gif-grid" id="gif-grid" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
                         <div id="custom-gif-container" class="hidden" style="flex: 1; overflow-y: auto; padding: 10px;">
                             <div id="custom-gif-grid" class="gif-grid" style="margin-bottom: 10px;"></div>
-                            <button id="add-custom-gif-btn" class="action-btn" style="width: 100%;" data-i18n="btn_add_gif">+ GIF hinzufügen (Max 1MB)</button>
+                            <button id="add-custom-gif-btn" class="action-btn" style="width: 100%;" data-i18n="security_gif_button">+ GIF hinzufügen (max. 192 KB)</button>
                             <input type="file" id="custom-gif-upload" accept="image/gif" class="hidden">
                         </div>
                     </div>
@@ -852,29 +855,32 @@
         </div>
 
     <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="vendor/firebase-app-compat.js"></script>
+    <script src="vendor/firebase-auth-compat.js"></script>
+    <script src="vendor/firebase-firestore-compat.js"></script>
+    <script src="vendor/firebase-functions-compat.js"></script>
     
-    <script src="firebase-config.js?v=25"></script>
-    <script src="app.js?v=324"></script>
-    <script src="webrtc.js?v=57"></script>
-    <script src="doodle.js?v=275"></script>
+    <script src="vendor/purify.min.js"></script>
+    <script src="security.js?v=1"></script>
+    <script src="auth-translations.js?v=9"></script>
+    <script src="firebase-config.js?v=28"></script>
+    <script src="account-client.js?v=1"></script>
+    <script src="app.js?v=340"></script>
+    <script src="webrtc.js?v=59"></script>
+    <script src="doodle.js?v=276"></script>
 
         <!-- Add Contact Modal -->
         <div id="add-contact-modal" class="modal hidden">
             <div class="modal-content glass-panel" style="max-width: 400px; padding: 30px;">
-                <h2 style="margin-bottom: 20px;">Kontakt hinzufügen</h2>
+                <h2 data-i18n="modal_add_contact" style="margin-bottom: 20px;">Kontakt hinzufügen</h2>
                 <div style="display: flex; gap: 5px; margin-bottom: 20px;">
                     <input type="text" id="user-search-input" data-i18n="ph_search_user" placeholder="Benutzer suchen (@name)..." autocomplete="off" style="flex: 1; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); outline: none;">
                     <input type="text" id="user-search-id" data-i18n="ph_id" placeholder="ID" autocomplete="off" style="width: 80px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); outline: none; text-align: center;" maxlength="6">
                     <button id="user-search-btn" class="icon-btn" style="background: var(--accent); color: #000; border-radius: 8px;">🔍</button>
                 </div>
-                
+                <div id="user-search-result" style="display: none; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-bottom: 20px;"></div>
                 <div class="modal-actions" style="justify-content: flex-end;">
-                    <button id="close-create-group-btn" class="text-btn" data-i18n="btn_cancel">Abbrechen</button>
-                    <button id="confirm-create-group-btn" class="submit-btn" data-i18n="btn_create">Erstellen</button>
+                    <button id="close-add-contact-btn" class="text-btn" data-i18n="btn_cancel">Abbrechen</button>
                 </div>
             </div>
         </div>
@@ -899,13 +905,6 @@
                 <div class="modal-actions" style="justify-content: flex-end;">
                     <button id="close-edit-group-btn" class="text-btn" data-i18n="btn_cancel">Abbrechen</button>
                     <button id="confirm-edit-group-btn" class="submit-btn" data-i18n="btn_save">Speichern</button>
-                </div>
-            </div>
-        </div>
-
-                <div id="user-search-result" style="display: none; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; flex-direction: column; gap: 10px; align-items: center; text-align: center; margin-bottom: 20px;"></div>
-                <div class="modal-actions" style="justify-content: flex-end;">
-                    <button id="close-add-contact-btn" class="text-btn">Abbrechen</button>
                 </div>
             </div>
         </div>
@@ -1021,31 +1020,5 @@
             </div>
         </div>
     </div>
-    <!-- Games List Modal -->
-    <div id="games-list-modal" class="modal hidden" style="z-index: 10001;">
-        <div class="modal-content glass-panel" style="max-width: 600px; width: 95%; max-height: 85vh; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0; font-size: 24px;">🎮 Spiele</h3>
-                <button class="close-btn" id="close-games-list-btn" onclick="document.getElementById('games-list-modal').classList.add('hidden')" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-            </div>
-            <div id="games-grid" class="games-grid" style="overflow-y: auto; padding-right: 5px;">
-                <!-- Games will be injected here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Game Player Modal -->
-    <div id="game-player-modal" class="modal hidden" style="z-index: 10002; background: rgba(0,0,0,0.95); padding: 0;">
-        <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-            <div style="height: 50px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-shrink: 0;">
-                <h3 id="game-player-title" style="margin: 0; color: white; font-size: 18px;">Spiel lädt...</h3>
-                <button class="close-btn" id="close-game-player-btn" style="background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 5px 15px; font-weight: bold; cursor: pointer;" data-i18n="lbl_end_game">Beenden</button>
-            </div>
-            <div style="flex-grow: 1; position: relative; height: 100%; width: 100%; -webkit-overflow-scrolling: touch;">
-                <iframe id="game-player-iframe" src="" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="autoplay; fullscreen; gamepad"></iframe>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>

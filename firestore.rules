@@ -1,39 +1,167 @@
 rules_version = '2';
-
 service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Helper
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Since the app uses Usernames (e.g. "@benutzer") in participants arrays, caller fields, etc., 
-    // and Firestore rules only natively know request.auth.uid, strict row-level security 
-    // based on username requires querying the users collection backwards, which is not possible 
-    // without structuring data with UIDs. 
-    // To implement flawless security without rewriting the entire frontend architecture, 
-    // we enforce that ALL actions require a valid, verified Firebase Authentication session.
-    // This blocks unauthenticated scrapers, anonymous bots, and public exposure.
-
-    match /{document=**} {
-      allow read, write: if isAuthenticated();
-    }
-
-    // We can add specific rules for the 'users' collection to ensure uids match for updates
-    match /users/{username} {
-      allow read: if true;
-      
-      // Allow unauthenticated email verification if they provide the correct token
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVerified', 'verifyAttempt'])
-                    && request.resource.data.isVerified == true
-                    && request.resource.data.verifyAttempt == resource.data.verificationToken;
-
-      // Allow create/update only if the user is authenticated. 
-      // If the uid field exists, it must match the authenticated user's uid to prevent taking over accounts.
-      allow write: if isAuthenticated() && 
-                   (!request.resource.data.keys().hasAll(['uid']) || request.resource.data.uid == request.auth.uid) &&
-                   (resource == null || !resource.data.keys().hasAll(['uid']) || resource.data.uid == request.auth.uid);
-    }
+ match /databases/{database}/documents {
+  function verified() { return request.auth != null && request.auth.token.email_verified == true; }
+  function account() { return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data; }
+  function name() { return account().username; }
+  function key() { return account().key; }
+  function owner(username) { return verified() && username == key(); }
+  function group(id) { return get(/databases/$(database)/documents/groups/$(id)).data; }
+  function member(id) { return verified() && name() in group(id).members; }
+  function admin(id) { return member(id) && name() in group(id).admins; }
+  function messageReader(data) {
+   return verified() && ((data.isPublic == false && key() in data.participants) ||
+    (data.isPublic == true && (data.chat_id == 'general' || member(data.chat_id))));
   }
+  function roomWriter(id) {
+   return id == 'general' || (member(id) && !(name() in group(id).get('mutedMembers', [])) &&
+    (!group(id).get('isReadOnly', false) || admin(id)));
+  }
+  function ownAccountAfter(username) {
+   return request.auth != null && getAfter(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.key == username;
+  }
+  function invitedByMessage(messageId, groupId, groupData) {
+   let invite = get(/databases/$(database)/documents/messages/$(messageId)).data;
+   return invite.type == 'group_invite' && invite.invite_group_id == groupId &&
+    invite.isPublic == false && key() in invite.participants && invite.recipient_username == key() &&
+    invite.invite_status == 'pending' && invite.sender_username in groupData.admins && invite.sender_username in groupData.members &&
+    getAfter(/databases/$(database)/documents/messages/$(messageId)).data.invite_status == 'accepted';
+  }
+  match /accounts/{uid} {
+   allow read: if request.auth != null && request.auth.uid == uid;
+   allow create: if request.auth != null && request.auth.uid == uid &&
+    request.resource.data.keys().hasOnly(['username', 'key']) &&
+    request.resource.data.key == request.resource.data.username.lower() &&
+    getAfter(/databases/$(database)/documents/users/$(request.resource.data.key)).data.uid == uid &&
+    getAfter(/databases/$(database)/documents/users/$(request.resource.data.key)).data.username == request.resource.data.username;
+  }
+  match /users/{username} {
+   allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+   allow create: if ownAccountAfter(username) && request.resource.data.uid == request.auth.uid &&
+    request.resource.data.email == request.auth.token.email &&
+    request.resource.data.username.lower() == username &&
+    request.resource.data.username.matches('^@[\\p{L}\\p{N}_.-]{10,64}$') &&
+    request.resource.data.id_number.matches('^[0-9]{6}$') && request.resource.data.createdAt == request.time &&
+    request.resource.data.keys().hasOnly(['uid', 'email', 'username', 'id_number', 'createdAt']) &&
+    !exists(/databases/$(database)/documents/groups/$(username)) &&
+    !exists(/databases/$(database)/documents/accounts/$(request.auth.uid));
+   match /callHistory/{callId} {
+    allow read, write: if owner(username);
+   }
+  }
+  match /profiles/{username} {
+   allow read: if verified();
+   allow create: if ownAccountAfter(username) &&
+    request.resource.data.uid == request.auth.uid &&
+    request.resource.data.username == getAfter(/databases/$(database)/documents/users/$(username)).data.username &&
+    request.resource.data.id_number == getAfter(/databases/$(database)/documents/users/$(username)).data.id_number &&
+    request.resource.data.keys().hasOnly(['uid', 'username', 'id_number', 'avatarUrl', 'profilePics', 'searchable', 'avatarVisibility', 'callPrivacy', 'lastSeenPrivacy', 'bio']);
+   allow update: if owner(username) && request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly(['avatarUrl', 'profilePics', 'searchable', 'avatarVisibility', 'callPrivacy', 'lastSeenPrivacy', 'bio']);
+  }
+  match /userData/{username} { allow read, write: if owner(username); }
+  match /presence/{username} {
+   allow get: if owner(username) || (verified() && get(/databases/$(database)/documents/profiles/$(username)).data.get('lastSeenPrivacy', 'all') == 'all');
+   allow create, update: if owner(username) && request.resource.data.keys().hasOnly(['lastSeen', 'isOnline']) &&
+    request.resource.data.isOnline is bool && request.resource.data.lastSeen == request.time;
+   allow delete: if owner(username);
+  }
+  match /messages/{messageId} {
+   allow read: if messageReader(resource.data);
+   allow create: if verified() && request.resource.data.sender_username == name() &&
+    ((request.resource.data.isPublic == true && roomWriter(request.resource.data.chat_id)) ||
+     (request.resource.data.isPublic == false && request.resource.data.participants is list &&
+      request.resource.data.participants.size() >= 1 && request.resource.data.participants.size() <= 2 && key() in request.resource.data.participants &&
+      ((request.resource.data.chat_id == 'saved' && request.resource.data.participants == [key()]) ||
+       request.resource.data.recipient_username.lower() in request.resource.data.participants))) &&
+    (request.resource.data.get('type', '') != 'group_invite' || admin(request.resource.data.invite_group_id));
+   allow update: if messageReader(resource.data) && (
+    (resource.data.sender_username == name() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited'])) ||
+    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']) && resource.data.isPublic == false &&
+     resource.data.sender_username != name() && request.resource.data.read == true) ||
+    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
+    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor']) &&
+     request.resource.data.deletedFor.toSet().hasAll(resource.data.get('deletedFor', []).toSet()) &&
+     request.resource.data.deletedFor.toSet().difference(resource.data.get('deletedFor', []).toSet()).hasOnly([name()])) ||
+    (resource.data.get('type', '') == 'group_invite' && resource.data.recipient_username == key() &&
+     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['invite_status']) &&
+     (request.resource.data.invite_status == 'declined' ||
+      (invitedByMessage(messageId, resource.data.invite_group_id, group(resource.data.invite_group_id)) &&
+       name() in getAfter(/databases/$(database)/documents/groups/$(resource.data.invite_group_id)).data.members &&
+       getAfter(/databases/$(database)/documents/groups/$(resource.data.invite_group_id)).data.joinProof.messageId == messageId)))
+   );
+   allow delete: if messageReader(resource.data) && (resource.data.sender_username == name() ||
+    (resource.data.isPublic && admin(resource.data.chat_id)) ||
+    (resource.data.get('expires_at', null) != null && resource.data.expires_at <= request.time.toMillis()));
+  }
+  match /groups/{groupId} {
+   allow read: if verified() && (resource.data.privacy == 'public' || name() in resource.data.members);
+   allow create: if verified() && request.resource.data.id == groupId && request.resource.data.creator == name() &&
+    request.resource.data.members == [name()] && request.resource.data.admins == [name()] &&
+    request.resource.data.privacy in ['public', 'private'] && !exists(/databases/$(database)/documents/users/$(groupId));
+   allow update: if verified() && request.resource.data.id == resource.data.id && request.resource.data.creator == resource.data.creator && (
+    (name() in resource.data.admins && name() in resource.data.members && resource.data.creator in request.resource.data.members &&
+     resource.data.creator in request.resource.data.admins && request.resource.data.members.toSet().hasAll(request.resource.data.admins.toSet())) ||
+    (resource.data.privacy == 'public' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) &&
+     request.resource.data.members.toSet() == resource.data.members.toSet().union([name()].toSet())) ||
+    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'joinProof']) &&
+     request.resource.data.members.toSet() == resource.data.members.toSet().union([name()].toSet()) &&
+     ((request.resource.data.joinProof.keys().hasOnly(['messageId']) &&
+       invitedByMessage(request.resource.data.joinProof.messageId, groupId, resource.data)) ||
+      (request.resource.data.joinProof.keys().hasOnly(['token']) &&
+       request.resource.data.joinProof.token.matches('^[a-f0-9]{48}$') &&
+       request.resource.data.joinProof.token == resource.data.inviteToken))) ||
+    (name() in resource.data.members && name() != resource.data.creator &&
+     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'admins', 'mutedMembers']) &&
+     request.resource.data.members.toSet() == resource.data.members.toSet().difference([name()].toSet()) &&
+     request.resource.data.admins.toSet() == resource.data.admins.toSet().difference([name()].toSet()) &&
+     request.resource.data.get('mutedMembers', []).toSet() == resource.data.get('mutedMembers', []).toSet().difference([name()].toSet())) ||
+    (name() in resource.data.members && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activeCall']))
+   );
+   allow delete: if verified() && resource.data.creator == name();
+   match /call_participants/{username} {
+    allow read: if member(groupId);
+    allow write: if member(groupId) && username == name();
+   }
+   match /call_signals/{signalId} {
+    allow read: if member(groupId) && resource.data.to == name();
+    allow create: if member(groupId) && request.resource.data.from == name() && request.resource.data.to in group(groupId).members;
+    allow delete: if member(groupId) && (resource.data.to == name() || resource.data.from == name());
+   }
+  }
+  match /groupLinks/{token} {
+   allow get: if verified() && group(resource.data.groupId).inviteToken == token;
+   allow create: if admin(request.resource.data.groupId) && token.matches('^[a-f0-9]{48}$') &&
+    request.resource.data.keys().hasOnly(['groupId', 'name', 'avatar']) &&
+    getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.inviteToken == token;
+   allow update: if admin(resource.data.groupId) && request.resource.data.groupId == resource.data.groupId &&
+    request.resource.data.keys().hasOnly(['groupId', 'name', 'avatar']) &&
+    getAfter(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.inviteToken == token;
+   allow delete: if admin(resource.data.groupId);
+  }
+  match /calls/{callId} {
+   function participant() { return verified() && (resource.data.caller == name() || resource.data.receiver == name()); }
+   allow read: if participant();
+   allow create: if verified() && request.resource.data.caller == name() && request.resource.data.status == 'calling';
+   allow update: if participant() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'status', 'endedAt']);
+   allow delete: if participant();
+   match /{candidateCollection}/{candidateId} {
+    function call() { return get(/databases/$(database)/documents/calls/$(callId)).data; }
+    allow read: if verified() && (call().caller == name() || call().receiver == name()) && candidateCollection in ['callerCandidates', 'receiverCandidates'];
+    allow create: if verified() && ((candidateCollection == 'callerCandidates' && call().caller == name()) || (candidateCollection == 'receiverCandidates' && call().receiver == name()));
+   }
+  }
+  match /doodle_sessions/{sessionId} {
+   function participant() { return verified() && (resource.data.caller == key() || resource.data.receiver == key()); }
+   allow read: if participant();
+   allow create: if verified() && request.resource.data.caller == key();
+   allow update: if participant() && request.resource.data.caller == resource.data.caller && request.resource.data.receiver == resource.data.receiver;
+   allow delete: if participant();
+   match /strokes/{strokeId} {
+    allow read, write: if verified() && (get(/databases/$(database)/documents/doodle_sessions/$(sessionId)).data.caller == key() ||
+     get(/databases/$(database)/documents/doodle_sessions/$(sessionId)).data.receiver == key());
+   }
+  }
+  // All unlisted paths and changes to private account identities are denied.
+ }
 }

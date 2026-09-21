@@ -41,6 +41,7 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     const forgotPasswordLink = document.getElementById('forgot-password-link'); const forgotUsernameIdLink = document.getElementById('forgot-username-id-link'); const resendVerificationLink = document.getElementById('resend-verification-link'); const resendVerificationContainer = document.getElementById('resend-verification-container'); const rememberMeCheckbox = document.getElementById('remember-me-checkbox'); const rememberMeContainer = document.getElementById('remember-me-container');
     let audioPlayer = null;
     let isRegisterMode = false;
+    let isRecoveryMode = false;
 
     // Pre-fill username and id from localStorage
     if (localStorage.getItem('doori_saved_username')) {
@@ -212,19 +213,19 @@ if (doodleBtnGlobal) {
     const GIFS = ['https://media.giphy.com/media/111ebonMs90YLu/giphy.gif', 'https://media.giphy.com/media/10yXFkBJ0MwGQ0/giphy.gif', 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif', 'https://media.giphy.com/media/2rtQMJvhzOnRe/giphy.gif', 'https://media.giphy.com/media/l1J9u3TZfpmeCEkZa/giphy.gif', 'https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif', 'https://media.giphy.com/media/nFjDu1LjEADh6/giphy.gif', 'https://media.giphy.com/media/98maV70oAqIZtEYqB4/giphy.gif', 'https://media.giphy.com/media/jPAdK8Nfzzwt2/giphy.gif', 'https://media.giphy.com/media/3og0INyCmHlNylks9O/giphy.gif'];
 
     const TRANSLATIONS = {
-        de: { login_title: 'Doori Messenger', login_subtitle: 'Bitte wähle einen Benutzernamen.', login_btn: 'Weiter', sec_personal: 'Persönlich', chat_saved: 'Gespeichertes', sec_rooms: 'Gruppen', sec_chats: 'Chats', chat_general: 'Allgemein', sec_contacts: 'Kontakte', sec_calls: 'Anrufe', status_online: 'Online', btn_block: 'Blockieren', btn_unblock: 'Entblocken', err_blocked: 'Du hast diesen Kontakt blockiert.', err_channel: 'Nur Administratoren können hier schreiben.', placeholder_msg: 'Nachricht schreiben...', placeholder_search: 'Benutzer suchen (@name)...', ttl_off: '🕒 Aus', btn_cancel: 'Abbrechen', btn_save: 'Speichern', btn_stop_send: '⏹ Senden', modal_new_room: 'Neuer Raum', lbl_room_name: 'Name der Gruppe / des Kanals', opt_group: 'Gruppe (Jeder kann schreiben)', opt_channel: 'Kanal (Nur Admins)', btn_create: 'Erstellen', modal_settings: 'Einstellungen', tab_profile: 'Profil', tab_privacy: 'Privatsphäre', tab_chats: 'Chats', btn_change_pic: 'Bild ändern', lbl_language: 'Sprache / Language', lbl_last_seen: '"Zuletzt online" anzeigen', lbl_read_receipts: 'Lesebestätigungen', lbl_searchable: 'In der Suche auffindbar sein', lbl_avatar_visibility: 'Profilbild sichtbar für', opt_vis_all: 'Alle', opt_vis_contacts: 'Nur Kontakte', opt_vis_none: 'Niemand', lbl_sound: 'Benachrichtigungstöne', lbl_storage_used: 'Lokaler Speicher genutzt:', btn_clear_cache: 'Cache leeren', btn_logout: 'Ausloggen', lbl_call_privacy: 'Wer darf mich anrufen?', err_calls_blocked: 'Dieser Benutzer hat Anrufe blockiert.', err_calls_contacts: 'Dieser Benutzer erlaubt Anrufe nur von Kontakten.', ctx_reply: 'Antworten', ctx_copy: 'Kopieren', ctx_edit: 'Bearbeiten', ctx_select: 'Auswählen', ctx_forward: 'Weiterleiten', ctx_pin: 'Anheften', ctx_unpin: 'Loslösen', ctx_share: 'Teilen', ctx_delete: 'Löschen', ctx_delete_for_me: 'Für mich löschen', ctx_msg_info: 'Nachrichten-Info', msg_read_at: 'Gelesen am: ', msg_unread: 'Noch nicht gelesen', msg_read_unknown: 'Gelesen (kein genauer Zeitpunkt verfügbar)', dlg_delete_title: 'Nachricht löschen?', dlg_delete_for_all: 'Für alle löschen', dlg_cancel: 'Abbrechen', lbl_theme_mode: 'App Design', opt_theme_dark: 'Immer Dunkel', opt_theme_light: 'Immer Hell', opt_theme_auto: 'Automatisch (Sonnenauf-/Untergang)', err_too_many_avatars: 'Du kannst maximal 5 Profilbilder haben.', err_file_too_large: 'Jedes GIF darf maximal 1 MB und 10 Sekunden lang sein.', err_too_many_gifs: 'Jeder Benutzer darf maximal 10 GIFs hinzufügen.', btn_add_pic: 'Bild hinzufügen' },
-        en: { login_title: 'Doori Messenger', login_subtitle: 'Please choose a username.', login_btn: 'Continue', sec_personal: 'Personal', chat_saved: 'Saved Messages', sec_rooms: 'Groups', sec_chats: 'Chats', chat_general: 'General', sec_contacts: 'Contacts', sec_calls: 'Calls', status_online: 'Online', btn_block: 'Block', btn_unblock: 'Unblock', err_blocked: 'You blocked this contact.', err_channel: 'Only administrators can post here.', placeholder_msg: 'Write a message...', placeholder_search: 'Search user (@name)...', ttl_off: '🕒 Off', btn_cancel: 'Cancel', btn_save: 'Save', btn_stop_send: '⏹ Send', modal_new_room: 'New Room', lbl_room_name: 'Group / Channel Name', opt_group: 'Group (Anyone can write)', opt_channel: 'Channel (Admins only)', btn_create: 'Create', modal_settings: 'Settings', tab_profile: 'Profile', tab_privacy: 'Privacy', tab_chats: 'Chats', btn_change_pic: 'Change Picture', lbl_language: 'Language', lbl_last_seen: 'Show "Last seen"', lbl_read_receipts: 'Read Receipts', lbl_searchable: 'Discoverable in search', lbl_avatar_visibility: 'Profile picture visible for', opt_vis_all: 'Everyone', opt_vis_contacts: 'Contacts Only', opt_vis_none: 'Nobody', lbl_sound: 'Notification Sounds', lbl_storage_used: 'Local Storage used:', btn_clear_cache: 'Clear Cache', btn_logout: 'Logout', lbl_call_privacy: 'Who can call me?', err_calls_blocked: 'This user has blocked calls.', err_calls_contacts: 'This user only allows calls from contacts.', ctx_reply: 'Reply', ctx_copy: 'Copy', ctx_edit: 'Edit', ctx_select: 'Select', ctx_forward: 'Forward', ctx_pin: 'Pin', ctx_unpin: 'Unpin', ctx_share: 'Share', ctx_delete: 'Delete', ctx_delete_for_me: 'Delete for me', ctx_msg_info: 'Message Info', msg_read_at: 'Read at: ', msg_unread: 'Not read yet', msg_read_unknown: 'Read (no exact time available)', dlg_delete_title: 'Delete message?', dlg_delete_for_all: 'Delete for everyone', dlg_cancel: 'Cancel', lbl_theme_mode: 'App Theme', opt_theme_dark: 'Always Dark', opt_theme_light: 'Always Light', opt_theme_auto: 'Automatic (Sunrise/Sunset)', err_too_many_avatars: 'You can have a maximum of 5 profile pictures.', err_file_too_large: 'Each GIF must be max 1 MB and 10 seconds long.', err_too_many_gifs: 'Each user can add a maximum of 10 GIFs.', btn_add_pic: 'Add Picture' },
+        de: { login_title: 'Doori Messenger', login_subtitle: 'Bitte wähle einen Benutzernamen.', login_btn: 'Weiter', sec_personal: 'Persönlich', chat_saved: 'Gespeichertes', sec_rooms: 'Gruppen', sec_chats: 'Chats', chat_general: 'Allgemein', sec_contacts: 'Kontakte', sec_calls: 'Anrufe', status_online: 'Online', btn_block: 'Blockieren', btn_unblock: 'Entblocken', err_blocked: 'Du hast diesen Kontakt blockiert.', err_channel: 'Nur Administratoren können hier schreiben.', placeholder_msg: 'Nachricht schreiben...', placeholder_search: 'Benutzer suchen (@name)...', ttl_off: '🕒 Aus', btn_cancel: 'Abbrechen', btn_save: 'Speichern', btn_stop_send: '⏹ Senden', modal_new_room: 'Neuer Raum', lbl_room_name: 'Name der Gruppe / des Kanals', opt_group: 'Gruppe (Jeder kann schreiben)', opt_channel: 'Kanal (Nur Admins)', btn_create: 'Erstellen', modal_settings: 'Einstellungen', tab_profile: 'Profil', tab_privacy: 'Privatsphäre', tab_chats: 'Chats', btn_change_pic: 'Bild ändern', lbl_language: 'Sprache / Language', lbl_last_seen: '"Zuletzt online" anzeigen', lbl_read_receipts: 'Lesebestätigungen', lbl_searchable: 'In der Suche auffindbar sein', lbl_avatar_visibility: 'Profilbild sichtbar für', opt_vis_all: 'Alle', opt_vis_contacts: 'Nur Kontakte', opt_vis_none: 'Niemand', lbl_sound: 'Benachrichtigungstöne', lbl_storage_used: 'Lokaler Speicher genutzt:', btn_clear_cache: 'Cache leeren', btn_logout: 'Ausloggen', lbl_call_privacy: 'Wer darf mich anrufen?', err_calls_blocked: 'Dieser Benutzer hat Anrufe blockiert.', err_calls_contacts: 'Dieser Benutzer erlaubt Anrufe nur von Kontakten.', ctx_reply: 'Antworten', ctx_copy: 'Kopieren', ctx_edit: 'Bearbeiten', ctx_select: 'Auswählen', ctx_forward: 'Weiterleiten', ctx_pin: 'Anheften', ctx_unpin: 'Loslösen', ctx_share: 'Teilen', ctx_delete: 'Löschen', ctx_delete_for_me: 'Für mich löschen', ctx_msg_info: 'Nachrichten-Info', msg_read_at: 'Gelesen am: ', msg_unread: 'Noch nicht gelesen', msg_read_unknown: 'Gelesen (kein genauer Zeitpunkt verfügbar)', dlg_delete_title: 'Nachricht löschen?', dlg_delete_for_all: 'Für alle löschen', dlg_cancel: 'Abbrechen', lbl_theme_mode: 'App Design', opt_theme_dark: 'Immer Dunkel', opt_theme_light: 'Immer Hell', opt_theme_auto: 'Automatisch (Sonnenauf-/Untergang)', err_too_many_avatars: 'Du kannst maximal 5 Profilbilder haben.', err_file_too_large: 'Jedes GIF darf maximal 192 KB und 10 Sekunden lang sein.', err_too_many_gifs: 'Jeder Benutzer darf maximal 10 GIFs hinzufügen.', btn_add_pic: 'Bild hinzufügen' },
+        en: { login_title: 'Doori Messenger', login_subtitle: 'Please choose a username.', login_btn: 'Continue', sec_personal: 'Personal', chat_saved: 'Saved Messages', sec_rooms: 'Groups', sec_chats: 'Chats', chat_general: 'General', sec_contacts: 'Contacts', sec_calls: 'Calls', status_online: 'Online', btn_block: 'Block', btn_unblock: 'Unblock', err_blocked: 'You blocked this contact.', err_channel: 'Only administrators can post here.', placeholder_msg: 'Write a message...', placeholder_search: 'Search user (@name)...', ttl_off: '🕒 Off', btn_cancel: 'Cancel', btn_save: 'Save', btn_stop_send: '⏹ Send', modal_new_room: 'New Room', lbl_room_name: 'Group / Channel Name', opt_group: 'Group (Anyone can write)', opt_channel: 'Channel (Admins only)', btn_create: 'Create', modal_settings: 'Settings', tab_profile: 'Profile', tab_privacy: 'Privacy', tab_chats: 'Chats', btn_change_pic: 'Change Picture', lbl_language: 'Language', lbl_last_seen: 'Show "Last seen"', lbl_read_receipts: 'Read Receipts', lbl_searchable: 'Discoverable in search', lbl_avatar_visibility: 'Profile picture visible for', opt_vis_all: 'Everyone', opt_vis_contacts: 'Contacts Only', opt_vis_none: 'Nobody', lbl_sound: 'Notification Sounds', lbl_storage_used: 'Local Storage used:', btn_clear_cache: 'Clear Cache', btn_logout: 'Logout', lbl_call_privacy: 'Who can call me?', err_calls_blocked: 'This user has blocked calls.', err_calls_contacts: 'This user only allows calls from contacts.', ctx_reply: 'Reply', ctx_copy: 'Copy', ctx_edit: 'Edit', ctx_select: 'Select', ctx_forward: 'Forward', ctx_pin: 'Pin', ctx_unpin: 'Unpin', ctx_share: 'Share', ctx_delete: 'Delete', ctx_delete_for_me: 'Delete for me', ctx_msg_info: 'Message Info', msg_read_at: 'Read at: ', msg_unread: 'Not read yet', msg_read_unknown: 'Read (no exact time available)', dlg_delete_title: 'Delete message?', dlg_delete_for_all: 'Delete for everyone', dlg_cancel: 'Cancel', lbl_theme_mode: 'App Theme', opt_theme_dark: 'Always Dark', opt_theme_light: 'Always Light', opt_theme_auto: 'Automatic (Sunrise/Sunset)', err_too_many_avatars: 'You can have a maximum of 5 profile pictures.', err_file_too_large: 'Each GIF must be max 192 KB and 10 seconds long.', err_too_many_gifs: 'Each user can add a maximum of 10 GIFs.', btn_add_pic: 'Add Picture' },
         fa: { login_title: 'دوری مسنجر', login_subtitle: 'لطفاً یک نام کاربری انتخاب کنید.', login_btn: 'ادامه', sec_personal: 'شخصی', chat_saved: 'پیام‌های ذخیره‌شده', sec_rooms: 'گروه‌ها', sec_chats: 'گفتگوها', chat_general: 'عمومی', sec_contacts: 'مخاطبین', sec_calls: 'تماس‌ها', status_online: 'آنلاین', btn_block: 'مسدود کردن', btn_unblock: 'رفع مسدودیت', err_blocked: 'شما این مخاطب را مسدود کرده‌اید.', err_channel: 'فقط مدیران می‌توانند اینجا پیام بفرستند.', placeholder_msg: 'پیام بنویسید...', placeholder_search: 'جستجوی کاربر (نام@)...', ttl_off: '🕒 خاموش', btn_cancel: 'لغو', btn_save: 'ذخیره', btn_stop_send: '⏹ ارسال', modal_new_room: 'اتاق جدید', lbl_room_name: 'نام گروه / کانال', opt_group: 'گروه (همه می‌توانند بنویسند)', opt_channel: 'کانال (فقط مدیران)', btn_create: 'ایجاد', modal_settings: 'تنظیمات', tab_profile: 'نمایه', tab_privacy: 'حریم خصوصی', tab_chats: 'گفتگوها', btn_change_pic: 'تغییر تصویر', lbl_language: 'زبان', lbl_last_seen: 'نمایش "آخرین بازدید"', lbl_read_receipts: 'رسید خوانده‌شدن', lbl_searchable: 'قابل جستجو بودن', lbl_avatar_visibility: 'نمایش عکس پروفایل برای', opt_vis_all: 'همه', opt_vis_contacts: 'فقط مخاطبین', opt_vis_none: 'هیچ‌کس', lbl_sound: 'صداهای اعلان', lbl_storage_used: 'فضای ذخیره‌سازی استفاده‌شده:', btn_clear_cache: 'پاک کردن حافظه پنهان', btn_logout: 'خروج', lbl_call_privacy: 'چه کسی می‌تواند با من تماس بگیرد؟', err_calls_blocked: 'این کاربر تماس‌ها را مسدود کرده است.', err_calls_contacts: 'این کاربر فقط اجازه تماس از طرف مخاطبین را می‌دهد.', ctx_reply: 'پاسخ دادن', ctx_copy: 'کپی کردن', ctx_edit: 'ویرایش', ctx_select: 'انتخاب', ctx_forward: 'ارسال مجدد', ctx_pin: 'سنجاق کردن', ctx_unpin: 'برداشتن سنجاق', ctx_share: 'اشتراک گذاری', ctx_delete: 'حذف', ctx_delete_for_me: 'حذف برای من', ctx_msg_info: 'اطلاعات پیام', msg_read_at: 'خوانده شده در: ', msg_unread: 'هنوز خوانده نشده', msg_read_unknown: 'خوانده شده (زمان دقیق در دسترس نیست)', dlg_delete_title: 'حذف پیام؟', dlg_delete_for_all: 'حذف برای همه', dlg_cancel: 'لغو', lbl_theme_mode: 'ظاهر برنامه', opt_theme_dark: 'همیشه تاریک', opt_theme_light: 'همیشه روشن', opt_theme_auto: 'خودکار (طلوع/غروب خورشید)', err_too_many_avatars: 'شما می‌توانید حداکثر 5 عکس پروفایل داشته باشید.', err_file_too_large: 'هر گیف باید حداکثر 1 مگابایت و 10 ثانیه طول داشته باشد.', err_too_many_gifs: 'هر کاربر می‌تواند حداکثر 10 گیف اضافه کند.', btn_add_pic: 'افزودن تصویر' },
         ar: { login_title: 'دوري ماسنجر', login_subtitle: 'الرجاء اختيار اسم مستخدم.', login_btn: 'متابعة', sec_personal: 'شخصی', chat_saved: 'الرسائل المحفوظة', sec_rooms: 'المجموعات', sec_chats: 'الدردشات', chat_general: 'عام', sec_contacts: 'جهات الاتصال', sec_calls: 'المكالمات', status_online: 'متصل', btn_block: 'حظر', btn_unblock: 'إلغاء الحظر', err_blocked: 'لقد قمت بحظر جهة الاتصال هذه.', err_channel: 'فقط المسؤولون يمكنهم النشر هنا.', placeholder_msg: 'اكتب رسالة...', placeholder_search: 'ابحث عن مستخدم (اسم@)...', ttl_off: '🕒 إيقاف', btn_cancel: 'إلغاء', btn_save: 'حفظ', btn_stop_send: '⏹ إرسال', modal_new_room: 'غرفة جديدة', lbl_room_name: 'اسم المجموعة / القناة', opt_group: 'مجموعة (يمكن للجميع الكتابة)', opt_channel: 'قناة (للمسؤولين فقط)', btn_create: 'إنشاء', modal_settings: 'الإعدادات', tab_profile: 'الملف الشخصي', tab_privacy: 'الخصوصية', tab_chats: 'الدردشات', btn_change_pic: 'تغيير الصورة', lbl_language: 'اللغة', lbl_last_seen: 'إظهار "آخر ظهور"', lbl_read_receipts: 'مؤشرات قراءة الرسائل', lbl_searchable: 'قابل للبحث', lbl_avatar_visibility: 'صورة الملف الشخصي مرئية لـ', opt_vis_all: 'الجميع', opt_vis_contacts: 'جهات الاتصال فقط', opt_vis_none: 'لا أحد', lbl_sound: 'أصوات الإشعارات', lbl_storage_used: 'مساحة التخزين المستخدمة:', btn_clear_cache: 'مسح ذاكرة التخزين المؤقت', btn_logout: 'تسجيل خروج', lbl_call_privacy: 'من يمكنه الاتصال بي؟', err_calls_blocked: 'قام هذا المستخدم بحظر المكالمات.', err_calls_contacts: 'يسمح هذا المستخدم بالمكالمات من جهات الاتصال فقط.', ctx_reply: 'رد', ctx_copy: 'نسخ', ctx_edit: 'تعديل', ctx_select: 'تحديد', ctx_forward: 'تحويل', ctx_pin: 'تثبيت', ctx_unpin: 'إلغاء التثبيت', ctx_share: 'مشاركة', ctx_delete: 'حذف', ctx_delete_for_me: 'حذف بالنسبة لي', ctx_msg_info: 'معلومات الرسالة', msg_read_at: 'قرأ في: ', msg_unread: 'لم تقرأ بعد', msg_read_unknown: 'قرأ (لا يوجد وقت دقيق)', dlg_delete_title: 'حذف الرسالة؟', dlg_delete_for_all: 'حذف للجميع', dlg_cancel: 'إلغاء', lbl_theme_mode: 'مظهر التطبيق', opt_theme_dark: 'دائماً داكن', opt_theme_light: 'دائماً فاتح', opt_theme_auto: 'تلقائي (شروق/غروب الشمس)', err_too_many_avatars: 'يمكنك الحصول على 5 صور للملف الشخصي كحد أقصى.', err_file_too_large: 'يجب أن يكون كل ملف GIF بحد أقصى 1 ميغابايت وطوله 10 ثوانٍ.', err_too_many_gifs: 'يمكن لكل مستخدم إضافة 10 ملفات GIF كحد أقصى.', btn_add_pic: 'إضافة صورة' },
         tr: { login_title: 'Doori Messenger', login_subtitle: 'Lütfen bir kullanıcı adı seçin.', login_btn: 'Devam et', sec_personal: 'Kişisel', chat_saved: 'Kaydedilen Mesajlar', sec_rooms: 'Gruplar', sec_chats: 'Sohbetler', chat_general: 'Genel', sec_contacts: 'Kişiler', sec_calls: 'Aramalar', status_online: 'Çevrimiçi', btn_block: 'Engelle', btn_unblock: 'Engeli Kaldır', err_blocked: 'Bu kişiyi engellediniz.', err_channel: 'Buraya yalnızca yöneticiler yazabilir.', placeholder_msg: 'Bir mesaj yazın...', placeholder_search: 'Kullanıcı ara (@isim)...', ttl_off: '🕒 Kapalı', btn_cancel: 'İptal', btn_save: 'Kaydet', btn_stop_send: '⏹ Gönder', modal_new_room: 'Yeni Oda', lbl_room_name: 'Grup / Kanal Adı', opt_group: 'Grup (Herkes yazabilir)', opt_channel: 'Kanal (Sadece yöneticiler)', btn_create: 'Oluştur', modal_settings: 'Ayarlar', tab_profile: 'Profil', tab_privacy: 'Gizlilik', tab_chats: 'Sohbetler', btn_change_pic: 'Resmi Değiştir', lbl_language: 'Dil', lbl_last_seen: '"Son görülme" durumunu göster', lbl_read_receipts: 'Okundu Bilgisi', lbl_searchable: 'Aramada bulunabilir ol', lbl_avatar_visibility: 'Profil resmini görebilecekler', opt_vis_all: 'Herkes', opt_vis_contacts: 'Sadece Kişiler', opt_vis_none: 'Hiç kimse', lbl_sound: 'Bildirim Sesleri', lbl_storage_used: 'Kullanılan Yerel Depolama:', btn_clear_cache: 'Önbelleği Temizle', btn_logout: 'Çıkış Yap', lbl_call_privacy: 'Beni kimler arayabilir?', err_calls_blocked: 'Bu kullanıcı aramaları engelledi.', err_calls_contacts: 'Bu kullanıcı yalnızca kişilerden gelen aramalara izin veriyor.', ctx_reply: 'Cevapla', ctx_copy: 'Kopyala', ctx_edit: 'Düzenle', ctx_select: 'Seç', ctx_forward: 'İlet', ctx_pin: 'Sabitle', ctx_unpin: 'Sabitlemeyi Kaldır', ctx_share: 'Paylaş', ctx_delete: 'Sil', ctx_delete_for_me: 'Benim için sil', ctx_msg_info: 'Mesaj Bilgisi', msg_read_at: 'Okunma zamanı: ', msg_unread: 'Henüz okunmadı', msg_read_unknown: 'Okundu (kesin zaman yok)', dlg_delete_title: 'Mesaj silinsin mi?', dlg_delete_for_all: 'Herkes için sil', dlg_cancel: 'İptal', lbl_theme_mode: 'Uygulama Teması', opt_theme_dark: 'Her Zaman Koyu', opt_theme_light: 'Her Zaman Açık', opt_theme_auto: 'Otomatik (Gündoğumu/Günbatımı)', err_too_many_avatars: 'En fazla 5 profil resmine sahip olabilirsiniz.', err_file_too_large: 'Her bir GIF en fazla 1 MB ve 10 saniye uzunluğunda olmalıdır.', err_too_many_gifs: 'Her kullanıcı en fazla 10 GIF ekleyebilir.', btn_add_pic: 'Resim Ekle' }
     };
     window.TRANSLATIONS = TRANSLATIONS;
 
-    Object.assign(TRANSLATIONS.de, { lbl_font_group: 'Schrift (Eigener Text)', ph_bio_placeholder: 'Ich bin neu hier...', lbl_font_preview: 'Vorschau', ph_preview_text: 'Hey, ich nutze Doori!', lbl_bio: 'Info / Über mich', lbl_font_color: 'Farbe', lbl_font_size: 'Größe', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Schreibmaschine', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Locker (Comic)', btn_custom_wallpaper: 'Eigene...', opt_color_pink: 'Hellrosa', opt_color_green: 'Hellgrün', opt_color_blue: 'Hellblau', opt_color_default: 'Standard (Weiß)', lbl_font_family: 'Schriftart', lbl_wallpaper: 'Chat-Hintergrundbild', btn_change_wallpaper: 'Bild auswählen', btn_remove_wallpaper: 'Entfernen', opt_font_small: 'Klein', opt_font_normal: 'Normal', opt_font_large: 'Groß',  tab_design: "Design", lbl_font_size: "Schriftgröße", lbl_emoji: "Smilies", lbl_gif: "GIF", lbl_doodle: "Doodle zeichnen", lbl_file: "Datei senden", lbl_location: "Standort teilen", msg_location: "Standort ansehen",  ph_search_content: "Inhalte durchsuchen...", ph_id: "ID", ph_search: "Suchen...", ph_search_user: "Benutzer suchen (@name)...",  lbl_remember_me: "Angemeldet bleiben",  err_select_chat: "Bitte wähle zuerst einen Chat aus.", err_group_not_found: "Diese Gruppe existiert nicht oder wurde gelöscht.", err_join_group: "Fehler beim Beitreten der Gruppe.", msg_copied_clipboard: "Text in die Zwischenablage kopiert! (Teilen wird auf diesem Gerät nicht nativ unterstützt)", err_send_msg: "Nachricht konnte nicht gesendet werden (Offline?).", err_feature_update: "Diese Funktion steht im nächsten Update zur Verfügung.", err_group_username_req: "Bitte gib einen Benutzernamen für die Gruppe ein (z.B. @meinegruppe).", err_username_invalid: "Der Benutzername darf keine Leerzeichen enthalten und muss mindestens 2 Zeichen lang sein.", err_username_taken: "Dieser Benutzername ist bereits von einem anderen Benutzer belegt.", err_group_username_taken: "Dieser Gruppen-Benutzername ist bereits vergeben. Bitte wähle einen anderen.", err_create_group: "Fehler beim Erstellen der Gruppe.", err_search_self: "Das bist du selbst!", err_user_not_found_privacy: "Benutzername nicht gefunden (Privatsphäre).", msg_added_contact: " wurde zu den Kontakten hinzugefügt!", err_already_contact: " ist bereits ein Kontakt.", err_user_not_found2: "Benutzername nicht gefunden.", err_search: "Fehler bei der Suche.", msg_group_deleted: "Die Gruppe existiert nicht mehr.", prompt_new_group_name: "Neuer Gruppenname:", prompt_new_desc: "Neue Beschreibung:",  lbl_group_call: 'Gruppenanruf', lbl_incoming_invite: 'Neue Gruppeneinladung...', lbl_add_members: 'Mitglieder hinzufügen', sec_group_info: 'Gruppeninfo', sec_members: 'Mitglieder', btn_add_member: 'Mitglied hinzufügen', lbl_group_name: 'Name der Gruppe', msg_invited_you: 'hat dich in die Gruppe eingeladen:', btn_accept: 'Annehmen', btn_decline: 'Ablehnen', msg_invite_accepted: 'Einladung angenommen', msg_invite_declined: 'Einladung abgelehnt', sys_user_joined: 'ist der Gruppe beigetreten', sys_user_left: 'hat die Gruppe verlassen', sys_user_removed: 'wurde aus der Gruppe entfernt', btn_leave_group: 'Gruppe verlassen', lbl_admin_options: 'Admin Optionen', btn_copy_invite_link: '🔗 Einladungslink kopieren', lbl_admins_only: 'Nur Admins dürfen schreiben', msg_admin_kicked: 'Der Admin hat dich aus der Gruppe entfernt.', msg_link_copied: 'Einladungslink kopiert!', msg_muted_in_group: 'Du wurdest in dieser Gruppe stummgeschaltet.', msg_readonly_group: 'Nur Admins dürfen in dieser Gruppe schreiben.', ctx_select: 'Auswählen', ctx_forward: 'Weiterleiten', ctx_pin: 'Anheften', ctx_unpin: 'Loslösen', msg_forwarded: 'Weitergeleitet', msg_pinned: 'Angeheftete Nachricht', modal_forward: 'Weiterleiten an...', btn_send_doodle: 'Als Bild senden', lbl_doodle_invite: 'Doodle Einladung', msg_clear_doodle: 'Wirklich alles löschen?', err_doodle_private_only: 'Doodle ist derzeit nur in privaten Chats verfügbar.', msg_doodle_rejected: 'Einladung abgelehnt.', doodle_title: 'Doodle Einladung', doodle_btn_accept: 'Mitzeichnen', doodle_btn_reject: 'Ablehnen', doodle_msg_accepted: 'Doodle Einladung angenommen', doodle_msg_closed: 'Doodle beendet', doodle_msg_rejected: 'Doodle Einladung abgelehnt', doodle_waiting: 'Wartet...', doodle_connecting: 'Verbunden...', doodle_rejected: 'Abgelehnt', title_minimize: 'Minimieren', title_maximize: 'Maximieren', title_close: 'Schließen', title_color: 'Farbe wählen', title_size: 'Stiftdicke', title_eraser: 'Radiergummi', title_clear: 'Alles löschen', doodle_session_with: 'Doodle Sitzung mit', doodle_connected: 'Verbunden', doodle_wants_to_draw: ' möchte mit dir zeichnen!', lbl_games: "Spiele", game_billiards: "8-Ball Billard", game_soccer: "Clumsy Bird", game_karts: "Zauberwürfel", game_stickman: "Floppy Bird", game_uno: "Hextris", game_basket: "Memory", game_ludo: "Dino Run", game_tictactoe: "Tetris", game_chess: "Flappy Bird", game_firewater: "2048" });
-    Object.assign(TRANSLATIONS.en, { lbl_font_group: 'Font (Own Text)', ph_bio_placeholder: 'I am new here...', lbl_font_preview: 'Preview', ph_preview_text: 'Hey, I am using Doori!', lbl_bio: 'About / Info', lbl_font_color: 'Color', lbl_font_size: 'Size', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Typewriter', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Casual (Comic)', btn_custom_wallpaper: 'Custom...', opt_color_pink: 'Light Pink', opt_color_green: 'Light Green', opt_color_blue: 'Light Blue', opt_color_default: 'Default (White)', lbl_font_family: 'Font Family', lbl_wallpaper: 'Chat Wallpaper', btn_change_wallpaper: 'Select Image', btn_remove_wallpaper: 'Remove', opt_font_small: 'Small', opt_font_normal: 'Normal', opt_font_large: 'Large',  tab_design: "Design", lbl_font_size: "Font Size", lbl_emoji: "Emojis", lbl_gif: "GIF", lbl_doodle: "Draw Doodle", lbl_file: "Send File", lbl_location: "Share Location", msg_location: "View Location",  ph_search_content: "Search content...", ph_id: "ID", ph_search: "Search...", ph_search_user: "Search user (@name)...",  lbl_remember_me: "Remember me",  err_select_chat: "Please select a chat first.", err_group_not_found: "This group does not exist or was deleted.", err_join_group: "Error joining the group.", msg_copied_clipboard: "Text copied to clipboard!", err_send_msg: "Message could not be sent (Offline?).", err_feature_update: "This feature will be available in the next update.", err_group_username_req: "Please enter a username for the group (e.g. @mygroup).", err_username_invalid: "The username cannot contain spaces and must be at least 2 chars long.", err_username_taken: "This username is already taken by another user.", err_group_username_taken: "This group username is already taken. Please choose another one.", err_create_group: "Error creating the group.", err_search_self: "That is you!", err_user_not_found_privacy: "Username not found (Privacy).", msg_added_contact: " was added to your contacts!", err_already_contact: " is already a contact.", err_user_not_found2: "Username not found.", err_search: "Search failed.", msg_group_deleted: "The group no longer exists.", prompt_new_group_name: "New group name:", prompt_new_desc: "New description:",  lbl_group_call: 'Group Call', lbl_incoming_invite: 'New Group Invite...', lbl_add_members: 'Add members', sec_group_info: 'Group Info', sec_members: 'Members', btn_add_member: 'Add member', lbl_group_name: 'Group name', msg_invited_you: 'invited you to the group:', btn_accept: 'Accept', btn_decline: 'Decline', msg_invite_accepted: 'Invite accepted', msg_invite_declined: 'Invite declined', sys_user_joined: 'joined the group', sys_user_left: 'left the group', sys_user_removed: 'was removed from the group', btn_leave_group: 'Leave Group', lbl_admin_options: 'Admin Options', btn_copy_invite_link: '🔗 Copy Invite Link', lbl_admins_only: 'Only Admins can send messages', msg_admin_kicked: 'The Admin has removed you from the group.', msg_link_copied: 'Invite link copied!', msg_muted_in_group: 'You have been muted in this group.', msg_readonly_group: 'Only Admins can send messages in this group.', ctx_select: 'Select', ctx_forward: 'Forward', ctx_pin: 'Pin', ctx_unpin: 'Unpin', msg_forwarded: 'Forwarded', msg_pinned: 'Pinned Message', modal_forward: 'Forward to...', btn_send_doodle: 'Send as Image', lbl_doodle_invite: 'Doodle Invite', msg_clear_doodle: 'Clear everything?', err_doodle_private_only: 'Doodle is only available in private chats.', msg_doodle_rejected: 'Invite rejected.', doodle_title: 'Doodle Invite', doodle_btn_accept: 'Join', doodle_btn_reject: 'Decline', doodle_msg_accepted: 'Doodle Invite accepted', doodle_msg_closed: 'Doodle closed', doodle_msg_rejected: 'Doodle Invite rejected', doodle_waiting: 'Waiting...', doodle_connecting: 'Connecting...', doodle_rejected: 'Rejected', title_minimize: 'Minimize', title_maximize: 'Maximize', title_close: 'Close', title_color: 'Choose Color', title_size: 'Pen Size', title_eraser: 'Eraser', title_clear: 'Clear All', doodle_session_with: 'Doodle Session with', doodle_connected: 'Connected', doodle_wants_to_draw: ' wants to draw with you!', lbl_games: "Games", game_billiards: "8-Ball Pool", game_soccer: "Clumsy Bird", game_karts: "Rubik's Cube", game_stickman: "Floppy Bird", game_uno: "Hextris", game_basket: "Memory Game", game_ludo: "Dino Run", game_tictactoe: "Tetris", game_chess: "Flappy Bird", game_firewater: "2048" });
-    Object.assign(TRANSLATIONS.fa, { lbl_font_group: 'فونت (متن خود)', ph_bio_placeholder: 'من اینجا جدید هستم...', lbl_font_preview: 'پیش‌نمایش', ph_preview_text: 'سلام، من از دوری استفاده می‌کنم!', lbl_bio: 'درباره من', lbl_font_color: 'رنگ', lbl_font_size: 'اندازه', opt_font_inter: 'استاندارد (Inter)', opt_font_courier: 'ماشین تحریر', opt_font_georgia: 'ظریف (Serif)', opt_font_comic: 'غیررسمی (Comic)', btn_custom_wallpaper: 'سفارشی...', opt_color_pink: 'صورتی روشن', opt_color_green: 'سبز روشن', opt_color_blue: 'آبی روشن', opt_color_default: 'پیش‌فرض (سفید)', lbl_font_family: 'نوع فونت', lbl_wallpaper: 'تصویر زمینه چت', btn_change_wallpaper: 'انتخاب تصویر', btn_remove_wallpaper: 'حذف', opt_font_small: 'کوچک', opt_font_normal: 'معمولی', opt_font_large: 'بزرگ',  tab_design: "طراحی", lbl_font_size: "اندازه فونت", lbl_emoji: "شکلک ها", lbl_gif: "گیف", lbl_doodle: "نقاشی کشیدن", lbl_file: "ارسال فایل", lbl_location: "اشتراک مکان", msg_location: "مشاهده مکان",  ph_search_content: "جستجوی محتوا...", ph_id: "شناسه", ph_search: "جستجو...", ph_search_user: "جستجوی کاربر (@name)...",  lbl_remember_me: "مرا به خاطر بسپار",  err_select_chat: "لطفاً ابتدا یک چت انتخاب کنید.", err_group_not_found: "این گروه وجود ندارد یا حذف شده است.", err_join_group: "خطا در پیوستن به گروه.", msg_copied_clipboard: "متن در کلیپ بورد کپی شد!", err_send_msg: "پیام ارسال نشد (آفلاین؟).", err_feature_update: "این قابلیت در بروزرسانی بعدی در دسترس خواهد بود.", err_group_username_req: "لطفا یک نام کاربری برای گروه وارد کنید (مثلا @mygroup).", err_username_invalid: "نام کاربری نمی‌تواند شامل فاصله باشد و باید حداقل 2 حرف داشته باشد.", err_username_taken: "این نام کاربری قبلاً توسط کاربر دیگری گرفته شده است.", err_group_username_taken: "این نام کاربری گروه قبلاً گرفته شده است. لطفاً یکی دیگر انتخاب کنید.", err_create_group: "خطا در ایجاد گروه.", err_search_self: "این خود شما هستید!", err_user_not_found_privacy: "نام کاربری یافت نشد (حریم خصوصی).", msg_added_contact: " به مخاطبین شما اضافه شد!", err_already_contact: " قبلاً در مخاطبین شما بوده است.", err_user_not_found2: "نام کاربری یافت نشد.", err_search: "جستجو ناموفق بود.", msg_group_deleted: "گروه دیگر وجود ندارد.", prompt_new_group_name: "نام گروه جدید:", prompt_new_desc: "توضیحات جدید:",  lbl_group_call: 'تماس گروهی', lbl_incoming_invite: 'دعوت به گروه جدید...', lbl_add_members: 'افزودن اعضا', sec_group_info: 'اطلاعات گروه', sec_members: 'اعضا', btn_add_member: 'افزودن عضو', lbl_group_name: 'نام گروه', msg_invited_you: 'شما را به گروه دعوت کرد:', btn_accept: 'پذیرفتن', btn_decline: 'رد کردن', msg_invite_accepted: 'دعوت پذیرفته شد', msg_invite_declined: 'دعوت رد شد', sys_user_joined: 'به گروه پیوست', sys_user_left: 'گروه را ترک کرد', sys_user_removed: 'از گروه حذف شد', btn_leave_group: 'ترک گروه', lbl_admin_options: 'گزینه‌های مدیر', btn_copy_invite_link: '🔗 کپی لینک دعوت', lbl_admins_only: 'فقط مدیران می‌توانند پیام ارسال کنند', msg_admin_kicked: 'مدیر شما را از گروه حذف کرده است.', msg_link_copied: 'لینک دعوت کپی شد!', msg_muted_in_group: 'شما در این گروه بی‌صدا شده‌اید.', msg_readonly_group: 'فقط مدیران می‌توانند در این گروه پیام ارسال کنند.', ctx_select: 'انتخاب', ctx_forward: 'ارسال', ctx_pin: 'سنجاق کردن', ctx_unpin: 'برداشتن سنجاق', msg_forwarded: 'ارسال شده', msg_pinned: 'پیام سنجاق شده', modal_forward: 'ارسال به...', btn_send_doodle: 'ارسال به عنوان تصویر', lbl_doodle_invite: 'دعوت به دودل', msg_clear_doodle: 'آیا مطمئن هستید که می‌خواهید همه چیز را پاک کنید؟', err_doodle_private_only: 'دودل در حال حاضر فقط در چت‌های خصوصی در دسترس است.', msg_doodle_rejected: 'دعوت رد شد.', doodle_title: 'دعوت به دودل', doodle_btn_accept: 'پیوستن', doodle_btn_reject: 'رد کردن', doodle_msg_accepted: 'دعوت پذیرفته شد', doodle_msg_closed: 'دودل بسته شد', doodle_msg_rejected: 'دعوت رد شد', doodle_waiting: 'در حال انتظار...', doodle_connecting: 'در حال اتصال...', doodle_rejected: 'رد شد', title_minimize: 'کوچک کردن', title_maximize: 'بزرگ کردن', title_close: 'بستن', title_color: 'انتخاب رنگ', title_size: 'اندازه قلم', title_eraser: 'پاک‌کن', title_clear: 'پاک کردن همه', doodle_session_with: 'جلسه دودل با', doodle_connected: 'متصل شد', doodle_wants_to_draw: ' می‌خواهد با شما نقاشی کند!', lbl_games: "بازی‌ها", game_billiards: "بیلیارد ۸ توپ", game_soccer: "فوتبال", game_karts: "پک-من", game_stickman: "استریت فایتر", game_uno: "هکستریس", game_basket: "آجرشکن", game_ludo: "مار", game_tictactoe: "دوز", game_chess: "فلپی برد", game_firewater: "۲۰۴۸" });
-    Object.assign(TRANSLATIONS.ar, { lbl_font_group: 'الخط (نصك الخاص)', ph_bio_placeholder: 'أنا جديد هنا...', lbl_font_preview: 'معاينة', ph_preview_text: 'مرحبًا، أنا أستخدم دوري!', lbl_bio: 'حول / معلومات', lbl_font_color: 'اللون', lbl_font_size: 'الحجم', opt_font_inter: 'قياسي (Inter)', opt_font_courier: 'آلة كاتبة', opt_font_georgia: 'أنيق (Serif)', opt_font_comic: 'غير رسمي (Comic)', btn_custom_wallpaper: 'مخصص...', opt_color_pink: 'وردي فاتح', opt_color_green: 'أخضر فاتح', opt_color_blue: 'أزرق فاتح', opt_color_default: 'افتراضي (أبيض)', lbl_font_family: 'نوع الخط', lbl_wallpaper: 'خلفية الدردشة', btn_change_wallpaper: 'اختر صورة', btn_remove_wallpaper: 'إزالة', opt_font_small: 'صغير', opt_font_normal: 'عادي', opt_font_large: 'كبير',  tab_design: "التصميم", lbl_font_size: "حجم الخط", lbl_emoji: "الرموز التعبيرية", lbl_gif: "ملف GIF", lbl_doodle: "رسم خربشة", lbl_file: "إرسال ملف", lbl_location: "مشاركة الموقع", msg_location: "عرض الموقع",  ph_search_content: "البحث في المحتوى...", ph_id: "المعرف", ph_search: "بحث...", ph_search_user: "بحث عن مستخدم (@name)...",  lbl_remember_me: "تذكرني",  err_select_chat: "يرجى اختيار دردشة أولاً.", err_group_not_found: "هذه المجموعة غير موجودة أو تم حذفها.", err_join_group: "خطأ في الانضمام إلى المجموعة.", msg_copied_clipboard: "تم نسخ النص إلى الحافظة!", err_send_msg: "تعذر إرسال الرسالة (غير متصل؟).", err_feature_update: "ستكون هذه الميزة متاحة في التحديث القادم.", err_group_username_req: "يرجى إدخال اسم مستخدم للمجموعة (مثل @mygroup).", err_username_invalid: "لا يمكن أن يحتوي اسم المستخدم على مسافات ويجب أن يكون طوله حرفين على الأقل.", err_username_taken: "اسم المستخدم هذا مستخدم بالفعل من قبل مستخدم آخر.", err_group_username_taken: "اسم مستخدم المجموعة هذا مأخوذ. يرجى اختيار اسم آخر.", err_create_group: "خطأ في إنشاء المجموعة.", err_search_self: "هذا أنت!", err_user_not_found_privacy: "اسم المستخدم غير موجود (الخصوصية).", msg_added_contact: " تمت إضافته إلى جهات الاتصال الخاصة بك!", err_already_contact: " هو بالفعل جهة اتصال.", err_user_not_found2: "اسم المستخدم غير موجود.", err_search: "فشل البحث.", msg_group_deleted: "المجموعة لم تعد موجودة.", prompt_new_group_name: "اسم المجموعة الجديد:", prompt_new_desc: "وصف جديد:",  lbl_group_call: 'مكالمة جماعية', lbl_incoming_invite: 'دعوة مجموعة جديدة...', lbl_add_members: 'إضافة أعضاء', sec_group_info: 'معلومات المجموعة', sec_members: 'الأعضاء', btn_add_member: 'إضافة عضو', lbl_group_name: 'اسم المجموعة', msg_invited_you: 'دعاك إلى المجموعة:', btn_accept: 'قبول', btn_decline: 'رفض', msg_invite_accepted: 'تم قبول الدعوة', msg_invite_declined: 'تم رفض الدعوة', sys_user_joined: 'انضم إلى المجموعة', sys_user_left: 'غادر المجموعة', sys_user_removed: 'تمت إزالته من المجموعة', btn_leave_group: 'مغادرة المجموعة', lbl_admin_options: 'خيارات المشرف', btn_copy_invite_link: '🔗 نسخ رابط الدعوة', lbl_admins_only: 'المشرفون فقط يمكنهم إرسال رسائل', msg_admin_kicked: 'قام المشرف بإزالتك من المجموعة.', msg_link_copied: 'تم نسخ رابط الدعوة!', msg_muted_in_group: 'لقد تم كتم صوتك في هذه المجموعة.', msg_readonly_group: 'المشرفون فقط يمكنهم إرسال رسائل في هذه المجموعة.', ctx_select: 'تحديد', ctx_forward: 'تحويل', ctx_pin: 'تثبيت', ctx_unpin: 'إلغاء التثبيت', msg_forwarded: 'محولة', msg_pinned: 'رسالة مثبتة', modal_forward: 'تحويل إلى...', btn_send_doodle: 'إرسال كصورة', lbl_doodle_invite: 'دعوة دودل', msg_clear_doodle: 'هل تريد مسح كل شيء؟', err_doodle_private_only: 'دودل متاح حاليا فقط في الدردشات الخاصة.', msg_doodle_rejected: 'تم رفض الدعوة.', doodle_title: 'دعوة دودل', doodle_btn_accept: 'انضمام', doodle_btn_reject: 'رفض', doodle_msg_accepted: 'تم قبول الدعوة', doodle_msg_closed: 'تم إغلاق دودل', doodle_msg_rejected: 'تم رفض الدعوة', doodle_waiting: 'قيد الانتظار...', doodle_connecting: 'جاري الاتصال...', doodle_rejected: 'مرفوض', title_minimize: 'تصغير', title_maximize: 'تكبير', title_close: 'إغلاق', title_color: 'اختر اللون', title_size: 'حجم القلم', title_eraser: 'ممحاة', title_clear: 'مسح الكل', doodle_session_with: 'جلسة دودل مع', doodle_connected: 'متصل', doodle_wants_to_draw: ' يريد أن يرسم معك!', lbl_games: "ألعاب", game_billiards: "بلياردو 8 كرات", game_soccer: "كرة القدم", game_karts: "باك مان", game_stickman: "قتال الشوارع", game_uno: "هيكستريس", game_basket: "كسر الطوب", game_ludo: "ثعبان", game_tictactoe: "تيك تاك تو", game_chess: "فلابي بيرد", game_firewater: "2048" });
-    Object.assign(TRANSLATIONS.tr, { lbl_font_group: 'Yazı (Kendi Metniniz)', ph_bio_placeholder: 'Ben burada yeniyim...', lbl_font_preview: 'Önizleme', ph_preview_text: 'Merhaba, Doori kullanıyorum!', lbl_bio: 'Hakkımda / Bilgi', lbl_font_color: 'Renk', lbl_font_size: 'Boyut', opt_font_inter: 'Standart (Inter)', opt_font_courier: 'Daktilo', opt_font_georgia: 'Zarif (Serif)', opt_font_comic: 'Gündelik (Comic)', btn_custom_wallpaper: 'Özel...', opt_color_pink: 'Açık Pembe', opt_color_green: 'Açık Yeşil', opt_color_blue: 'Açık Mavi', opt_color_default: 'Varsayılan (Beyaz)', lbl_font_family: 'Yazı Tipi', lbl_wallpaper: 'Sohbet Duvar Kağıdı', btn_change_wallpaper: 'Resim Seç', btn_remove_wallpaper: 'Kaldır', opt_font_small: 'Küçük', opt_font_normal: 'Normal', opt_font_large: 'Büyük',  tab_design: "Tasarım", lbl_font_size: "Yazı Tipi Boyutu", lbl_emoji: "Emojiler", lbl_gif: "GIF", lbl_doodle: "Doodle Çiz", lbl_file: "Dosya Gönder", lbl_location: "Konum Paylaş", msg_location: "Konumu Görüntüle",  ph_search_content: "İçerik ara...", ph_id: "ID", ph_search: "Ara...", ph_search_user: "Kullanıcı ara (@name)...",  lbl_remember_me: "Beni hatırla",  err_select_chat: "Lütfen önce bir sohbet seçin.", err_group_not_found: "Bu grup mevcut değil veya silinmiş.", err_join_group: "Gruba katılırken hata oluştu.", msg_copied_clipboard: "Metin panoya kopyalandı!", err_send_msg: "Mesaj gönderilemedi (Çevrimdışı?).", err_feature_update: "Bu özellik bir sonraki güncellemede kullanıma sunulacak.", err_group_username_req: "Lütfen grup için bir kullanıcı adı girin (örn. @mygroup).", err_username_invalid: "Kullanıcı adı boşluk içeremez ve en az 2 karakter uzunluğunda olmalıdır.", err_username_taken: "Bu kullanıcı adı zaten başka bir kullanıcı tarafından alınmış.", err_group_username_taken: "Bu grup kullanıcı adı zaten alınmış. Lütfen başka bir tane seçin.", err_create_group: "Grup oluşturulurken hata oluştu.", err_search_self: "Bu sensin!", err_user_not_found_privacy: "Kullanıcı adı bulunamadı (Gizlilik).", msg_added_contact: " kişilerinize eklendi!", err_already_contact: " zaten bir kişi.", err_user_not_found2: "Kullanıcı adı bulunamadı.", err_search: "Arama başarısız.", msg_group_deleted: "Grup artık mevcut değil.", prompt_new_group_name: "Yeni grup adı:", prompt_new_desc: "Yeni açıklama:",  lbl_group_call: 'Grup Araması', lbl_incoming_invite: 'Yeni Grup Daveti...', lbl_add_members: 'Üye Ekle', sec_group_info: 'Grup Bilgisi', sec_members: 'Üyeler', btn_add_member: 'Üye ekle', lbl_group_name: 'Grup adı', msg_invited_you: 'seni gruba davet etti:', btn_accept: 'Kabul Et', btn_decline: 'Reddet', msg_invite_accepted: 'Davet kabul edildi', msg_invite_declined: 'Davet reddedildi', sys_user_joined: 'gruba katıldı', sys_user_left: 'gruptan ayrıldı', sys_user_removed: 'gruptan çıkarıldı', btn_leave_group: 'Gruptan Ayrıl', lbl_admin_options: 'Yönetici Seçenekleri', btn_copy_invite_link: '🔗 Davet Bağlantısını Kopyala', lbl_admins_only: 'Sadece Yöneticiler mesaj gönderebilir', msg_admin_kicked: 'Yönetici sizi gruptan çıkardı.', msg_link_copied: 'Davet bağlantısı kopyalandı!', msg_muted_in_group: 'Bu grupta sessize alındınız.', msg_readonly_group: 'Bu grupta sadece yöneticiler mesaj gönderebilir.', ctx_select: 'Seç', ctx_forward: 'İlet', ctx_pin: 'Sabitle', ctx_unpin: 'Sabitlemeyi Kaldır', msg_forwarded: 'İletildi', msg_pinned: 'Sabitlenmiş Mesaj', modal_forward: 'Şuna ilet...', btn_send_doodle: 'Resim olarak gönder', lbl_doodle_invite: 'Doodle Daveti', msg_clear_doodle: 'Her şeyi silmek istediğinize emin misiniz?', err_doodle_private_only: 'Doodle şu anda sadece özel sohbetlerde kullanılabilir.', msg_doodle_rejected: 'Davet reddedildi.', doodle_title: 'Doodle Daveti', doodle_btn_accept: 'Katıl', doodle_btn_reject: 'Reddet', doodle_msg_accepted: 'Doodle Daveti kabul edildi', doodle_msg_closed: 'Doodle kapatıldı', doodle_msg_rejected: 'Doodle Daveti reddedildi', doodle_waiting: 'Bekleniyor...', doodle_connecting: 'Bağlanıyor...', doodle_rejected: 'Reddedildi', title_minimize: 'Küçült', title_maximize: 'Büyüt', title_close: 'Kapat', title_color: 'Renk Seç', title_size: 'Kalem Boyutu', title_eraser: 'Silgi', title_clear: 'Tümünü Sil', doodle_session_with: 'Doodle Oturumu:', doodle_connected: 'Bağlandı', doodle_wants_to_draw: ' seninle çizim yapmak istiyor!', lbl_games: "Oyunlar", game_billiards: "8-Top Bilardo", game_soccer: "Futbol", game_karts: "Pac-Man", game_stickman: "Street Fighter", game_uno: "Hextris", game_basket: "Breakout", game_ludo: "Yılan (Snake)", game_tictactoe: "XOX", game_chess: "Flappy Bird", game_firewater: "2048" });
+    Object.assign(TRANSLATIONS.de, { lbl_font_group: 'Schrift (Eigener Text)', ph_bio_placeholder: 'Ich bin neu hier...', lbl_font_preview: 'Vorschau', ph_preview_text: 'Hey, ich nutze Doori!', lbl_bio: 'Info / Über mich', lbl_font_color: 'Farbe', lbl_font_size: 'Größe', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Schreibmaschine', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Locker (Comic)', btn_custom_wallpaper: 'Eigene...', opt_color_pink: 'Hellrosa', opt_color_green: 'Hellgrün', opt_color_blue: 'Hellblau', opt_color_default: 'Standard (Weiß)', lbl_font_family: 'Schriftart', lbl_wallpaper: 'Chat-Hintergrundbild', btn_change_wallpaper: 'Bild auswählen', btn_remove_wallpaper: 'Entfernen', opt_font_small: 'Klein', opt_font_normal: 'Normal', opt_font_large: 'Groß',  tab_design: "Design", lbl_font_size: "Schriftgröße", lbl_emoji: "Smilies", lbl_gif: "GIF", lbl_doodle: "Doodle zeichnen", lbl_file: "Datei senden", lbl_location: "Standort teilen", msg_location: "Standort ansehen",  ph_search_content: "Inhalte durchsuchen...", ph_id: "ID", ph_search: "Suchen...", ph_search_user: "Benutzer suchen (@name)...",  lbl_remember_me: "Angemeldet bleiben",  err_select_chat: "Bitte wähle zuerst einen Chat aus.", err_group_not_found: "Diese Gruppe existiert nicht oder wurde gelöscht.", err_join_group: "Fehler beim Beitreten der Gruppe.", msg_copied_clipboard: "Text in die Zwischenablage kopiert! (Teilen wird auf diesem Gerät nicht nativ unterstützt)", err_send_msg: "Nachricht konnte nicht gesendet werden (Offline?).", err_feature_update: "Diese Funktion steht im nächsten Update zur Verfügung.", err_group_username_req: "Bitte gib einen Benutzernamen für die Gruppe ein (z.B. @meinegruppe).", err_username_invalid: "Der Benutzername darf keine Leerzeichen enthalten und muss mindestens 2 Zeichen lang sein.", err_username_taken: "Dieser Benutzername ist bereits von einem anderen Benutzer belegt.", err_group_username_taken: "Dieser Gruppen-Benutzername ist bereits vergeben. Bitte wähle einen anderen.", err_create_group: "Fehler beim Erstellen der Gruppe.", err_search_self: "Das bist du selbst!", err_user_not_found_privacy: "Benutzername nicht gefunden (Privatsphäre).", msg_added_contact: " wurde zu den Kontakten hinzugefügt!", err_already_contact: " ist bereits ein Kontakt.", err_user_not_found2: "Benutzername nicht gefunden.", err_search: "Fehler bei der Suche.", msg_group_deleted: "Die Gruppe existiert nicht mehr.", prompt_new_group_name: "Neuer Gruppenname:", prompt_new_desc: "Neue Beschreibung:",  lbl_group_call: 'Gruppenanruf', lbl_incoming_invite: 'Neue Gruppeneinladung...', lbl_add_members: 'Mitglieder hinzufügen', sec_group_info: 'Gruppeninfo', sec_members: 'Mitglieder', btn_add_member: 'Mitglied hinzufügen', lbl_group_name: 'Name der Gruppe', msg_invited_you: 'hat dich in die Gruppe eingeladen:', btn_accept: 'Annehmen', btn_decline: 'Ablehnen', msg_invite_accepted: 'Einladung angenommen', msg_invite_declined: 'Einladung abgelehnt', sys_user_joined: 'ist der Gruppe beigetreten', sys_user_left: 'hat die Gruppe verlassen', sys_user_removed: 'wurde aus der Gruppe entfernt', btn_leave_group: 'Gruppe verlassen', lbl_admin_options: 'Admin Optionen', btn_copy_invite_link: '🔗 Einladungslink kopieren', lbl_admins_only: 'Nur Admins dürfen schreiben', msg_admin_kicked: 'Der Admin hat dich aus der Gruppe entfernt.', msg_link_copied: 'Einladungslink kopiert!', msg_muted_in_group: 'Du wurdest in dieser Gruppe stummgeschaltet.', msg_readonly_group: 'Nur Admins dürfen in dieser Gruppe schreiben.', ctx_select: 'Auswählen', ctx_forward: 'Weiterleiten', ctx_pin: 'Anheften', ctx_unpin: 'Loslösen', msg_forwarded: 'Weitergeleitet', msg_pinned: 'Angeheftete Nachricht', modal_forward: 'Weiterleiten an...', btn_send_doodle: 'Als Bild senden', lbl_doodle_invite: 'Doodle Einladung', msg_clear_doodle: 'Wirklich alles löschen?', err_doodle_private_only: 'Doodle ist derzeit nur in privaten Chats verfügbar.', msg_doodle_rejected: 'Einladung abgelehnt.', doodle_title: 'Doodle Einladung', doodle_btn_accept: 'Mitzeichnen', doodle_btn_reject: 'Ablehnen', doodle_msg_accepted: 'Doodle Einladung angenommen', doodle_msg_closed: 'Doodle beendet', doodle_msg_rejected: 'Doodle Einladung abgelehnt', doodle_waiting: 'Wartet...', doodle_connecting: 'Verbunden...', doodle_rejected: 'Abgelehnt', title_minimize: 'Minimieren', title_maximize: 'Maximieren', title_close: 'Schließen', title_color: 'Farbe wählen', title_size: 'Stiftdicke', title_eraser: 'Radiergummi', title_clear: 'Alles löschen', doodle_session_with: 'Doodle Sitzung mit', doodle_connected: 'Verbunden', doodle_wants_to_draw: ' möchte mit dir zeichnen!' });
+    Object.assign(TRANSLATIONS.en, { lbl_font_group: 'Font (Own Text)', ph_bio_placeholder: 'I am new here...', lbl_font_preview: 'Preview', ph_preview_text: 'Hey, I am using Doori!', lbl_bio: 'About / Info', lbl_font_color: 'Color', lbl_font_size: 'Size', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Typewriter', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Casual (Comic)', btn_custom_wallpaper: 'Custom...', opt_color_pink: 'Light Pink', opt_color_green: 'Light Green', opt_color_blue: 'Light Blue', opt_color_default: 'Default (White)', lbl_font_family: 'Font Family', lbl_wallpaper: 'Chat Wallpaper', btn_change_wallpaper: 'Select Image', btn_remove_wallpaper: 'Remove', opt_font_small: 'Small', opt_font_normal: 'Normal', opt_font_large: 'Large',  tab_design: "Design", lbl_font_size: "Font Size", lbl_emoji: "Emojis", lbl_gif: "GIF", lbl_doodle: "Draw Doodle", lbl_file: "Send File", lbl_location: "Share Location", msg_location: "View Location",  ph_search_content: "Search content...", ph_id: "ID", ph_search: "Search...", ph_search_user: "Search user (@name)...",  lbl_remember_me: "Remember me",  err_select_chat: "Please select a chat first.", err_group_not_found: "This group does not exist or was deleted.", err_join_group: "Error joining the group.", msg_copied_clipboard: "Text copied to clipboard!", err_send_msg: "Message could not be sent (Offline?).", err_feature_update: "This feature will be available in the next update.", err_group_username_req: "Please enter a username for the group (e.g. @mygroup).", err_username_invalid: "The username cannot contain spaces and must be at least 2 chars long.", err_username_taken: "This username is already taken by another user.", err_group_username_taken: "This group username is already taken. Please choose another one.", err_create_group: "Error creating the group.", err_search_self: "That is you!", err_user_not_found_privacy: "Username not found (Privacy).", msg_added_contact: " was added to your contacts!", err_already_contact: " is already a contact.", err_user_not_found2: "Username not found.", err_search: "Search failed.", msg_group_deleted: "The group no longer exists.", prompt_new_group_name: "New group name:", prompt_new_desc: "New description:",  lbl_group_call: 'Group Call', lbl_incoming_invite: 'New Group Invite...', lbl_add_members: 'Add members', sec_group_info: 'Group Info', sec_members: 'Members', btn_add_member: 'Add member', lbl_group_name: 'Group name', msg_invited_you: 'invited you to the group:', btn_accept: 'Accept', btn_decline: 'Decline', msg_invite_accepted: 'Invite accepted', msg_invite_declined: 'Invite declined', sys_user_joined: 'joined the group', sys_user_left: 'left the group', sys_user_removed: 'was removed from the group', btn_leave_group: 'Leave Group', lbl_admin_options: 'Admin Options', btn_copy_invite_link: '🔗 Copy Invite Link', lbl_admins_only: 'Only Admins can send messages', msg_admin_kicked: 'The Admin has removed you from the group.', msg_link_copied: 'Invite link copied!', msg_muted_in_group: 'You have been muted in this group.', msg_readonly_group: 'Only Admins can send messages in this group.', ctx_select: 'Select', ctx_forward: 'Forward', ctx_pin: 'Pin', ctx_unpin: 'Unpin', msg_forwarded: 'Forwarded', msg_pinned: 'Pinned Message', modal_forward: 'Forward to...', btn_send_doodle: 'Send as Image', lbl_doodle_invite: 'Doodle Invite', msg_clear_doodle: 'Clear everything?', err_doodle_private_only: 'Doodle is only available in private chats.', msg_doodle_rejected: 'Invite rejected.', doodle_title: 'Doodle Invite', doodle_btn_accept: 'Join', doodle_btn_reject: 'Decline', doodle_msg_accepted: 'Doodle Invite accepted', doodle_msg_closed: 'Doodle closed', doodle_msg_rejected: 'Doodle Invite rejected', doodle_waiting: 'Waiting...', doodle_connecting: 'Connecting...', doodle_rejected: 'Rejected', title_minimize: 'Minimize', title_maximize: 'Maximize', title_close: 'Close', title_color: 'Choose Color', title_size: 'Pen Size', title_eraser: 'Eraser', title_clear: 'Clear All', doodle_session_with: 'Doodle Session with', doodle_connected: 'Connected', doodle_wants_to_draw: ' wants to draw with you!' });
+    Object.assign(TRANSLATIONS.fa, { lbl_font_group: 'فونت (متن خود)', ph_bio_placeholder: 'من اینجا جدید هستم...', lbl_font_preview: 'پیش‌نمایش', ph_preview_text: 'سلام، من از دوری استفاده می‌کنم!', lbl_bio: 'درباره من', lbl_font_color: 'رنگ', lbl_font_size: 'اندازه', opt_font_inter: 'استاندارد (Inter)', opt_font_courier: 'ماشین تحریر', opt_font_georgia: 'ظریف (Serif)', opt_font_comic: 'غیررسمی (Comic)', btn_custom_wallpaper: 'سفارشی...', opt_color_pink: 'صورتی روشن', opt_color_green: 'سبز روشن', opt_color_blue: 'آبی روشن', opt_color_default: 'پیش‌فرض (سفید)', lbl_font_family: 'نوع فونت', lbl_wallpaper: 'تصویر زمینه چت', btn_change_wallpaper: 'انتخاب تصویر', btn_remove_wallpaper: 'حذف', opt_font_small: 'کوچک', opt_font_normal: 'معمولی', opt_font_large: 'بزرگ',  tab_design: "طراحی", lbl_font_size: "اندازه فونت", lbl_emoji: "شکلک ها", lbl_gif: "گیف", lbl_doodle: "نقاشی کشیدن", lbl_file: "ارسال فایل", lbl_location: "اشتراک مکان", msg_location: "مشاهده مکان",  ph_search_content: "جستجوی محتوا...", ph_id: "شناسه", ph_search: "جستجو...", ph_search_user: "جستجوی کاربر (@name)...",  lbl_remember_me: "مرا به خاطر بسپار",  err_select_chat: "لطفاً ابتدا یک چت انتخاب کنید.", err_group_not_found: "این گروه وجود ندارد یا حذف شده است.", err_join_group: "خطا در پیوستن به گروه.", msg_copied_clipboard: "متن در کلیپ بورد کپی شد!", err_send_msg: "پیام ارسال نشد (آفلاین؟).", err_feature_update: "این قابلیت در بروزرسانی بعدی در دسترس خواهد بود.", err_group_username_req: "لطفا یک نام کاربری برای گروه وارد کنید (مثلا @mygroup).", err_username_invalid: "نام کاربری نمی‌تواند شامل فاصله باشد و باید حداقل 2 حرف داشته باشد.", err_username_taken: "این نام کاربری قبلاً توسط کاربر دیگری گرفته شده است.", err_group_username_taken: "این نام کاربری گروه قبلاً گرفته شده است. لطفاً یکی دیگر انتخاب کنید.", err_create_group: "خطا در ایجاد گروه.", err_search_self: "این خود شما هستید!", err_user_not_found_privacy: "نام کاربری یافت نشد (حریم خصوصی).", msg_added_contact: " به مخاطبین شما اضافه شد!", err_already_contact: " قبلاً در مخاطبین شما بوده است.", err_user_not_found2: "نام کاربری یافت نشد.", err_search: "جستجو ناموفق بود.", msg_group_deleted: "گروه دیگر وجود ندارد.", prompt_new_group_name: "نام گروه جدید:", prompt_new_desc: "توضیحات جدید:",  lbl_group_call: 'تماس گروهی', lbl_incoming_invite: 'دعوت به گروه جدید...', lbl_add_members: 'افزودن اعضا', sec_group_info: 'اطلاعات گروه', sec_members: 'اعضا', btn_add_member: 'افزودن عضو', lbl_group_name: 'نام گروه', msg_invited_you: 'شما را به گروه دعوت کرد:', btn_accept: 'پذیرفتن', btn_decline: 'رد کردن', msg_invite_accepted: 'دعوت پذیرفته شد', msg_invite_declined: 'دعوت رد شد', sys_user_joined: 'به گروه پیوست', sys_user_left: 'گروه را ترک کرد', sys_user_removed: 'از گروه حذف شد', btn_leave_group: 'ترک گروه', lbl_admin_options: 'گزینه‌های مدیر', btn_copy_invite_link: '🔗 کپی لینک دعوت', lbl_admins_only: 'فقط مدیران می‌توانند پیام ارسال کنند', msg_admin_kicked: 'مدیر شما را از گروه حذف کرده است.', msg_link_copied: 'لینک دعوت کپی شد!', msg_muted_in_group: 'شما در این گروه بی‌صدا شده‌اید.', msg_readonly_group: 'فقط مدیران می‌توانند در این گروه پیام ارسال کنند.', ctx_select: 'انتخاب', ctx_forward: 'ارسال', ctx_pin: 'سنجاق کردن', ctx_unpin: 'برداشتن سنجاق', msg_forwarded: 'ارسال شده', msg_pinned: 'پیام سنجاق شده', modal_forward: 'ارسال به...', btn_send_doodle: 'ارسال به عنوان تصویر', lbl_doodle_invite: 'دعوت به دودل', msg_clear_doodle: 'آیا مطمئن هستید که می‌خواهید همه چیز را پاک کنید؟', err_doodle_private_only: 'دودل در حال حاضر فقط در چت‌های خصوصی در دسترس است.', msg_doodle_rejected: 'دعوت رد شد.', doodle_title: 'دعوت به دودل', doodle_btn_accept: 'پیوستن', doodle_btn_reject: 'رد کردن', doodle_msg_accepted: 'دعوت پذیرفته شد', doodle_msg_closed: 'دودل بسته شد', doodle_msg_rejected: 'دعوت رد شد', doodle_waiting: 'در حال انتظار...', doodle_connecting: 'در حال اتصال...', doodle_rejected: 'رد شد', title_minimize: 'کوچک کردن', title_maximize: 'بزرگ کردن', title_close: 'بستن', title_color: 'انتخاب رنگ', title_size: 'اندازه قلم', title_eraser: 'پاک‌کن', title_clear: 'پاک کردن همه', doodle_session_with: 'جلسه دودل با', doodle_connected: 'متصل شد', doodle_wants_to_draw: ' می‌خواهد با شما نقاشی کند!' });
+    Object.assign(TRANSLATIONS.ar, { lbl_font_group: 'الخط (نصك الخاص)', ph_bio_placeholder: 'أنا جديد هنا...', lbl_font_preview: 'معاينة', ph_preview_text: 'مرحبًا، أنا أستخدم دوري!', lbl_bio: 'حول / معلومات', lbl_font_color: 'اللون', lbl_font_size: 'الحجم', opt_font_inter: 'قياسي (Inter)', opt_font_courier: 'آلة كاتبة', opt_font_georgia: 'أنيق (Serif)', opt_font_comic: 'غير رسمي (Comic)', btn_custom_wallpaper: 'مخصص...', opt_color_pink: 'وردي فاتح', opt_color_green: 'أخضر فاتح', opt_color_blue: 'أزرق فاتح', opt_color_default: 'افتراضي (أبيض)', lbl_font_family: 'نوع الخط', lbl_wallpaper: 'خلفية الدردشة', btn_change_wallpaper: 'اختر صورة', btn_remove_wallpaper: 'إزالة', opt_font_small: 'صغير', opt_font_normal: 'عادي', opt_font_large: 'كبير',  tab_design: "التصميم", lbl_font_size: "حجم الخط", lbl_emoji: "الرموز التعبيرية", lbl_gif: "ملف GIF", lbl_doodle: "رسم خربشة", lbl_file: "إرسال ملف", lbl_location: "مشاركة الموقع", msg_location: "عرض الموقع",  ph_search_content: "البحث في المحتوى...", ph_id: "المعرف", ph_search: "بحث...", ph_search_user: "بحث عن مستخدم (@name)...",  lbl_remember_me: "تذكرني",  err_select_chat: "يرجى اختيار دردشة أولاً.", err_group_not_found: "هذه المجموعة غير موجودة أو تم حذفها.", err_join_group: "خطأ في الانضمام إلى المجموعة.", msg_copied_clipboard: "تم نسخ النص إلى الحافظة!", err_send_msg: "تعذر إرسال الرسالة (غير متصل؟).", err_feature_update: "ستكون هذه الميزة متاحة في التحديث القادم.", err_group_username_req: "يرجى إدخال اسم مستخدم للمجموعة (مثل @mygroup).", err_username_invalid: "لا يمكن أن يحتوي اسم المستخدم على مسافات ويجب أن يكون طوله حرفين على الأقل.", err_username_taken: "اسم المستخدم هذا مستخدم بالفعل من قبل مستخدم آخر.", err_group_username_taken: "اسم مستخدم المجموعة هذا مأخوذ. يرجى اختيار اسم آخر.", err_create_group: "خطأ في إنشاء المجموعة.", err_search_self: "هذا أنت!", err_user_not_found_privacy: "اسم المستخدم غير موجود (الخصوصية).", msg_added_contact: " تمت إضافته إلى جهات الاتصال الخاصة بك!", err_already_contact: " هو بالفعل جهة اتصال.", err_user_not_found2: "اسم المستخدم غير موجود.", err_search: "فشل البحث.", msg_group_deleted: "المجموعة لم تعد موجودة.", prompt_new_group_name: "اسم المجموعة الجديد:", prompt_new_desc: "وصف جديد:",  lbl_group_call: 'مكالمة جماعية', lbl_incoming_invite: 'دعوة مجموعة جديدة...', lbl_add_members: 'إضافة أعضاء', sec_group_info: 'معلومات المجموعة', sec_members: 'الأعضاء', btn_add_member: 'إضافة عضو', lbl_group_name: 'اسم المجموعة', msg_invited_you: 'دعاك إلى المجموعة:', btn_accept: 'قبول', btn_decline: 'رفض', msg_invite_accepted: 'تم قبول الدعوة', msg_invite_declined: 'تم رفض الدعوة', sys_user_joined: 'انضم إلى المجموعة', sys_user_left: 'غادر المجموعة', sys_user_removed: 'تمت إزالته من المجموعة', btn_leave_group: 'مغادرة المجموعة', lbl_admin_options: 'خيارات المشرف', btn_copy_invite_link: '🔗 نسخ رابط الدعوة', lbl_admins_only: 'المشرفون فقط يمكنهم إرسال رسائل', msg_admin_kicked: 'قام المشرف بإزالتك من المجموعة.', msg_link_copied: 'تم نسخ رابط الدعوة!', msg_muted_in_group: 'لقد تم كتم صوتك في هذه المجموعة.', msg_readonly_group: 'المشرفون فقط يمكنهم إرسال رسائل في هذه المجموعة.', ctx_select: 'تحديد', ctx_forward: 'تحويل', ctx_pin: 'تثبيت', ctx_unpin: 'إلغاء التثبيت', msg_forwarded: 'محولة', msg_pinned: 'رسالة مثبتة', modal_forward: 'تحويل إلى...', btn_send_doodle: 'إرسال كصورة', lbl_doodle_invite: 'دعوة دودل', msg_clear_doodle: 'هل تريد مسح كل شيء؟', err_doodle_private_only: 'دودل متاح حاليا فقط في الدردشات الخاصة.', msg_doodle_rejected: 'تم رفض الدعوة.', doodle_title: 'دعوة دودل', doodle_btn_accept: 'انضمام', doodle_btn_reject: 'رفض', doodle_msg_accepted: 'تم قبول الدعوة', doodle_msg_closed: 'تم إغلاق دودل', doodle_msg_rejected: 'تم رفض الدعوة', doodle_waiting: 'قيد الانتظار...', doodle_connecting: 'جاري الاتصال...', doodle_rejected: 'مرفوض', title_minimize: 'تصغير', title_maximize: 'تكبير', title_close: 'إغلاق', title_color: 'اختر اللون', title_size: 'حجم القلم', title_eraser: 'ممحاة', title_clear: 'مسح الكل', doodle_session_with: 'جلسة دودل مع', doodle_connected: 'متصل', doodle_wants_to_draw: ' يريد أن يرسم معك!' });
+    Object.assign(TRANSLATIONS.tr, { lbl_font_group: 'Yazı (Kendi Metniniz)', ph_bio_placeholder: 'Ben burada yeniyim...', lbl_font_preview: 'Önizleme', ph_preview_text: 'Merhaba, Doori kullanıyorum!', lbl_bio: 'Hakkımda / Bilgi', lbl_font_color: 'Renk', lbl_font_size: 'Boyut', opt_font_inter: 'Standart (Inter)', opt_font_courier: 'Daktilo', opt_font_georgia: 'Zarif (Serif)', opt_font_comic: 'Gündelik (Comic)', btn_custom_wallpaper: 'Özel...', opt_color_pink: 'Açık Pembe', opt_color_green: 'Açık Yeşil', opt_color_blue: 'Açık Mavi', opt_color_default: 'Varsayılan (Beyaz)', lbl_font_family: 'Yazı Tipi', lbl_wallpaper: 'Sohbet Duvar Kağıdı', btn_change_wallpaper: 'Resim Seç', btn_remove_wallpaper: 'Kaldır', opt_font_small: 'Küçük', opt_font_normal: 'Normal', opt_font_large: 'Büyük',  tab_design: "Tasarım", lbl_font_size: "Yazı Tipi Boyutu", lbl_emoji: "Emojiler", lbl_gif: "GIF", lbl_doodle: "Doodle Çiz", lbl_file: "Dosya Gönder", lbl_location: "Konum Paylaş", msg_location: "Konumu Görüntüle",  ph_search_content: "İçerik ara...", ph_id: "ID", ph_search: "Ara...", ph_search_user: "Kullanıcı ara (@name)...",  lbl_remember_me: "Beni hatırla",  err_select_chat: "Lütfen önce bir sohbet seçin.", err_group_not_found: "Bu grup mevcut değil veya silinmiş.", err_join_group: "Gruba katılırken hata oluştu.", msg_copied_clipboard: "Metin panoya kopyalandı!", err_send_msg: "Mesaj gönderilemedi (Çevrimdışı?).", err_feature_update: "Bu özellik bir sonraki güncellemede kullanıma sunulacak.", err_group_username_req: "Lütfen grup için bir kullanıcı adı girin (örn. @mygroup).", err_username_invalid: "Kullanıcı adı boşluk içeremez ve en az 2 karakter uzunluğunda olmalıdır.", err_username_taken: "Bu kullanıcı adı zaten başka bir kullanıcı tarafından alınmış.", err_group_username_taken: "Bu grup kullanıcı adı zaten alınmış. Lütfen başka bir tane seçin.", err_create_group: "Grup oluşturulurken hata oluştu.", err_search_self: "Bu sensin!", err_user_not_found_privacy: "Kullanıcı adı bulunamadı (Gizlilik).", msg_added_contact: " kişilerinize eklendi!", err_already_contact: " zaten bir kişi.", err_user_not_found2: "Kullanıcı adı bulunamadı.", err_search: "Arama başarısız.", msg_group_deleted: "Grup artık mevcut değil.", prompt_new_group_name: "Yeni grup adı:", prompt_new_desc: "Yeni açıklama:",  lbl_group_call: 'Grup Araması', lbl_incoming_invite: 'Yeni Grup Daveti...', lbl_add_members: 'Üye Ekle', sec_group_info: 'Grup Bilgisi', sec_members: 'Üyeler', btn_add_member: 'Üye ekle', lbl_group_name: 'Grup adı', msg_invited_you: 'seni gruba davet etti:', btn_accept: 'Kabul Et', btn_decline: 'Reddet', msg_invite_accepted: 'Davet kabul edildi', msg_invite_declined: 'Davet reddedildi', sys_user_joined: 'gruba katıldı', sys_user_left: 'gruptan ayrıldı', sys_user_removed: 'gruptan çıkarıldı', btn_leave_group: 'Gruptan Ayrıl', lbl_admin_options: 'Yönetici Seçenekleri', btn_copy_invite_link: '🔗 Davet Bağlantısını Kopyala', lbl_admins_only: 'Sadece Yöneticiler mesaj gönderebilir', msg_admin_kicked: 'Yönetici sizi gruptan çıkardı.', msg_link_copied: 'Davet bağlantısı kopyalandı!', msg_muted_in_group: 'Bu grupta sessize alındınız.', msg_readonly_group: 'Bu grupta sadece yöneticiler mesaj gönderebilir.', ctx_select: 'Seç', ctx_forward: 'İlet', ctx_pin: 'Sabitle', ctx_unpin: 'Sabitlemeyi Kaldır', msg_forwarded: 'İletildi', msg_pinned: 'Sabitlenmiş Mesaj', modal_forward: 'Şuna ilet...', btn_send_doodle: 'Resim olarak gönder', lbl_doodle_invite: 'Doodle Daveti', msg_clear_doodle: 'Her şeyi silmek istediğinize emin misiniz?', err_doodle_private_only: 'Doodle şu anda sadece özel sohbetlerde kullanılabilir.', msg_doodle_rejected: 'Davet reddedildi.', doodle_title: 'Doodle Daveti', doodle_btn_accept: 'Katıl', doodle_btn_reject: 'Reddet', doodle_msg_accepted: 'Doodle Daveti kabul edildi', doodle_msg_closed: 'Doodle kapatıldı', doodle_msg_rejected: 'Doodle Daveti reddedildi', doodle_waiting: 'Bekleniyor...', doodle_connecting: 'Bağlanıyor...', doodle_rejected: 'Reddedildi', title_minimize: 'Küçült', title_maximize: 'Büyüt', title_close: 'Kapat', title_color: 'Renk Seç', title_size: 'Kalem Boyutu', title_eraser: 'Silgi', title_clear: 'Tümünü Sil', doodle_session_with: 'Doodle Oturumu:', doodle_connected: 'Bağlandı', doodle_wants_to_draw: ' seninle çizim yapmak istiyor!' });
 
     
 Object.assign(TRANSLATIONS.de, { tab_login: 'Login', tab_register: 'Registrieren', ph_username: '@benutzername', ph_email: 'deine@email.com', ph_password: 'Passwort', lnk_forgot_pwd: 'Passwort vergessen?', lnk_forgot_user_id: 'Benutzername / ID vergessen?', lnk_resend_verify: 'Bestätigungs-E-Mail erneut senden', prompt_email_id: 'Bitte gib deine E-Mail ein, um deine ID-Nummer zu erhalten:', prompt_email_verify: 'Bitte gib deine E-Mail-Adresse ein:', msg_id_sent: 'Eine E-Mail mit deiner ID-Nummer wurde gesendet.', msg_verify_sent: 'Ein Bestätigungslink wurde gesendet.', msg_verify_resent: 'Bestätigungs-E-Mail wurde erneut gesendet.', err_send: 'Fehler beim Senden: ', msg_spam_warn: 'Wichtig: Bitte überprüfe auch deinen Spam-Ordner!', prompt_email_pwd: 'Bitte gib deine E-Mail ein, um dein Passwort zurückzusetzen:', prompt_email_user: 'Bitte gib deine registrierte E-Mail-Adresse ein:', err_no_account: 'Kein Benutzerkonto gefunden.', msg_your_usernames: 'Dein(e) Benutzername(n):', msg_pwd_reset_sent: 'Eine E-Mail zum Zurücksetzen deines Passworts wurde versendet.', msg_legacy_acc: 'Dein Account nutzt noch das alte System. Bitte wechsle auf Registrieren.', msg_email_not_ver: 'Bitte bestätige zuerst deine E-Mail-Adresse über den gesendeten Link.', msg_wrong_pwd: 'Falsches Passwort oder E-Mail.', msg_user_taken: 'Dieser Benutzername ist bereits vergeben.', msg_email_taken: 'Diese E-Mail ist bereits registriert.', msg_weak_pwd: 'Das Passwort ist zu schwach.', err_user_not_found: 'Benutzername nicht gefunden.', err_invalid_id: 'Die eingegebene 6-stellige ID ist falsch.', err_login_failed: 'Fehler beim Login: ', err_unexpected: 'Ein unerwarteter Fehler ist aufgetreten: ', msg_acc_details_sent: 'Eine E-Mail mit deinen Daten wurde gesendet.', err_search_failed: 'Fehler beim Suchen: ' });
@@ -284,7 +285,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     function renderCustomGifs() {
         const grid = document.getElementById('custom-gif-grid');
         if(!grid) return;
-        grid.innerHTML = '';
+        grid.innerHTML = safeHTML('');
         let customGifs = [];
         try {
             customGifs = JSON.parse(localStorage.getItem('doori_custom_gifs_' + currentUser) || '[]');
@@ -301,7 +302,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             img.onclick = () => { sendMessage('', 'gif', dataUrl); gifPicker.classList.add('hidden'); };
             
             const delBtn = document.createElement('button');
-            delBtn.innerHTML = '✖';
+            delBtn.innerHTML = safeHTML('✖');
             delBtn.style.position = 'absolute';
             delBtn.style.top = '2px';
             delBtn.style.right = '2px';
@@ -362,14 +363,14 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             customGifUpload.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                if (file.size > 1024 * 1024) { // 1MB limit
-                    alert((window.TRANSLATIONS[window.currentLang] || {}).err_file_too_large || 'Jedes GIF darf maximal 1 MB sein.');
+                if (file.size > 192 * 1024) {
+                    alert(authText('security_media_limit'));
                     customGifUpload.value = '';
                     return;
                 }
                 
                 if (addCustomGifBtn) {
-                    addCustomGifBtn.textContent = 'Lädt hoch...';
+                    addCustomGifBtn.textContent = authText('security_loading');
                     addCustomGifBtn.disabled = true;
                 }
                 
@@ -383,25 +384,21 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                         } catch(err) { customGifs = []; }
                         if (customGifs.length >= 10) {
                             alert((window.TRANSLATIONS[window.currentLang] || {}).err_too_many_gifs || 'Jeder Benutzer darf maximal 10 GIFs hinzufügen.');
-                            if (addCustomGifBtn) { addCustomGifBtn.textContent = '+ GIF hinzufügen (Max 1MB)'; addCustomGifBtn.disabled = false; }
+                            if (addCustomGifBtn) { addCustomGifBtn.textContent = authText('security_gif_button'); addCustomGifBtn.disabled = false; }
                             return;
                         }
                         
-                        const fb = typeof firebase !== 'undefined' ? firebase : window.firebase;
-                        const storageRef = fb.storage().ref();
-                        const fileName = 'custom_gifs/' + currentUser.replace('@', '') + '_' + Date.now() + '.gif';
-                        const fileRef = storageRef.child(fileName);
-                        await fileRef.putString(dataUrl, 'data_url');
-                        const downloadUrl = await fileRef.getDownloadURL();
+                        if (dataUrl.length > 262144) throw new Error(authText('security_media_limit'));
+                        const downloadUrl = dataUrl;
 
                         customGifs.push(downloadUrl);
                         localStorage.setItem('doori_custom_gifs_' + currentUser, JSON.stringify(customGifs));
                         renderCustomGifs();
                     } catch (err) {
                         console.error('GIF upload error:', err);
-                        alert('Fehler beim Hochladen des GIFs.');
+                        alert(authText('security_media_limit'));
                     }
-                    if (addCustomGifBtn) { addCustomGifBtn.textContent = '+ GIF hinzufügen (Max 1MB)'; addCustomGifBtn.disabled = false; }
+                    if (addCustomGifBtn) { addCustomGifBtn.textContent = authText('security_gif_button'); addCustomGifBtn.disabled = false; }
                 };
                 reader.readAsDataURL(file);
                 customGifUpload.value = '';
@@ -428,74 +425,6 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         }
     });
 
-    // --- Games Logic ---
-    const GAMES_LIST = [
-        { key: "game_billiards", emoji: "🎱", color: "#1e3a8a", url: "https://billiards.vercel.app/" },
-        { key: "game_soccer", emoji: "🐦", color: "#065f46", url: "https://ellisonleao.github.io/clumsy-bird/" },
-        { key: "game_karts", emoji: "🎲", color: "#991b1b", url: "https://bsehovac.github.io/the-cube/" },
-        { key: "game_stickman", emoji: "🐤", color: "#854d0e", url: "https://nebezb.com/floppybird/" },
-        { key: "game_uno", emoji: "🃏", color: "#be123c", url: "https://hextris.io/" },
-        { key: "game_basket", emoji: "🧠", color: "#b45309", url: "https://marina-ferreira.github.io/memory-game/" },
-        { key: "game_ludo", emoji: "🦖", color: "#4c1d95", url: "https://wayou.github.io/t-rex-runner/" },
-        { key: "game_tictactoe", emoji: "🧱", color: "#0f766e", url: "https://chvin.github.io/react-tetris/" },
-        { key: "game_chess", emoji: "♟️", color: "#374151", url: "https://imkennyyip.github.io/flappy-bird/" },
-        { key: "game_firewater", emoji: "🔥💧", color: "#b91c1c", url: "https://gabrielecirulli.github.io/2048/" }
-    ];
-
-    const getTranslation = (key) => {
-        const lang = window.currentLang || 'en';
-        return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) ? TRANSLATIONS[lang][key] : TRANSLATIONS['en'][key];
-    };
-
-    const gamesMenuBtn = document.getElementById('games-menu-btn');
-    const gamesListModal = document.getElementById('games-list-modal');
-    const gamesGrid = document.getElementById('games-grid');
-    const gamePlayerModal = document.getElementById('game-player-modal');
-    const gamePlayerIframe = document.getElementById('game-player-iframe');
-    const gamePlayerTitle = document.getElementById('game-player-title');
-    const closeGamePlayerBtn = document.getElementById('close-game-player-btn');
-
-    if (gamesMenuBtn) {
-        gamesMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const plusMenuDropdown = document.getElementById('plus-menu-dropdown');
-            if (plusMenuDropdown) plusMenuDropdown.classList.add('hidden');
-            
-            // Re-render always to ensure language updates
-            if (gamesGrid) {
-                gamesGrid.innerHTML = '';
-                GAMES_LIST.forEach(game => {
-                    const translatedTitle = getTranslation(game.key);
-                    const card = document.createElement('div');
-                    card.className = 'game-card';
-                    card.innerHTML = `<div style="background: ${game.color}; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 50px;">${game.emoji}</div><div class="game-title">${translatedTitle}</div>`;
-                    card.addEventListener('click', () => {
-                        if (gamesListModal) gamesListModal.classList.add('hidden');
-                        if (gamePlayerTitle) gamePlayerTitle.textContent = translatedTitle;
-                        if (gamePlayerIframe) gamePlayerIframe.src = game.url;
-                        if (gamePlayerModal) gamePlayerModal.classList.remove('hidden');
-                        document.body.style.overflow = 'hidden';
-                        document.body.style.position = 'fixed';
-                        document.body.style.width = '100%';
-                        document.body.style.height = '100%';
-                    });
-                    gamesGrid.appendChild(card);
-                });
-            }
-            if (gamesListModal) gamesListModal.classList.remove('hidden');
-        });
-    }
-
-    if (closeGamePlayerBtn) {
-        closeGamePlayerBtn.addEventListener('click', () => {
-            if (gamePlayerModal) gamePlayerModal.classList.add('hidden');
-            if (gamePlayerIframe) gamePlayerIframe.src = ''; 
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-            document.body.style.height = '';
-        });
-    }
     document.addEventListener('click', (e) => { 
         if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.classList.add('hidden'); 
         if (!gifPicker.contains(e.target) && e.target !== gifBtn) gifPicker.classList.add('hidden'); 
@@ -529,7 +458,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 }
                 
                 if (force || isOnlineState || e) {
-                    window.db.collection('userData').doc(currentUser.toLowerCase()).set({ 
+                    window.db.collection('presence').doc(currentUser.toLowerCase()).set({
                         lastSeen: fb.firestore.FieldValue.serverTimestamp(),
                         isOnline: isOnlineState
                     }, { merge: true }).catch(()=>{});
@@ -672,7 +601,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             }
             
             // Also fetch own profile from users collection
-            const userSnap = await window.db.collection('users').doc(currentUser.toLowerCase()).get();
+            const userSnap = await window.db.collection('profiles').doc(currentUser.toLowerCase()).get();
             if (userSnap.exists) {
                 const uData = userSnap.data();
                 users.set(currentUser, { avatarUrl: uData.avatarUrl || null, profilePics: uData.profilePics || [], status: 'Online', searchable: uData.searchable !== false, avatarVisibility: uData.avatarVisibility || 'all', callPrivacy: uData.callPrivacy || 'all', lastSeenPrivacy: uData.lastSeenPrivacy || 'all' });
@@ -733,29 +662,12 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
     async function handleSecureJoinLink(joinParam) {
         try {
-            const parts = joinParam.split('_');
-            if (parts.length !== 2) return;
-            const groupId = parts[0];
-            const token = parts[1];
+            const separator = joinParam.lastIndexOf('_');
+            if (separator < 1) return;
+            const groupId = joinParam.slice(0, separator);
+            const token = joinParam.slice(separator + 1);
             
-            const groupRef = window.db.collection('groups').doc(groupId);
-            const doc = await groupRef.get();
-            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en'];
-            
-            if (!doc.exists) {
-                alert(t.err_invalid_token || 'Gruppe existiert nicht.');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return;
-            }
-            
-            const groupData = doc.data();
-            
-            if (groupData.inviteToken !== token) {
-                alert(t.err_invalid_token || 'Ungltiger oder abgelaufener Einladungs-Link!');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return;
-            }
-            
+            const groupData = await authCall('groupInviteInfo', { groupId, token });
             if (groupData.members && groupData.members.includes(currentUser)) {
                 window.history.replaceState({}, document.title, window.location.pathname);
                 selectChat(groupId, 'room');
@@ -769,9 +681,9 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             const confirmBtn = document.getElementById('confirm-join-link-btn');
             
             if (groupData.avatar) {
-                avatar.innerHTML = `<img src="${groupData.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                avatar.innerHTML = safeHTML(`<img src="${groupData.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`);
             } else {
-                avatar.innerHTML = groupData.name.charAt(0).toUpperCase();
+                avatar.innerHTML = safeHTML(groupData.name.charAt(0).toUpperCase());
             }
             name.textContent = groupData.name;
             
@@ -785,21 +697,19 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             
             confirmBtn.onclick = async () => {
                 confirmBtn.disabled = true;
-                await groupRef.update({ members: window.firebase.firestore.FieldValue.arrayUnion(currentUser) });
-                await window.sendSystemMessage(groupId, 'joined', currentUser);
-                
-                if (!chatData.rooms.find(r => r.id === groupId)) {
-                    groupData.members.push(currentUser);
-                    chatData.rooms.push(groupData);
+                try {
+                    await authCall('acceptGroupInvitation', { groupId, token });
+                    const joined = (await window.db.collection('groups').doc(groupId).get()).data();
+                    if (!chatData.rooms.find(r => r.id === groupId)) chatData.rooms.push({ ...joined, type: 'room' });
                     saveUserData();
                     renderChatList();
-                }
-                
-                confirmBtn.disabled = false;
-                closeIt();
-                selectChat(groupId, 'room');
+                    closeIt();
+                    selectChat(groupId, 'room');
+                } catch (error) {
+                    alert(authText('security_invite_error'));
+                } finally { confirmBtn.disabled = false; }
             };
-        } catch(err) { console.error("Error joining group securely", err); }
+        } catch(err) { alert(authText('security_invite_error')); }
     }
 
     function setupFirestoreListeners() {
@@ -808,25 +718,35 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         
         // Listener 1: Private Messages (DMs & Saved)
         let initialDMLoad = true;
-        const dmListener = window.db.collection('messages')
+        let dmOldest = null;
+        const roomOldest = new Map();
+        let olderMessagesLoading = false;
+        const mergeHistoricalDMs = snapshot => {
+            snapshot.docs.forEach(doc => {
+                const msg = { ...doc.data(), id: doc.id };
+                const chatId = msg.chat_id === 'saved' ? 'saved' : (msg.sender_username === currentUser ? msg.recipient_username : msg.sender_username);
+                if (!messages.has(chatId)) messages.set(chatId, []);
+                const list = messages.get(chatId);
+                if (!list.some(item => item.id === msg.id)) list.push(msg);
+                list.sort((a,b) => a.timestamp - b.timestamp);
+            });
+            saveUserData(); renderMessages();
+        };
+        const dmQuery = () => window.db.collection('messages')
             .where('participants', 'array-contains', currentUser.toLowerCase())
-            .onSnapshot(snapshot => {
+            .where('isPublic', '==', false)
+            .orderBy('timestamp', 'desc');
+        const dmListener = dmQuery().limit(200).onSnapshot(snapshot => {
+                if (snapshot.docs.length) dmOldest = snapshot.docs.at(-1);
                 let changed = false;
                 snapshot.docChanges().forEach(change => {
                     const msg = change.doc.data();
                     msg.id = change.doc.id;
                     const chatId = (msg.isPublic || msg.chat_id === 'saved') ? msg.chat_id : (msg.sender_username === currentUser ? msg.recipient_username : msg.sender_username);
                     
-                    if (change.type === 'removed') {
-                        if (messages.has(chatId)) {
-                            const chatMsgs = messages.get(chatId);
-                            const existingIdx = chatMsgs.findIndex(m => m.id === msg.id);
-                            if (existingIdx >= 0) {
-                                chatMsgs.splice(existingIdx, 1);
-                                changed = true;
-                            }
-                        }
-                    } else if (change.type === 'added' || change.type === 'modified') {
+                    // A limited live query also emits "removed" when an older item
+                    // falls outside the window. Keep paged history in memory.
+                    if (change.type === 'added' || change.type === 'modified') {
                         if (msg.type === 'group_invite' && !msg.participants.includes(currentUser.toLowerCase())) {
                             return; // Only process if current user is a participant
                         }
@@ -881,38 +801,29 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             });
             
         // Listener 2: Public Rooms
-        let initialRoomLoad = true;
-        const roomListener = window.db.collection('messages')
-            .where('isPublic', '==', true)
-            .onSnapshot(snapshot => {
+        const loadedRooms = new Set();
+        const handleRoomSnapshot = (snapshot, roomId, historical = false) => {
+                if (snapshot.docs.length) roomOldest.set(roomId, snapshot.docs.at(-1));
+                const initialRoomLoad = !loadedRooms.has(roomId);
                 let changed = false;
                 snapshot.docChanges().forEach(change => {
                     const msg = change.doc.data();
                     msg.id = change.doc.id;
                     const chatId = msg.chat_id;
                     
-                    if (change.type === 'removed') {
-                        if (messages.has(chatId)) {
-                            const chatMsgs = messages.get(chatId);
-                            const existingIdx = chatMsgs.findIndex(m => m.id === msg.id);
-                            if (existingIdx >= 0) {
-                                chatMsgs.splice(existingIdx, 1);
-                                changed = true;
-                            }
-                        }
-                    } else if (change.type === 'added' || change.type === 'modified') {
+                    if (change.type === 'added' || change.type === 'modified') {
                         if (!messages.has(chatId)) messages.set(chatId, []);
                         const chatMsgs = messages.get(chatId);
                         const existingIdx = chatMsgs.findIndex(m => m.id === msg.id);
                         if (existingIdx >= 0) chatMsgs[existingIdx] = msg;
                         else {
                             chatMsgs.push(msg);
-                            if (change.type === 'added' && msg.sender_username !== currentUser && chatId !== currentChat?.id) {
+                            if (!historical && change.type === 'added' && msg.sender_username !== currentUser && chatId !== currentChat?.id) {
                                 unreadChats.add(chatId);
                             }
                         }
                         
-                        if (!initialRoomLoad && change.type === 'added' && !msg.silent && msg.sender_username !== currentUser && !blockedContacts.has(msg.sender_username)) {
+                        if (!historical && !initialRoomLoad && change.type === 'added' && !msg.silent && msg.sender_username !== currentUser && !blockedContacts.has(msg.sender_username)) {
                             const isMention = msg.mentions && msg.mentions.includes(currentUser.toLowerCase());
                             if (isMention && (!currentChat || chatId !== currentChat.id)) {
                                 mentionedChats.add(chatId);
@@ -931,15 +842,20 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                         changed = true;
                     }
                 });
-                initialRoomLoad = false;
+                loadedRooms.add(roomId);
                 if (changed) {
                     messages.forEach((msgs, id) => msgs.sort((a,b) => a.timestamp - b.timestamp));
                     saveUserData();
                     renderChatList();
                     renderMessages();
                 }
-            });
-            
+                    };
+        const roomListener = window.db.collection('messages').where('isPublic', '==', true)
+            .where('chat_id', '==', 'general').orderBy('timestamp', 'desc').limit(50)
+            .onSnapshot(snapshot => handleRoomSnapshot(snapshot, 'general'));
+        const groupMessageListeners = new Map();
+        unsubListeners.push(() => groupMessageListeners.forEach(unsubscribe => unsubscribe()));
+
         // Listener 3: Groups
         const groupsListener = window.db.collection('groups')
             .where('members', 'array-contains', currentUser)
@@ -947,6 +863,16 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 let changed = false;
                 snapshot.docChanges().forEach(change => {
                     const group = change.doc.data();
+                    if (change.type === 'removed') {
+                        groupMessageListeners.get(group.id)?.();
+                        groupMessageListeners.delete(group.id);
+                        messages.delete(group.id);
+                    } else if (!groupMessageListeners.has(group.id)) {
+                        groupMessageListeners.set(group.id, window.db.collection('messages')
+                            .where('isPublic', '==', true).where('chat_id', '==', group.id)
+                            .orderBy('timestamp', 'desc').limit(50)
+                            .onSnapshot(snapshot => handleRoomSnapshot(snapshot, group.id)));
+                    }
                     if (change.type === 'added' || change.type === 'modified') {
                         group.type = 'room'; // Ensure local type is room
                         const existingIdx = chatData.rooms.findIndex(r => r.id === group.id);
@@ -993,6 +919,27 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             });
             
         unsubListeners.push(dmListener, roomListener, groupsListener);
+
+        messagesContainer.onscroll = async () => {
+            if (messagesContainer.scrollTop > 40 || olderMessagesLoading || !currentChat) return;
+            olderMessagesLoading = true;
+            try {
+                if (currentChat.type === 'room') {
+                    const cursor = roomOldest.get(currentChat.id); if (!cursor) return;
+                    const page = await window.db.collection('messages').where('isPublic', '==', true)
+                        .where('chat_id', '==', currentChat.id).orderBy('timestamp', 'desc')
+                        .startAfter(cursor).limit(50).get();
+                    if (!page.empty) handleRoomSnapshot(page, currentChat.id, true);
+                    else roomOldest.delete(currentChat.id);
+                } else {
+                    if (!dmOldest) return;
+                    const page = await dmQuery().startAfter(dmOldest).limit(200).get();
+                    if (!page.empty) { dmOldest = page.docs.at(-1); mergeHistoricalDMs(page); }
+                    else dmOldest = null;
+                }
+            } catch (error) { console.error('Older messages could not be loaded', error); }
+            finally { olderMessagesLoading = false; }
+        };
     }
 
     async function migrateOldMessages() {
@@ -1021,7 +968,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             const avatarVis = document.getElementById('setting-avatar-visibility') ? document.getElementById('setting-avatar-visibility').value : 'all';
             const callPriv = document.getElementById('setting-call-privacy') ? document.getElementById('setting-call-privacy').value : 'all';
             const lsVal = document.getElementById('setting-last-seen') ? (document.getElementById('setting-last-seen').checked ? 'all' : 'none') : 'all';
-            window.db.collection('users').doc(currentUser.toLowerCase()).set({ avatarUrl: p.avatarUrl || null, profilePics: p.profilePics || [], searchable: isSearchable, avatarVisibility: avatarVis, callPrivacy: callPriv, lastSeenPrivacy: lsVal }, { merge: true })
+            window.db.collection('profiles').doc(currentUser.toLowerCase()).set({ avatarUrl: p.avatarUrl || null, profilePics: p.profilePics || [], searchable: isSearchable, avatarVisibility: avatarVis, callPrivacy: callPriv, lastSeenPrivacy: lsVal }, { merge: true })
                 .catch(e => console.error("Save User Profile Error", e));
             
             // Also update the local Map so that reopening settings gets the new values without reload
@@ -1036,7 +983,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     window.fetchMissingProfile = function(username) {
         if (!username || missingUsersToFetch.has(username)) return;
         missingUsersToFetch.add(username);
-        window.db.collection('users').doc(username.toLowerCase()).get().then(doc => {
+        window.db.collection('profiles').doc(username.toLowerCase()).get().then(doc => {
             if (doc.exists) {
                 users.set(username, doc.data());
                 renderMessages();
@@ -1101,17 +1048,17 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 contentHtml += `<div class="forwarded-tag">↪️ ${(TRANSLATIONS[currentLang]||TRANSLATIONS['en']).msg_forwarded || 'Weitergeleitet'}</div>`;
             }
             if (msg.replyTo) {
-                contentHtml += `<div class="reply-preview"><span class="reply-preview-sender">${msg.replyTo.sender}</span>${msg.replyTo.text}</div>`;
+                contentHtml += `<div class="reply-preview"><span class="reply-preview-sender">${escapeHTML(msg.replyTo.sender)}</span>${escapeHTML(msg.replyTo.text)}</div>`;
             }
             
-            if (msg.mediaType === 'image') { contentHtml += `<img src="${msg.mediaUrl}" style="max-width:100%; border-radius:8px; margin-bottom:5px;"><br>${msg.text}`; }
-            else if (msg.mediaType === 'video') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'video') + (msg.text ? `<br>${msg.text}`:''); }
-            else if (msg.mediaType === 'audio') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'audio') + (msg.text ? `<br>${msg.text}`:''); }
-            else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" class="gif-msg"><br>${msg.text}`; }
+            if (msg.mediaType === 'image') { contentHtml += `<img src="${msg.mediaUrl}" style="max-width:100%; border-radius:8px; margin-bottom:5px;"><br>${escapeHTML(msg.text)}`; }
+            else if (msg.mediaType === 'video') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'video') + (msg.text ? `<br>${escapeHTML(msg.text)}`:''); }
+            else if (msg.mediaType === 'audio') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'audio') + (msg.text ? `<br>${escapeHTML(msg.text)}`:''); }
+            else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" class="gif-msg"><br>${escapeHTML(msg.text)}`; }
             else if (msg.mediaType === 'buzz') { contentHtml += `<div class="buzz-message">⚡ BUZZ! ⚡</div>`; }
             else if (msg.mediaType === 'doodle_invite') {
-                contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" onclick="this.disabled=true; this.textContent='${t.doodle_connecting || 'Verbunden...'}'; if(window.acceptDoodleInvite) window.acceptDoodleInvite('${msg.sender}')">${t.doodle_btn_accept || 'Mitzeichnen'}</button>
-                    <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" onclick="this.disabled=true; this.textContent='${t.doodle_rejected || 'Abgelehnt'}'; if(window.rejectDoodleInvite) window.rejectDoodleInvite('${msg.sender}')">${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;
+                contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
+                    <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username)}>${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;
             }
             else if (msg.mediaType === 'doodle_accept') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(46, 213, 115, 0.1); color: #2ed573; padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">✅ <b>${t.doodle_msg_accepted || 'Doodle Einladung angenommen'}</b></div>`;
@@ -1132,7 +1079,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,107,107,0.1); color: #ff6b6b; padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">❌ <b>${t.doodle_msg_rejected || 'Doodle Einladung abgelehnt'}</b></div>`;
             }
             else { 
-                let processedText = msg.text || '';
+                let processedText = escapeHTML(msg.text || '');
                 if (currentChat && currentChat.type === 'room') {
                     processedText = processedText.replace(/@[\w]+/gi, match => {
                         if (match.toLowerCase() === currentUser) {
@@ -1169,13 +1116,13 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
             if (msg.type === 'group_invite') {
                 className = msg.sender_username === currentUser ? 'message sent' : 'message received';
-                let inviteText = `💌 Einladung zur Gruppe: <b>${msg.invite_group_name}</b>`;
+                let inviteText = `💌 Einladung zur Gruppe: <b>${escapeHTML(msg.invite_group_name)}</b>`;
                 let btnHtml = '';
                 if (msg.invite_status === 'pending') {
                     if (msg.sender_username !== currentUser) {
                         btnHtml = `<div style="margin-top:10px; display:flex; gap:10px; justify-content:center;">
-                            <button class="submit-btn" style="padding:5px 10px; font-size:12px;" onclick="acceptGroupInvite('${msg.invite_group_id}', '${msg.id}', '${msg.sender_username}', '${msg.invite_group_name}')">${t.btn_accept || 'Annehmen'}</button>
-                            <button class="danger-btn" style="padding:5px 10px; font-size:12px;" onclick="declineGroupInvite('${msg.invite_group_id}', '${msg.id}', '${msg.sender_username}', '${msg.invite_group_name}')">${t.btn_decline || 'Ablehnen'}</button>
+                            <button class="submit-btn" style="padding:5px 10px; font-size:12px;" ${actionAttrs("acceptGroupInvite", msg.invite_group_id, msg.id, msg.sender_username, msg.invite_group_name)}>${t.btn_accept || 'Annehmen'}</button>
+                            <button class="danger-btn" style="padding:5px 10px; font-size:12px;" ${actionAttrs("declineGroupInvite", msg.invite_group_id, msg.id, msg.sender_username, msg.invite_group_name)}>${t.btn_decline || 'Ablehnen'}</button>
                         </div>`;
                     } else {
                         inviteText += `<br><span style="font-size:11px; color:#aaa;">(Wartet auf Antwort...)</span>`;
@@ -1188,7 +1135,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 
                 expectedInner = `
                     <div class="message-content" style="background: rgba(37, 211, 102, 0.1); border: 1px solid rgba(37,211,102,0.3);">
-                        <div class="sender">${msg.sender_username}</div>
+                        <div class="sender">${escapeHTML(msg.sender_username)}</div>
                         <div class="text" style="text-align:center;">
                             ${inviteText}
                             ${btnHtml}
@@ -1204,7 +1151,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 if (msg.system_action === 'joined') actionText = t.sys_user_joined || 'ist der Gruppe beigetreten';
                 if (msg.system_action === 'left') actionText = t.sys_user_left || 'hat die Gruppe verlassen';
                 if (msg.system_action === 'removed') actionText = t.sys_user_removed || 'wurde aus der Gruppe entfernt';
-                expectedInner = `<div class="system-message-text">${msg.system_target} ${actionText}</div>`;
+                expectedInner = `<div class="system-message-text">${escapeHTML(msg.system_target)} ${actionText}</div>`;
 
             } else {
                 
@@ -1236,8 +1183,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                     if(window.fetchMissingProfile) window.fetchMissingProfile(msg.sender_username);
                 }
                 const aUrl = window.getAllowedProfilePics ? (window.getAllowedProfilePics(msg.sender_username, p)[0] || null) : p.avatarUrl;
-                let msgAvatar = aUrl ? `<img src="${aUrl}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;cursor:pointer;" onclick="if(window.showUserProfileModal) window.showUserProfileModal('${msg.sender_username}')">` : `<div style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle;margin-right:5px;cursor:pointer;" onclick="if(window.showUserProfileModal) window.showUserProfileModal('${msg.sender_username}')">${msg.sender_username.charAt(0).toUpperCase()}</div>`;
-                expectedInner = `<div class="message-sender" style="display:flex;align-items:center;">${msgAvatar}<span style="cursor:pointer;" onclick="if(window.showUserProfileModal) window.showUserProfileModal('${msg.sender_username}')">${isSentByMe ? 'Du' : msg.sender_username}</span></div><div class="message-bubble"${styleAttr}><div>${contentHtml}</div></div>${reactionsHtml}<div class="message-time">${ttlHtml} ${statusHtml} ${timeStr}${ticks}</div>`;
+                let msgAvatar = aUrl ? `<img src="${aUrl}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>` : `<div style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle;margin-right:5px;cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>${msg.sender_username.charAt(0).toUpperCase()}</div>`;
+                expectedInner = `<div class="message-sender" style="display:flex;align-items:center;">${msgAvatar}<span style="cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>${isSentByMe ? 'Du' : msg.sender_username}</span></div><div class="message-bubble"${styleAttr}><div>${contentHtml}</div></div>${reactionsHtml}<div class="message-time">${ttlHtml} ${statusHtml} ${timeStr}${ticks}</div>`;
     
                 className = `message ${isSentByMe ? 'sent' : 'received'}`;
             }
@@ -1246,7 +1193,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             if (div) {
                 if (div.dataset.hash !== hash) {
                     div.className = className;
-                    div.innerHTML = expectedInner;
+                    div.innerHTML = safeHTML(expectedInner);
                     div.dataset.hash = hash;
                 }
             } else {
@@ -1254,7 +1201,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 div.className = className;
                 div.dataset.id = msg.id;
                 div.dataset.hash = hash;
-                div.innerHTML = expectedInner;
+                div.innerHTML = safeHTML(expectedInner);
                 messagesContainer.appendChild(div);
                 shouldScroll = true;
             }
@@ -1718,7 +1665,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     });
 
     function renderForwardContactsList(filter) {
-        forwardContactsList.innerHTML = '';
+        forwardContactsList.innerHTML = safeHTML('');
         const allChats = [
             ...Array.from(users.keys()).filter(u => u !== currentUser).map(c => ({ id: c, name: '@'+c, type: 'dm', isContact: true })),
             ...Array.from(rooms.values()).map(r => ({ id: r.id, name: r.name, type: r.type, isContact: false }))
@@ -1728,12 +1675,12 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             if (filter && !chat.name.toLowerCase().includes(filter)) return;
             const div = document.createElement('div');
             div.className = 'chat-item';
-            div.innerHTML = `
+            div.innerHTML = safeHTML(`
                 <div class="avatar">${chat.isContact ? chat.name.charAt(1).toUpperCase() : chat.name.charAt(0).toUpperCase()}</div>
                 <div style="flex:1;">
-                    <div class="chat-item-name">${chat.name}</div>
+                    <div class="chat-item-name">${escapeHTML(chat.name)}</div>
                 </div>
-            `;
+            `);
             div.onclick = async () => {
                 forwardModal.classList.add('hidden');
                 if (forwardMessagesQueue.length === 0) return;
@@ -1750,13 +1697,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                                 isForwarded: true
                             };
-                            if (chat.type === 'dm') {
-                                payload.receiver_username = chat.id;
-                                payload.participants = [currentUser, chat.id];
-                                payload.chatId = [currentUser, chat.id].sort().join('_');
-                            } else {
-                                payload.roomId = chat.id;
-                            }
+                            Object.assign(payload, messageDestination(chat, currentUser));
+                            payload.timestamp = Date.now();
                             if (data.mediaUrl) payload.mediaUrl = data.mediaUrl;
                             if (data.mediaType) payload.mediaType = data.mediaType;
                             
@@ -1871,38 +1813,30 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     // --- Message Sending ---
     window.sendMessage = sendMessage;
 async function sendMessage(text, mediaType = null, mediaUrl = null, silent = false, scheduleTime = null) {
-        if (!currentChat) return;
-        if (currentChat.type === 'channel' && !currentChat.isAdmin) return;
-        if (blockedContacts.has(currentChat.id)) return;
+        if (!currentChat || scheduleTime) return;
+        const targetChat = { ...currentChat, members: [...(currentChat.members || [])] };
+        const destination = messageDestination(targetChat, currentUser);
+        const sender = currentUser;
+        if (targetChat.type === 'channel' && !targetChat.isAdmin) return;
+        if (blockedContacts.has(targetChat.id)) return;
         if (editingMessageId && !mediaType) { 
             try {
-                window.db.collection('messages').doc(editingMessageId).update({ text: text, edited: true });
+                await window.db.collection('messages').doc(editingMessageId).update({ text: text, edited: true });
             } catch(e) { console.error("Edit failed", e); }
             editingMessageId = null; 
             return; 
         }
 
-        let ttl = parseInt(ttlSelect.value); let expiresAt = null; if (ttl > 0 && currentChat.type === 'dm') expiresAt = null; else if(ttl > 0) expiresAt = Date.now() + (ttl * 1000); 
-        let processedText = text; if(currentChat.isSecret && !mediaType && text) processedText = await encryptMessage(text);
+        let ttl = parseInt(ttlSelect.value) || 0; let expiresAt = null; if (ttl > 0 && targetChat.type === 'dm') expiresAt = null; else if(ttl > 0) expiresAt = Date.now() + (ttl * 1000);
+        let processedText = text; if(targetChat.isSecret && !mediaType && text) processedText = await encryptMessage(text);
 
-        let mentions = [];
-        if (currentChat.type === 'room' && processedText) {
-            const matches = processedText.match(/@([a-zA-Z0-9_.-]+)/g);
-            if (matches) {
-                matches.forEach(m => {
-                    const uname = m.substring(1).toLowerCase();
-                    if (currentChat.members && currentChat.members.some(member => member.toLowerCase() === uname)) {
-                        if (!mentions.includes(uname)) mentions.push(uname);
-                    }
-                });
-            }
-        }
+        const mentions = targetChat.type === 'room' ? collectMentions(processedText, targetChat.members) : [];
 
         const msgObj = {
             id: Date.now().toString() + Math.random().toString(36).substr(2,9),
-            sender_username: currentUser,
-            chat_id: currentChat.id,
-            text: processedText, mediaType, mediaUrl, ttl, expires_at: expiresAt, silent, isSecret: currentChat.isSecret, edited: false,
+            sender_username: sender,
+            ...destination,
+            text: processedText, mediaType, mediaUrl, ttl, expires_at: expiresAt, silent, isSecret: !!targetChat.isSecret, edited: false,
             timestamp: scheduleTime || Date.now(),
             read: false,
             reactions: {},
@@ -1920,7 +1854,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
         const doodleTypes = ['doodle_invite', 'doodle_accept', 'doodle_close', 'doodle_reject'];
         if (doodleTypes.includes(mediaType) || (processedText && processedText.includes('Doodle Einladung abgelehnt'))) {
-            const existingMsgs = messages.get(currentChat.id) || [];
+            const existingMsgs = messages.get(targetChat.id) || [];
             existingMsgs.forEach(m => {
                 if (doodleTypes.includes(m.mediaType) || (m.text && m.text.includes('Doodle Einladung abgelehnt'))) {
                     if (window.db) window.db.collection('messages').doc(m.id).delete().catch(()=>{});
@@ -1928,19 +1862,15 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             });
         }
 
-        if (scheduleTime && scheduleTime > Date.now()) { setTimeout(() => { executeSendMessage(msgObj); }, scheduleTime - Date.now()); return; }
-        executeSendMessage(msgObj);
+        await executeSendMessage(msgObj);
     }
 
     async function executeSendMessage(msgObj) {
-        let isPublic = currentChat.type === 'room' || currentChat.type === 'channel';
-        let docData = { ...msgObj, isPublic: isPublic };
-        if (!isPublic) {
-            let other = currentChat.type === 'saved' ? currentUser : currentChat.id;
-            docData.participants = [currentUser.toLowerCase(), other.toLowerCase()];
-            if (currentChat.type === 'dm') docData.recipient_username = currentChat.id;
+        if (new TextEncoder().encode(JSON.stringify(msgObj)).length > 700 * 1024) {
+            alert(authText('security_media_limit'));
+            return;
         }
-        
+        const docData = { ...msgObj };
         try {
             await window.db.collection('messages').doc(msgObj.id).set(docData);
             if (!msgObj.silent) playSound();
@@ -2028,6 +1958,16 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     // Recording
     let isRecordingCancelled = false;
+    function getRecordingOptions(type) {
+        const candidates = type === 'video'
+            ? ['video/mp4;codecs=h264,aac', 'video/webm;codecs=vp8,opus', 'video/webm']
+            : ['audio/mp4;codecs=mp4a.40.2', 'audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/webm'];
+        const mimeType = candidates.find(candidate => MediaRecorder.isTypeSupported?.(candidate));
+        const options = mimeType ? { mimeType } : {};
+        if (type === 'video') options.videoBitsPerSecond = 100000;
+        return options;
+    }
+
     async function startRecording(type) {
         isRecordingCancelled = false;
         try {
@@ -2041,24 +1981,28 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 return;
             }
             
-            let options = undefined;
-            if (type === 'video') {
-                options = { videoBitsPerSecond: 100000 };
-            }
-            mediaRecorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+            const options = getRecordingOptions(type);
+            mediaRecorder = Object.keys(options).length ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
             
             let chunks = [];
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.ondataavailable = e => {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
             mediaRecorder.onstop = async () => {
-                let mType = mediaRecorder.mimeType || (type === "video" ? "video/mp4" : "audio/mp4");
-                if (mType.includes(';')) mType = mType.split(';')[0];
-                const blob = new Blob(chunks, { type: mType });
+                const recordedMimeType = mediaRecorder.mimeType || options.mimeType || (type === 'video' ? 'video/webm' : 'audio/webm');
+                const blob = new Blob(chunks, { type: recordedMimeType });
+                stream.getTracks().forEach(track => track.stop());
+
+                if (!blob.size) {
+                    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_empty_recording);
+                    return;
+                }
                 
                 // Show uploading indicator
                 const uploadIndicator = document.createElement('div');
                 uploadIndicator.id = 'upload-indicator';
                 uploadIndicator.style.cssText = 'position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3);';
-                uploadIndicator.textContent = 'Verarbeite...';
+                uploadIndicator.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).recording_processing;
                 document.body.appendChild(uploadIndicator);
 
                 const reader = new FileReader();
@@ -2067,16 +2011,16 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     sendMessage('', type, reader.result); 
                 };
                 reader.readAsDataURL(blob);
-                stream.getTracks().forEach(t => t.stop());
             };
-            mediaRecorder.start();
+            // Periodic chunks avoid empty recordings on Safari/iOS and Chromium.
+            mediaRecorder.start(250);
             if (type === 'video') { liveVideoPreview.srcObject = stream; liveVideoPreview.classList.remove('hidden'); liveVideoPreview.play().catch(e => console.error(e)); }
             recordingPreview.classList.remove('hidden'); messageForm.style.opacity = '0';
             recordingStartTime = Date.now();
             recordingInterval = setInterval(() => { const sec = Math.floor((Date.now() - recordingStartTime)/1000); recordingTimeEl.textContent = `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`; }, 1000);
         } catch(e) { 
             console.error("Recording error:", e);
-            alert("Aufnahme-Fehler: " + e.message + " (" + e.name + ")");
+            alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_recording_failed);
         }
     }
     recordAudioBtn.addEventListener('click', () => startRecording('audio')); recordVideoBtn.addEventListener('click', () => startRecording('video'));
@@ -2143,7 +2087,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         else {
             const profile = users.get(chat.name);
             const aUrl = getAllowedAvatarUrl(chat.name, profile);
-            if (aUrl) { currentChatAvatar.innerHTML = `<img src="${aUrl}" class="avatar-img">`; }
+            if (aUrl) { currentChatAvatar.innerHTML = safeHTML(`<img src="${aUrl}" class="avatar-img">`); }
             else { currentChatAvatar.textContent = chat.name.replace('@','').charAt(0).toUpperCase(); }
         }
 
@@ -2213,14 +2157,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 }
             };
 
-            window.currentChatStatusUserListener = window.db.collection('users').doc(id.toLowerCase()).onSnapshot(uDoc => {
+            window.currentChatStatusUserListener = window.db.collection('profiles').doc(id.toLowerCase()).onSnapshot(uDoc => {
                 if (uDoc.exists) {
                     users.set(id, uDoc.data());
                     updateText();
                 }
             });
 
-            window.currentChatStatusListener = window.db.collection('userData').doc(id.toLowerCase()).onSnapshot(doc => {
+            window.currentChatStatusListener = window.db.collection('presence').doc(id.toLowerCase()).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     window.currentChatLastSeenData = data;
@@ -2239,6 +2183,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 currentChatStatus.textContent = '';
             });
         }
+        renderMessages();
+        markMessagesAsRead(id);
     };
 
     ctxChatPin.addEventListener('click', () => {
@@ -2269,10 +2215,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 } else {
                     chatHeaderDropdown.classList.toggle('hidden');
                     const t = typeof TRANSLATIONS !== 'undefined' ? (TRANSLATIONS[currentLang] || TRANSLATIONS['de']) : {};
-                    dropdownAddContact.innerHTML = '👤 ' + (t.ctx_add_contact || 'Zu Kontakten hinzufügen');
-                    dropdownClearChat.innerHTML = '🗑️ ' + (t.ctx_clear_chat || 'Chat leeren');
-                    dropdownMuteUser.innerHTML = isMuted ? '🔔 ' + (t.ctx_unmute_user || 'Stummschaltung aufheben') : '🔕 ' + (t.ctx_mute_user || 'Stummschalten');
-                    dropdownBlockUser.innerHTML = isBlocked ? '✅ ' + (t.ctx_unblock_user || 'Entblocken') : '🚫 ' + (t.ctx_block_user || 'Blockieren');
+                    dropdownAddContact.innerHTML = safeHTML('👤 ' + (t.ctx_add_contact || 'Zu Kontakten hinzufügen'));
+                    dropdownClearChat.innerHTML = safeHTML('🗑️ ' + (t.ctx_clear_chat || 'Chat leeren'));
+                    dropdownMuteUser.innerHTML = safeHTML(isMuted ? '🔔 ' + (t.ctx_unmute_user || 'Stummschaltung aufheben') : '🔕 ' + (t.ctx_mute_user || 'Stummschalten'));
+                    dropdownBlockUser.innerHTML = safeHTML(isBlocked ? '✅ ' + (t.ctx_unblock_user || 'Entblocken') : '🚫 ' + (t.ctx_block_user || 'Blockieren'));
                     dropdownAddContact.style.display = isContact ? 'none' : 'flex';
                     
                     if (currentChat.type === 'saved') {
@@ -2363,7 +2309,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 settingsModal.classList.remove('hidden');
                 langSelect.value = currentLang;
                 const p = users.get(currentUser);
-                if(p && p.avatarUrl) settingsAvatar.innerHTML = `<img src="${p.avatarUrl}" class="avatar-img">`;
+                if(p && p.avatarUrl) settingsAvatar.innerHTML = safeHTML(`<img src="${p.avatarUrl}" class="avatar-img">`);
                 else settingsAvatar.textContent = currentUser.replace('@','').charAt(0).toUpperCase();
                 
                 if (p) {
@@ -2385,7 +2331,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (tab === 'calls') {
                 document.getElementById('list-calls').style.display = 'block';
                 if (currentUser && window.db) {
-                    window.db.collection('users').doc(currentUser).collection('callHistory')
+                    window.db.collection('users').doc(currentUser.toLowerCase()).collection('callHistory')
                         .where('type', '==', 'missed')
                         .where('seen', '==', false)
                         .get()
@@ -2414,7 +2360,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     });
     
     function renderChatList() {
-        lists.personal.innerHTML = ''; lists.rooms.innerHTML = ''; lists.contacts.innerHTML = '';
+        lists.personal.innerHTML = safeHTML(''); lists.rooms.innerHTML = safeHTML(''); lists.contacts.innerHTML = safeHTML('');
         const createItem = (chat) => {
             const div = document.createElement('div'); 
             let classNames = 'chat-item';
@@ -2434,7 +2380,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 if(aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img">`; else avatarHtml = chat.name.replace('@','').charAt(0).toUpperCase();
             }
             const mentionBadgeHtml = mentionedChats.has(chat.id) ? '<div class="mention-badge" style="position:absolute; top:-5px; right:-5px; background:var(--accent); color:#000; border-radius:50%; width:16px; height:16px; font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 5px rgba(0,0,0,0.5);">@</div>' : '';
-            div.innerHTML = `<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${getTranslatedChatName(chat)}</span></div>`;
+            div.innerHTML = safeHTML(`<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${escapeHTML(getTranslatedChatName(chat))}</span></div>`);
             div.addEventListener('click', () => {
                 if (mentionedChats.has(chat.id)) {
                     mentionedChats.delete(chat.id);
@@ -2514,12 +2460,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         else if (p && p.avatarUrl) profilePics = [p.avatarUrl]; // Migration
 
         if (galleryContainer) {
-            galleryContainer.innerHTML = '';
+            galleryContainer.innerHTML = safeHTML('');
             window.selectedProfilePicIndex = null;
             
             if (profilePics.length === 0) {
                 const initial = currentUser.replace('@','').charAt(0).toUpperCase();
-                galleryContainer.innerHTML = `<div class="avatar-large gallery-item" style="scroll-snap-align: center; flex-shrink: 0; position: relative;">${initial}</div>`;
+                galleryContainer.innerHTML = safeHTML(`<div class="avatar-large gallery-item" style="scroll-snap-align: center; flex-shrink: 0; position: relative;">${initial}</div>`);
                 if(removeBtn) removeBtn.classList.add('hidden');
                 if(primaryBtn) primaryBtn.classList.add('hidden');
             } else {
@@ -2528,8 +2474,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     const div = document.createElement('div');
                     div.className = 'avatar-large gallery-item' + (isPrimary ? ' primary' : '');
                     div.style = 'scroll-snap-align: center; flex-shrink: 0; position: relative; cursor: pointer; border: 2px solid ' + (isPrimary ? 'var(--accent)' : 'transparent') + '; padding: 2px;';
-                    div.innerHTML = `<img src="${url}" class="avatar-img" style="border-radius: 50%; width: 100%; height: 100%; object-fit: cover;">
-                                     ${isPrimary ? '<div style="position: absolute; bottom: 0; right: 0; background: var(--accent); color: #000; border-radius: 50%; font-size: 10px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">★</div>' : ''}`;
+                    div.innerHTML = safeHTML(`<img src="${url}" class="avatar-img" style="border-radius: 50%; width: 100%; height: 100%; object-fit: cover;">
+                                     ${isPrimary ? '<div style="position: absolute; bottom: 0; right: 0; background: var(--accent); color: #000; border-radius: 50%; font-size: 10px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">★</div>' : ''}`);
                     div.onclick = () => {
                         document.querySelectorAll('.gallery-item').forEach(el => el.style.border = '2px solid transparent');
                         div.style.border = '2px solid rgba(255,255,255,0.5)';
@@ -2647,7 +2593,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         btn.disabled = true;
 
         try {
-            const canvas = cropperInstance.getCroppedCanvas({ width: 600, height: 600 });
+            const canvas = cropperInstance.getCroppedCanvas({ width: 256, height: 256 });
             if (!canvas) throw new Error("Canvas rendering failed");
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
@@ -2656,26 +2602,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             let profilePics = p.profilePics || [];
             if (p.avatarUrl && profilePics.length === 0) profilePics = [p.avatarUrl];
 
-            try {
-                const fb = typeof firebase !== 'undefined' ? firebase : window.firebase;
-                if (fb && fb.storage) {
-                    const storageRef = fb.storage().ref();
-                    const fileName = 'avatars/' + currentUser.replace('@', '') + '_' + Date.now() + '.jpg';
-                    const fileRef = storageRef.child(fileName);
-                    
-                    const uploadTask = fileRef.putString(dataUrl, 'data_url');
-                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Upload Timeout")), 5000));
-                    await Promise.race([uploadTask, timeoutPromise]);
-                    
-                    const downloadUrl = await fileRef.getDownloadURL();
-                    profilePics.push(downloadUrl);
-                } else {
-                    throw new Error("Firebase storage not initialized");
-                }
-            } catch (err) {
-                console.error("Storage upload error:", err);
-                profilePics.push(dataUrl);
-            }
+            if (dataUrl.length > 65536) throw new Error(authText('security_media_limit'));
+            profilePics = profilePics.slice(-4);
+            profilePics.push(dataUrl);
 
             p.profilePics = profilePics;
             if (profilePics.length > 0) {
@@ -2751,8 +2680,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (evt) => {
+                    if (evt.target.result.length > 65536) return alert(authText('security_media_limit'));
                     newGroupAvatarUrl = evt.target.result;
-                    if(newGroupAvatarPreview) newGroupAvatarPreview.innerHTML = `<img src="${newGroupAvatarUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    if(newGroupAvatarPreview) newGroupAvatarPreview.innerHTML = safeHTML(`<img src="${newGroupAvatarUrl}" style="width: 100%; height: 100%; object-fit: cover;">`);
                 };
                 reader.readAsDataURL(file);
             }
@@ -2765,11 +2695,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         editGroupAvatar.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 2 * 1024 * 1024) return alert("Bild zu groß! Max. 2MB erlaubt.");
+                if (file.size > 48 * 1024) return alert(authText('security_media_limit'));
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    if (e.target.result.length > 65536) return alert(authText('security_media_limit'));
                     editGroupAvatarUrl = e.target.result;
-                    if(editGroupAvatarPreview) editGroupAvatarPreview.innerHTML = `<img src="${editGroupAvatarUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    if(editGroupAvatarPreview) editGroupAvatarPreview.innerHTML = safeHTML(`<img src="${editGroupAvatarUrl}" style="width: 100%; height: 100%; object-fit: cover;">`);
                 };
                 reader.readAsDataURL(file);
             }
@@ -2796,7 +2727,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 
                 window.renderGroupInfo();
                 document.getElementById('current-chat-name').textContent = currentChat.name;
-                if (currentChat.avatar && currentChatAvatar) currentChatAvatar.innerHTML = `<img src="${currentChat.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                if (currentChat.avatar && currentChatAvatar) currentChatAvatar.innerHTML = safeHTML(`<img src="${currentChat.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`);
                 
                 editGroupModal.classList.add('hidden');
             } catch (e) {
@@ -2843,7 +2774,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         createGroupSubmitBtn.disabled = true;
 
         try {
-            const userRef = await window.db.collection('users').doc(username).get();
+            const userRef = await window.db.collection('profiles').doc(username).get();
             if (userRef.exists) {
                 alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_username_taken || 'Dieser Benutzername ist bereits von einem anderen Benutzer belegt.');
                 createGroupSubmitBtn.textContent = (window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).btn_create || 'Erstellen';
@@ -2864,16 +2795,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         createGroupSubmitBtn.textContent = 'Erstelle...';
         try {
                 let finalAvatarUrl = newGroupAvatarUrl;
-                if (newGroupAvatarUrl && newGroupAvatarUrl.startsWith('data:')) {
-                    try {
-                        const storageRef = firebase.storage().ref();
-                        const fileRef = storageRef.child('avatars/' + id + '.jpg');
-                        await fileRef.putString(newGroupAvatarUrl, 'data_url');
-                        finalAvatarUrl = await fileRef.getDownloadURL();
-                    } catch (e) {
-                        console.error('Group avatar upload failed', e);
-                    }
-                }
+                if (newGroupAvatarUrl && newGroupAvatarUrl.length > 65536) throw new Error(authText('security_media_limit'));
 
                 const newGroup = {
                     id: id,
@@ -2884,6 +2806,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     type: 'room',
                     description: desc,
                     privacy: privacy,
+                    groupId: groupUid,
                     avatarUrl: finalAvatarUrl,
                     searchable: privacy === 'public'
                 };
@@ -2901,9 +2824,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 newGroupName.value = '';
                 if(descInput) descInput.value = '';
                 newGroupAvatarUrl = '';
-                if(newGroupAvatarPreview) newGroupAvatarPreview.innerHTML = '📷';
+                if(newGroupAvatarPreview) newGroupAvatarPreview.innerHTML = safeHTML('📷');
                 if(newGroupAvatarInput) newGroupAvatarInput.value = '';
-                document.getElementById('selected-members-container').innerHTML = '';
+                document.getElementById('selected-members-container').innerHTML = safeHTML('');
                 
                 // Force switch to active chats list so it shows up in sidebar
                 document.getElementById('start-page').classList.remove('active');
@@ -2928,7 +2851,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         let q = globalSearchInput.value.trim().toLowerCase();
         if (!q) {
             globalSearchResults.style.display = 'none';
-            globalSearchResults.innerHTML = '';
+            globalSearchResults.innerHTML = safeHTML('');
             return;
         }
 
@@ -2936,7 +2859,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
         globalSearchBtn.textContent = '...';
         globalSearchBtn.disabled = true;
-        globalSearchResults.innerHTML = '';
+        globalSearchResults.innerHTML = safeHTML('');
         globalSearchResults.style.display = 'flex';
 
         try {
@@ -2953,12 +2876,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     
                     const avContainer = document.createElement('div');
                     avContainer.style.flexShrink = '0';
-                    avContainer.innerHTML = grp.avatarUrl ? `<img src="${grp.avatarUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">` : `<div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#000;font-size:14px;font-weight:bold;">${grp.name.charAt(0).toUpperCase()}</div>`;
+                    avContainer.innerHTML = safeHTML(grp.avatarUrl ? `<img src="${grp.avatarUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">` : `<div style="width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#000;font-size:14px;font-weight:bold;">${grp.name.charAt(0).toUpperCase()}</div>`);
                     
                     const info = document.createElement('div');
                     info.style.flex = '1';
                     let displayId = grp.id.startsWith('@') ? grp.id : '';
-                    info.innerHTML = `<div style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 150px; white-space: nowrap;">${grp.name}</div><div style="font-size: 11px; color: #aaa;">${displayId ? displayId + ' • ' : ''}${t.lbl_public_group || 'Öffentliche Gruppe'}</div>`;
+                    info.innerHTML = safeHTML(`<div style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 150px; white-space: nowrap;">${escapeHTML(grp.name)}</div><div style="font-size: 11px; color: #aaa;">${displayId ? displayId + ' • ' : ''}${t.lbl_public_group || 'Öffentliche Gruppe'}</div>`);
                     
                     const actionBtn = document.createElement('button');
                     actionBtn.className = 'icon-btn';
@@ -2992,12 +2915,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             });
 
             if (foundGroups === 0) {
-                globalSearchResults.innerHTML = `<div style="font-size: 12px; color: #aaa; text-align: center;">${t.err_no_public_groups || 'Keine öffentlichen Gruppen gefunden.'}</div>`;
+                globalSearchResults.innerHTML = safeHTML(`<div style="font-size: 12px; color: #aaa; text-align: center;">${t.err_no_public_groups || 'Keine öffentlichen Gruppen gefunden.'}</div>`);
             }
 
         } catch (e) {
             console.error('Search error', e);
-            globalSearchResults.innerHTML = `<div style="font-size: 12px; color: var(--error); text-align: center;">${t.err_search_failed || 'Suche fehlgeschlagen.'}</div>`;
+            globalSearchResults.innerHTML = safeHTML(`<div style="font-size: 12px; color: var(--error); text-align: center;">${t.err_search_failed || 'Suche fehlgeschlagen.'}</div>`);
         }
 
         globalSearchBtn.textContent = '🔍';
@@ -3027,13 +2950,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const resultContainer = document.getElementById('user-search-result');
         if (resultContainer) {
             resultContainer.style.display = 'none';
-            resultContainer.innerHTML = '';
+            resultContainer.innerHTML = safeHTML('');
         }
 
         if (lowerQ === currentUser.toLowerCase()) {
             if (resultContainer) {
                 resultContainer.style.display = 'flex';
-                resultContainer.innerHTML = `<span style="color: var(--error);">Das bist du selbst!</span>`;
+                resultContainer.innerHTML = safeHTML(`<span style="color: var(--error);">Das bist du selbst!</span>`);
             } else alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_search_self || 'Das bist du selbst!');
             return;
         }
@@ -3043,13 +2966,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         userSearchBtn.disabled = true;
 
         try {
-            const docRef = window.db.collection('users').doc(lowerQ);
+            const docRef = window.db.collection('profiles').doc(lowerQ);
             const docSnap = await docRef.get();
             if (docSnap.exists && docSnap.data().id_number === idVal) {
                 if (docSnap.data().searchable === false) {
                     if (resultContainer) {
                         resultContainer.style.display = 'flex';
-                        resultContainer.innerHTML = `<span style="color: var(--error);">Benutzername nicht gefunden (Privatsphäre).</span>`;
+                        resultContainer.innerHTML = safeHTML(`<span style="color: var(--error);">Benutzername nicht gefunden (Privatsphäre).</span>`);
                     } else alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_user_not_found_privacy || 'Benutzername nicht gefunden (Privatsphäre).');
                     return;
                 }
@@ -3061,11 +2984,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                         ? `<img src="${aUrl}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">`
                         : `<div style="width: 50px; height: 50px; border-radius: 50%; background: var(--panel-bg); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: var(--text-primary);">${q.replace('@','').charAt(0).toUpperCase()}</div>`;
                     
-                    resultContainer.innerHTML = `
+                    resultContainer.innerHTML = safeHTML(`
                         ${avatarImg}
                         <span style="font-weight: bold;">${q}</span>
                         <button id="start-search-chat-btn" style="background: var(--accent); color: #000; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 5px;">Als Kontakt hinzufügen</button>
-                    `;
+                    `);
                     resultContainer.style.display = 'flex';
                     
                     document.getElementById('start-search-chat-btn').addEventListener('click', () => {
@@ -3077,7 +3000,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             } else {
                 if (resultContainer) {
                     resultContainer.style.display = 'flex';
-                    resultContainer.innerHTML = `<span style="color: var(--error);">Dieser Benutzername existiert nicht.</span>`;
+                    resultContainer.innerHTML = safeHTML(`<span style="color: var(--error);">Dieser Benutzername existiert nicht.</span>`);
                 } else alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_user_not_found2 || 'Benutzername nicht gefunden.');
             }
         } catch (error) {
@@ -3102,367 +3025,206 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     sendBtn.addEventListener('touchend', () => clearTimeout(longPressTimer));
     
     sendSilentBtn.addEventListener('click', () => { const text = messageInput.value.trim(); if(text) { sendMessage(text, null, null, true); messageInput.value = ''; sendOptionsPopup.classList.add('hidden'); } });
-    sendScheduleBtn.addEventListener('click', () => { scheduleModal.classList.remove('hidden'); sendOptionsPopup.classList.add('hidden'); });
+    sendScheduleBtn.hidden = true;
+    sendScheduleBtn.style.display = 'none';
+    sendScheduleBtn.disabled = true;
     closeScheduleModalBtn.addEventListener('click', () => scheduleModal.classList.add('hidden'));
-    scheduleSubmitBtn.addEventListener('click', () => { const text = messageInput.value.trim(); const dt = new Date(scheduleDatetime.value).getTime(); if(text && dt > Date.now()) { sendMessage(text, null, null, false, dt); messageInput.value = ''; scheduleModal.classList.add('hidden'); } });
+    scheduleSubmitBtn.disabled = true;
 
-    // --- Firebase Auth & Login Logic ---
-    tabLogin.addEventListener('click', () => {
-        isRegisterMode = false;
-        tabLogin.style.fontWeight = 'bold'; tabLogin.style.color = 'var(--accent)'; tabLogin.style.borderBottom = '2px solid var(--accent)';
-        tabRegister.style.fontWeight = 'normal'; tabRegister.style.color = 'var(--text-secondary)'; tabRegister.style.borderBottom = 'none';
-        emailInput.classList.add('hidden'); emailInput.removeAttribute('required');
-        idInput.classList.remove('hidden'); idInput.setAttribute('required', 'true');
-        idHint.classList.add('hidden'); // Hide hint during login
-        verificationInfo.classList.add('hidden');
-        if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
-        if (rememberMeContainer) rememberMeContainer.style.display = 'flex';
-        document.getElementById('forgot-links').style.display = 'none';
-        loginSubmitBtn.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).tab_login || 'Einloggen';
-        document.getElementById('forgot-links').style.display = 'flex'; loginSubmitBtn.style.display = 'block';
-        loginError.classList.add('hidden');
-    });
-
-    tabRegister.addEventListener('click', () => {
-        isRegisterMode = true;
-        tabRegister.style.fontWeight = 'bold'; tabRegister.style.color = 'var(--accent)'; tabRegister.style.borderBottom = '2px solid var(--accent)';
-        tabLogin.style.fontWeight = 'normal'; tabLogin.style.color = 'var(--text-secondary)'; tabLogin.style.borderBottom = 'none';
-        emailInput.classList.remove('hidden'); emailInput.setAttribute('required', 'true');
-        idInput.classList.add('hidden'); idInput.removeAttribute('required');
-        idHint.classList.remove('hidden'); // Show hint during registration
-        verificationInfo.classList.add('hidden');
-        if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
-        if (rememberMeContainer) rememberMeContainer.style.display = 'none';
-        loginSubmitBtn.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).tab_register || 'Registrieren'; loginSubmitBtn.style.display = 'block';
-        loginError.classList.add('hidden');
-    });
-
-
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = prompt((TRANSLATIONS[currentLang] || TRANSLATIONS.en).prompt_email_pwd || "Bitte gib deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen:");
-            if (!email) return;
-            try {
-                await window.auth.sendPasswordResetEmail(email.trim());
-                verificationInfo.innerHTML = ((TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_pwd_reset_sent || "Eine E-Mail...") + "<br><strong style='color:#ffcc00; display:block; margin-top:8px;'>" + ((TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_spam_warn || "Wichtig: Spam-Ordner") + "</strong>";
-                verificationInfo.classList.remove('hidden');
-                loginError.classList.add('hidden');
-            } catch (error) {
-                loginError.textContent = "Fehler: " + error.message;
-                loginError.classList.remove('hidden');
-                verificationInfo.classList.add('hidden');
-            }
-        });
+    // Firebase Auth verifies passwords; Firestore rules enforce account ownership.
+    for (const lang of Object.keys(window.AUTH_TRANSLATIONS)) {
+        Object.assign(TRANSLATIONS[lang], window.AUTH_TRANSLATIONS[lang]);
     }
-
-    if (forgotUsernameIdLink) {
-        forgotUsernameIdLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = prompt((TRANSLATIONS[currentLang] || TRANSLATIONS.en).prompt_email_user || "Bitte gib deine registrierte E-Mail-Adresse ein:");
-            if (!email) return;
-            try {
-                const snapshot = await window.db.collection('users').where('email', '==', email.trim()).get();
-                if (snapshot.empty) {
-                    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_no_account || "Kein Benutzerkonto gefunden.");
-                    return;
-                }
-                
-                let accounts = [];
-                snapshot.forEach(doc => {
-                    accounts.push({
-                        username: doc.data().username,
-                        id_number: doc.data().id_number || 'Keine ID'
-                    });
-                });
-                
-                let accountsHtml = accounts.map(a => `<p><strong>Username:</strong> ${a.username}<br><strong>ID Number:</strong> ${a.id_number}</p>`).join('');
-
-                await fetch('https://api.brevo.com/v3/smtp/email', {
-                  method: 'POST',
-                  headers: {
-                    'Accept': 'application/json',
-                    'api-key': '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',
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    sender: { name: "Doori Messenger", email: "noreply@doori-messenger.de" },
-                    to: [{ email: email.trim() }],
-                    subject: "Your Doori Messenger Account Details",
-                    htmlContent: `<html><body style="font-family: sans-serif; line-height: 1.6;"><h2>Hello,</h2><p>You requested your Doori Messenger account details.</p>${accountsHtml}<p>Please keep your ID safe as you need it for every login. NEVER share your password with anyone!</p></body></html>`
-                  })
-                });
-                
-                alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_acc_details_sent || "Eine E-Mail mit deinen Daten wurde gesendet.");
-                
-            } catch (error) {
-                alert(((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_send || "Fehler beim Senden: ") + error.message);
-            }
-        });
+    const authText = key => (window.AUTH_TRANSLATIONS[currentLang] || window.AUTH_TRANSLATIONS.en)[key];
+    const gifAddButton = document.getElementById('add-custom-gif-btn');
+    if (gifAddButton) {
+        gifAddButton.dataset.i18n = 'security_gif_button';
+        gifAddButton.textContent = authText('security_gif_button');
     }
-
-    if (resendVerificationLink) {
-        resendVerificationLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = emailInput.value.trim() || prompt((TRANSLATIONS[currentLang] || TRANSLATIONS.en).prompt_email_verify || "Bitte gib deine E-Mail-Adresse ein:");
-            if (!email) return;
-            
-            try {
-                const snapshot = await window.db.collection('users').where('email', '==', email).limit(1).get();
-                if (snapshot.empty) {
-                    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_no_account || "Kein Benutzerkonto gefunden.");
-                    return;
-                }
-                const doc = snapshot.docs[0];
-                const username = doc.data().username;
-                const generatedId = doc.data().id_number;
-                const verificationToken = doc.data().verificationToken;
-                
-                const verifyLink = `https://doori-messenger.de/?verify=${verificationToken}&u=${encodeURIComponent(username)}`;
-                
-                await fetch('https://api.brevo.com/v3/smtp/email', {
-                  method: 'POST',
-                  headers: {
-                    'Accept': 'application/json',
-                    'api-key': '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',
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    sender: { name: "Doori Messenger", email: "noreply@doori-messenger.de" },
-                    to: [{ email: email }],
-                    subject: "Verify your Doori Messenger Account",
-                    htmlContent: `<html><body style="font-family: sans-serif; line-height: 1.6;"><h2>Welcome to Doori Messenger</h2><p>Your account has been created successfully.</p><p><strong>Username:</strong> ${username}</p><p><strong>Your 6-digit ID Number:</strong> ${generatedId}</p><p style="color: #d93025; font-weight: bold;">Important: You must keep this 6-digit ID safe. You will need it for every login! You can share this ID number with others so they can find you, but NEVER share your password with anyone!</p><p>To activate your account and access the messenger, please click the verification link below:</p><p><a href="${verifyLink}" style="display: inline-block; padding: 10px 20px; background: #00d2d3; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email & Login</a></p><p>Or copy this link into your browser: <br>${verifyLink}</p></body></html>`
-                  })
-                });
-                alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_verify_resent || "Bestätigungs-E-Mail wurde erneut gesendet.");
-                if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
-            } catch(e) {
-                alert(((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_send || "Fehler beim Senden: ") + e.message);
-            }
-        });
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const verifyToken = urlParams.get('verify');
-    const verifyUser = urlParams.get('u');
-    if (verifyToken && verifyUser) {
-        const verifyUserLower = verifyUser.toLowerCase();
-        localStorage.setItem('doori_verify_token_' + verifyUserLower, verifyToken);
-        // Auto-verify in the background using unauthenticated access allowed by new Firestore rules
-        window.db.collection('users').doc(verifyUserLower).update({
-            isVerified: true,
-            verifyAttempt: verifyToken
-        }).then(() => {
-            console.log("Account successfully auto-verified via link!");
-            verificationInfo.innerHTML = "✅ Account erfolgreich verifiziert! Du kannst dich jetzt einloggen.";
-            verificationInfo.style.color = "#2ed573";
-        }).catch(err => {
-            console.warn("Auto-verify failed (maybe already verified or invalid token):", err);
-        });
-
-        setTimeout(() => {
-            tabLogin.click();
-            usernameInput.value = verifyUser;
-            verificationInfo.innerHTML = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_verify_login || "Please log in to confirm your email address and activate your account.";
-            verificationInfo.classList.remove('hidden');
-        }, 500);
-    }
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
-        loginError.classList.add('hidden');
-        loginSubmitBtn.disabled = true;
-        loginSubmitBtn.textContent = 'Lädt...';
-        
-        let username = usernameInput.value.trim(); 
-        let password = passwordInput.value.trim();
-        let idVal = idInput.value.trim();
-        
-        if (!username || !password || (!isRegisterMode && !idVal)) {
-            loginSubmitBtn.disabled = false;
-            loginSubmitBtn.textContent = isRegisterMode ? ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_register||'Registrieren') : ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_login||'Einloggen');
-            return;
-        }
-
-        let rawUsername = username.replace('@', '');
-        if (isRegisterMode && !/^.{10,}$/.test(rawUsername)) {
-            loginError.textContent = (TRANSLATIONS[currentLang]||TRANSLATIONS.en).hint_username || 'Mindestens 10 Zeichen erforderlich.';
-            loginError.classList.remove('hidden');
-            loginSubmitBtn.disabled = false;
-            loginSubmitBtn.textContent = isRegisterMode ? ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_register||'Registrieren') : ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_login||'Einloggen');
-            return;
-        }
-        
-        if (!username.startsWith('@')) username = '@' + username;
-        const usernameLower = username.toLowerCase();
-
+    const serverAuthCalls = new Set(['registerAccount', 'ensureAccount', 'loginWithUsername', 'recoverAccountDetails', 'sendVerificationEmail']);
+    const authCall = (name, data = {}) => serverAuthCalls.has(name)
+        ? window.accountFunctions.httpsCallable(name)(data).then(result => result.data)
+        : window.accountClient[name](data);
+    function savedAlias() {
         try {
-            if (isRegisterMode) {
-                window.isRegistering = true;
-                let email = emailInput.value.trim();
-                if (!email) return;
-                
-                try {
-                    // Check if username is taken in Firestore
-                    const userDocRef = window.db.collection('users').doc(usernameLower);
-                    const userDocSnap = await userDocRef.get();
-                    if (userDocSnap.exists && userDocSnap.data().uid) {
-                        throw new Error('username-taken');
-                    }
-                    
-                    // Register via Firebase Auth
-                    const userCredential = await window.auth.createUserWithEmailAndPassword(email, password);
-                    const user = userCredential.user;
-                    
-                    const generatedId = Math.floor(100000 + Math.random() * 900000).toString();
-                    
-                    const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-                    await userDocRef.set({
-                        uid: user.uid,
-                        username: username,
-                        email: email,
-                        id_number: generatedId,
-                        isVerified: false,
-                        verificationToken: verificationToken,
-                        createdAt: new Date().toISOString()
-                    }, { merge: true });
-                    
-                    const verifyLink = `https://doori-messenger.de/?verify=${verificationToken}&u=${encodeURIComponent(username)}`;
-                    
-                    try {
-                        await fetch('https://api.brevo.com/v3/smtp/email', {
-                          method: 'POST',
-                          headers: {
-                            'Accept': 'application/json',
-                            'api-key': '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',
-                            'Content-Type': 'application/json'
-                          },
-                          body: JSON.stringify({
-                            sender: { name: "Doori Messenger", email: "noreply@doori-messenger.de" },
-                            to: [{ email: email }],
-                            subject: "Verify your Doori Messenger Account",
-                            htmlContent: `<html><body style="font-family: sans-serif; line-height: 1.6;"><h2>Welcome to Doori Messenger</h2><p>Your account has been created successfully.</p><p><strong>Username:</strong> ${username}</p><p><strong>Your 6-digit ID Number:</strong> ${generatedId}</p><p style="color: #d93025; font-weight: bold;">Important: You must keep this 6-digit ID safe. You will need it for every login! You can share this ID number with others so they can find you, but NEVER share your password with anyone!</p><p>To activate your account and access the messenger, please click the verification link below:</p><p><a href="${verifyLink}" style="display: inline-block; padding: 10px 20px; background: #00d2d3; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email & Login</a></p><p>Or copy this link into your browser: <br>${verifyLink}</p></body></html>`
-                          })
-                        });
-                        verificationInfo.innerHTML = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_verify_sent || "Please check your email to verify your account.";
-                        verificationInfo.classList.remove('hidden');
-                    } catch(e) { console.error("Brevo error", e); }
-                    
-                    // Do not log in immediately. Log them out and force verification.
-                    await window.auth.signOut();
-                    
-                    loginSubmitBtn.disabled = false;
-                    loginSubmitBtn.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).tab_register || 'Registrieren';
-                    loginError.classList.add('hidden');
-                    
-                } catch (error) {
-                    if (error.message === 'username-taken') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_user_taken || 'Dieser Benutzername ist bereits vergeben.';
-                    } else if (error.code === 'auth/email-already-in-use') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_email_taken || 'Diese E-Mail-Adresse ist bereits registriert.';
-                    } else if (error.code === 'auth/weak-password') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_weak_pwd || 'Das Passwort ist zu schwach (mindestens 6 Zeichen).';
-                    } else if (error.message && error.message.includes('client is offline')) {
-                        loginError.innerHTML = '<b>Datenbank-Fehler (Offline)</b><br>1. Hast du in der <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--accent);">Firebase Console</a> unter <b>Firestore Database</b> auf "Datenbank erstellen" geklickt?<br>2. Falls ja, deaktiviere bitte kurz deinen Ad-Blocker (z.B. uBlock), da dieser Firebase blockieren könnte.';
-                    } else {
-                        loginError.textContent = 'Fehler bei der Registrierung: ' + error.message;
-                    }
-                    loginError.classList.remove('hidden');
-                }
-            } else {
-                // Login Mode
-                try {
-                    // First get the email for this username from Firestore
-                    const userDocRef = window.db.collection('users').doc(usernameLower);
-                    const userDocSnap = await userDocRef.get();
-                    if (!userDocSnap.exists) {
-                        throw new Error('user-not-found');
-                    }
-                    
-                    const userEmail = userDocSnap.data().email;
-                    const storedId = userDocSnap.data().id_number;
-                    const isVerified = userDocSnap.data().isVerified;
-                    const verificationToken = userDocSnap.data().verificationToken;
-                    
-                    if (!userEmail) {
-                        throw new Error('legacy-account');
-                    }
-                    if (storedId && storedId !== idVal) {
-                        throw new Error('invalid-id');
-                    }
-                    
-                    const localToken = localStorage.getItem('doori_verify_token_' + usernameLower) || localStorage.getItem('doori_verify_token_' + username);
-                    const effectiveToken = verifyToken || localToken;
-                    
-                    if (isVerified === false) {
-                        if (!effectiveToken || effectiveToken !== verificationToken) {
-                            throw new Error('not-verified');
-                        }
-                        window.isVerifying = true;
-                    }
-                    
-                    // Login via Firebase Auth
-                    
-                    // Set persistence
-                    if (rememberMeCheckbox && rememberMeCheckbox.checked) {
-                        await window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                        localStorage.setItem('doori_saved_username', username);
-                        localStorage.setItem('doori_saved_id', idVal);
-                    } else {
-                        await window.auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
-                        localStorage.removeItem('doori_saved_username');
-                        localStorage.removeItem('doori_saved_id');
-                    }
-                    const userCredential = await window.auth.signInWithEmailAndPassword(userEmail, password);
-
-                    const user = userCredential.user;
-                    
-                    if (isVerified === false && effectiveToken === verificationToken) {
-                        await userDocRef.update({ isVerified: true });
-                        // Only clear URL if we actually had verifyToken in URL
-                        if (verifyToken) {
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                        }
-                        localStorage.removeItem('doori_verify_token_' + usernameLower);
-                        localStorage.removeItem('doori_verify_token_' + username);
-                    }
-                    
-                    performLogin(username);
-                } catch (error) {
-                    console.error("Login Flow Error:", error);
-                    if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
-                    if (error.message === 'user-not-found') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_user_not_found || 'Benutzername nicht gefunden.';
-                    } else if (error.message === 'invalid-id') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_invalid_id || 'Die eingegebene 6-stellige ID ist falsch.';
-                    } else if (error.message === 'legacy-account') {
-                        loginError.innerHTML = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_legacy_acc || 'Dein Account nutzt noch das alte System...';
-                    } else if (error.message === 'not-verified') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_not_verified || 'Bitte bestätige zuerst deine E-Mail über den Link.';
-                        if (resendVerificationContainer) resendVerificationContainer.style.display = 'block';
-                    } else if (error.message === 'email-not-verified') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_email_not_ver || 'Bitte bestätige zuerst deine E-Mail-Adresse...';
-                        if (resendVerificationContainer) resendVerificationContainer.style.display = 'block';
-                    } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                        loginError.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.en).msg_wrong_pwd || 'Falsches Passwort oder E-Mail.';
-                    } else {
-                        loginError.textContent = ((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_login_failed || 'Fehler beim Login: ') + (error.message || JSON.stringify(error));
-                    }
-                    loginError.classList.remove('hidden');
-                }
-            }
-        } catch (criticalError) {
-            console.error("Critical Login Error:", criticalError);
-            alert(((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_unexpected || "Ein unerwarteter Fehler ist aufgetreten: ") + criticalError.message);
+            const key = 'doori_alias:' + normalizeUsername(usernameInput.value);
+            const alias = JSON.parse(sessionStorage.getItem(key) || localStorage.getItem(key) || 'null');
+            return alias?.id === idInput.value.trim() ? alias : null;
+        } catch { return null; }
+    }
+    function rememberAlias(username, id, email, persistent) {
+        const key = 'doori_alias:' + normalizeUsername(username);
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+        (persistent ? localStorage : sessionStorage).setItem(key, JSON.stringify({ id, email }));
+    }
+    function authNotice(key, replacements = {}) {
+        let text = authText(key);
+        for (const [name, value] of Object.entries(replacements)) text = text.replace('{' + name + '}', value);
+        verificationInfo.textContent = text;
+        verificationInfo.classList.remove('hidden');
+    }
+    function syncAuthForm() {
+        const emailLogin = !isRegisterMode && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(usernameInput.value.trim());
+        const loginSubtitle = document.getElementById('login-subtitle');
+        const usernameLabel = document.getElementById('username-label');
+        const emailLabel = document.getElementById('email-label');
+        const passwordLabel = document.getElementById('password-label');
+        const idLabel = document.getElementById('id-label');
+        const registrationEmailHint = document.getElementById('registration-email-hint');
+        const forgotLinks = document.getElementById('forgot-links');
+        loginSubtitle.dataset.i18n = isRecoveryMode ? 'security_recovery_title' : isRegisterMode ? 'security_register_title' : 'security_login_title';
+        usernameLabel.dataset.i18n = isRecoveryMode ? 'security_field_email' : isRegisterMode ? 'security_register_username_label' : 'security_field_username_email';
+        emailLabel.dataset.i18n = isRegisterMode ? 'security_register_email_label' : 'security_field_email';
+        passwordLabel.dataset.i18n = isRegisterMode ? 'security_register_password_label' : 'security_field_password';
+        idLabel.dataset.i18n = 'security_field_contact_id';
+        registrationEmailHint.dataset.i18n = 'security_register_email_hint';
+        loginSubtitle.textContent = authText(isRecoveryMode ? 'security_recovery_title' : isRegisterMode ? 'security_register_title' : 'security_login_title');
+        usernameLabel.textContent = authText(usernameLabel.dataset.i18n);
+        emailLabel.textContent = authText(emailLabel.dataset.i18n);
+        passwordLabel.textContent = authText(passwordLabel.dataset.i18n);
+        idLabel.textContent = authText('security_field_contact_id');
+        registrationEmailHint.textContent = authText('security_register_email_hint');
+        usernameInput.dataset.i18n = isRecoveryMode ? 'security_email_prompt' : isRegisterMode ? 'security_register_hint' : 'security_login_hint';
+        usernameInput.placeholder = authText(usernameInput.dataset.i18n);
+        document.getElementById('username-hint')?.classList.add('hidden');
+        idHint.dataset.i18n = 'security_id_hint';
+        idHint.textContent = authText('security_id_hint');
+        emailInput.classList.toggle('hidden', !isRegisterMode);
+        emailLabel.classList.toggle('hidden', !isRegisterMode);
+        registrationEmailHint.classList.toggle('hidden', !isRegisterMode);
+        emailInput.required = isRegisterMode;
+        const aliasHint = document.getElementById('alias-email-hint');
+        aliasHint.textContent = authText('security_alias_hint');
+        aliasHint.classList.add('hidden');
+        idInput.classList.toggle('hidden', isRegisterMode || isRecoveryMode);
+        idLabel.classList.toggle('hidden', isRegisterMode || isRecoveryMode);
+        idInput.required = !isRegisterMode && !isRecoveryMode;
+        passwordInput.classList.toggle('hidden', isRecoveryMode);
+        passwordLabel.classList.toggle('hidden', isRecoveryMode);
+        passwordInput.required = !isRecoveryMode;
+        idHint.classList.toggle('hidden', !isRegisterMode);
+        if (rememberMeContainer) rememberMeContainer.style.display = (isRegisterMode || isRecoveryMode) ? 'none' : 'flex';
+        if (forgotLinks) forgotLinks.style.display = (!isRegisterMode && !isRecoveryMode) ? 'flex' : 'none';
+        usernameInput.type = isRecoveryMode ? 'email' : 'text';
+        loginSubmitBtn.textContent = isRecoveryMode ? authText('security_recover_button') : (TRANSLATIONS[currentLang] || TRANSLATIONS.en)[isRegisterMode ? 'tab_register' : 'tab_login'];
+        loginSubmitBtn.dataset.i18n = isRecoveryMode ? 'security_recover_button' : isRegisterMode ? 'tab_register' : 'tab_login';
+        tabLogin.classList.toggle('active', !isRegisterMode && !isRecoveryMode);
+        tabRegister.classList.toggle('active', isRegisterMode);
+        tabLogin.setAttribute('aria-selected', String(!isRegisterMode && !isRecoveryMode));
+        tabRegister.setAttribute('aria-selected', String(isRegisterMode));
+    }
+    usernameInput.addEventListener('input', syncAuthForm);
+    for (const input of [usernameInput, idInput]) input.addEventListener('input', () => {
+        if (!isRegisterMode && savedAlias()) emailInput.value = savedAlias().email;
+    });
+    tabLogin.addEventListener('click', () => { isRegisterMode = false; isRecoveryMode = false; syncAuthForm(); });
+    tabRegister.addEventListener('click', () => { isRegisterMode = true; isRecoveryMode = false; syncAuthForm(); });
+    syncAuthForm();
+    forgotUsernameIdLink?.addEventListener('click', event => {
+        event.preventDefault();
+        isRegisterMode = false;
+        isRecoveryMode = true;
+        syncAuthForm();
+        authNotice('security_recovery_instructions');
+        usernameInput.focus();
+    });
+    async function authenticateForm() {
+        const identifier = usernameInput.value.trim();
+        const password = passwordInput.value; // Spaces are valid password characters.
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identifier)) {
+            return window.accountClient.signIn({ email: identifier, password, id: idInput.value.trim() });
+        }
+        const result = await authCall('loginWithUsername', { username: normalizeUsername(identifier), id: idInput.value.trim(), password });
+        return (await window.auth.signInWithCustomToken(result.token)).user;
+    }
+    resendVerificationLink?.addEventListener('click', async event => {
+        event.preventDefault();
+        if (window.authFlowBusy) return;
+        window.authFlowBusy = true;
+        try {
+            const user = await authenticateForm();
+            window.auth.languageCode = currentLang;
+            await authCall('sendVerificationEmail', { language: currentLang });
+            authNotice('security_sent');
+        } catch (error) {
+            authNotice(error.code?.includes('too-many') || error.code?.includes('resource-exhausted') ? 'security_slow' : 'security_error');
         } finally {
-            window.isRegistering = false;
-            if(loginSubmitBtn.style.display !== 'none') {
-                loginSubmitBtn.disabled = false;
-                loginSubmitBtn.textContent = isRegisterMode ? ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_register||'Registrieren') : ((TRANSLATIONS[currentLang]||TRANSLATIONS.en).tab_login||'Einloggen');
-            }
+            await window.auth.signOut();
+            window.authFlowBusy = false;
         }
     });
+    loginForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (window.authFlowBusy) return;
+        window.authFlowBusy = true;
+        loginSubmitBtn.disabled = true;
+        loginSubmitBtn.textContent = authText('security_loading');
+        loginError.classList.add('hidden');
+        verificationInfo.classList.add('hidden');
+        if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
+        let createdUser = null;
+        let accountCreated = false;
+        try {
+            window.auth.languageCode = currentLang;
+            await window.auth.setPersistence(rememberMeCheckbox?.checked && !isRegisterMode
+                ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+            if (isRecoveryMode) {
+                await authCall('recoverAccountDetails', { email: usernameInput.value.trim(), language: currentLang });
+                isRecoveryMode = false;
+                authNotice('security_recovery_sent');
+            } else if (isRegisterMode) {
+                const credential = await window.auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
+                createdUser = credential.user;
+                const result = await authCall('registerAccount', { username: usernameInput.value.trim() });
+                accountCreated = true;
+                isRegisterMode = false;
+                usernameInput.value = result.username;
+                idInput.value = result.id;
+                rememberAlias(result.username, result.id, createdUser.email, false);
+                await authCall('sendVerificationEmail', { language: currentLang });
+                authNotice('security_created', { name: result.username, id: result.id });
+                await window.auth.signOut();
+                syncAuthForm();
+            } else {
+                const user = await authenticateForm();
+                await user.reload();
+                if (!user.emailVerified) {
+                    authNotice('security_verify');
+                    if (resendVerificationContainer) resendVerificationContainer.style.display = 'block';
+                    await window.auth.signOut();
+                    return;
+                }
+                await user.getIdToken(true);
+                const account = await authCall('ensureAccount');
+                const privateAccount = (await window.db.collection('users').doc(account.key).get()).data();
+                rememberAlias(account.username, String(privateAccount.id_number), user.email, !!rememberMeCheckbox?.checked);
+                if (rememberMeCheckbox?.checked) localStorage.setItem('doori_saved_username', usernameInput.value.trim());
+                else localStorage.removeItem('doori_saved_username');
+                localStorage.removeItem('doori_saved_id');
+                performLogin(account.username);
+            }
+        } catch (error) {
+            // Keep an already registered account recoverable if email delivery fails.
+            if (createdUser && !accountCreated) await createdUser.delete().catch(() => {});
+            await window.auth.signOut().catch(() => {});
+            const key = accountCreated ? 'security_created_email_error' : error.code?.includes('resource-exhausted') || error.code === 'auth/too-many-requests'
+                ? 'security_slow' : isRecoveryMode && error.code?.includes('unavailable') ? 'security_recovery_error' : error.code === 'unavailable' ? 'security_unavailable'
+                : isRegisterMode ? 'security_register_error' : 'security_error';
+            loginError.textContent = authText(key);
+            loginError.classList.remove('hidden');
+            if (accountCreated) {
+                syncAuthForm();
+                if (resendVerificationContainer) resendVerificationContainer.style.display = 'block';
+            }
+            if (accountCreated && resendVerificationContainer) resendVerificationContainer.style.display = 'block';
+        } finally {
+            window.authFlowBusy = false;
+            loginSubmitBtn.disabled = false;
+            syncAuthForm();
+        }
+    });
+
 
     function performLogin(username) {
         currentUser = username; window.currentUser = username;
@@ -3477,14 +3239,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     let callHistoryUnsubscribe = null;
     function loadCallHistory(username) {
         if (callHistoryUnsubscribe) callHistoryUnsubscribe();
-        callHistoryUnsubscribe = window.db.collection('users').doc(username).collection('callHistory')
+        callHistoryUnsubscribe = window.db.collection('users').doc(username.toLowerCase()).collection('callHistory')
             .orderBy('timestamp', 'desc')
             .limit(50)
             .onSnapshot(snapshot => {
                 const listEl = document.getElementById('list-calls');
                 if (!listEl) return;
                 
-                listEl.innerHTML = '';
+                listEl.innerHTML = safeHTML('');
                 let unreadCount = 0;
                 
                 const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
@@ -3518,13 +3280,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     const aUrl = getAllowedAvatarUrl(data.peer, p);
                     if (aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img">`;
                     
-                    el.innerHTML = `
+                    el.innerHTML = safeHTML(`
                         <div class="avatar" style="color:${color}; border-color:${color};">${avatarHtml}</div>
                         <div class="chat-item-info">
                             <span class="chat-item-name" style="color:${color};">${data.peer}</span>
                             <span class="chat-item-last-message" style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${iconStr} - ${timeStr} ${durStr ? '('+durStr+' '+(t.lbl_min || 'Min')+')' : ''}</span>
                         </div>
-                    `;
+                    `);
                     el.onclick = () => {
                         if (!data.seen && data.type === 'missed') {
                             doc.ref.update({seen: true}).catch(e=>{});
@@ -3558,23 +3320,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     // Custom Player
     function getCachedBlobUrl(msg) {
-        if (msg._blobUrl) return msg._blobUrl;
         let b64 = msg.mediaUrl || msg.fileData;
         if (!b64 || !b64.startsWith('data:')) return b64;
-        try {
-            let safeUrl = b64.replace(/(data:(audio|video)\/[a-zA-Z0-9]+);.*?base64,/, '$1;base64,');
-            const parts = safeUrl.split(',');
-            const mime = parts[0].match(/:(.*?);/)[1];
-            const bstr = atob(parts[1]);
-            let n = bstr.length;
-            const u8arr = new Uint8Array(n);
-            while(n--) u8arr[n] = bstr.charCodeAt(n);
-            const blob = new Blob([u8arr], {type: mime});
-            msg._blobUrl = URL.createObjectURL(blob);
-            return msg._blobUrl;
-        } catch(e) {
-            return b64;
-        }
+        // DOMPurify intentionally removes blob: URLs. Keep the stored media data
+        // URL so the sanitized audio/video element retains a playable source.
+        return b64.replace(/(data:(audio|video)\/[a-zA-Z0-9.+-]+);.*?base64,/, '$1;base64,');
     }
 
     function renderCustomPlayer(url, type) {
@@ -3595,34 +3345,53 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             const media = playerEl.querySelector('video, audio'); const playBtn = playerEl.querySelector('.play-btn'); const progBar = playerEl.querySelector('.player-progress-bar'); const progCont = playerEl.querySelector('.player-progress-container'); const timeEl = playerEl.querySelector('.player-time');
             if(!media) return;
             const fmt = (s) => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-            playBtn.onclick = () => { if(media.paused) { const p = media.play(); if(p !== undefined) { p.then(() => { playBtn.textContent = '\u23F8'; }).catch(e => { console.log('play err', e); alert('Media Play Error: ' + e.message); }); } else { playBtn.textContent = '\u23F8'; } } else { media.pause(); playBtn.textContent = '\u25B6'; } };
+            playBtn.onclick = () => {
+                if (media.paused) {
+                    media.dataset.playPending = 'true';
+                    const p = media.play();
+                    if (p !== undefined) {
+                        p.then(() => {
+                            delete media.dataset.playPending;
+                            playBtn.textContent = '\u23F8';
+                        }).catch(error => {
+                            delete media.dataset.playPending;
+                            playBtn.textContent = '\u25B6';
+                            const interrupted = error?.name === 'AbortError' || /interrupted by a call to pause/i.test(error?.message || '');
+                            if (!interrupted) {
+                                console.error('Media playback failed', error);
+                                alert((TRANSLATIONS[currentLang] || TRANSLATIONS.en).err_media_playback);
+                            }
+                        });
+                    } else {
+                        delete media.dataset.playPending;
+                        playBtn.textContent = '\u23F8';
+                    }
+                } else {
+                    media.pause();
+                    playBtn.textContent = '\u25B6';
+                }
+            };
             media.ontimeupdate = () => { if(media.duration) { progBar.style.width = (media.currentTime/media.duration*100)+'%'; timeEl.textContent = `${fmt(media.currentTime)} / ${fmt(media.duration)}`; } };
             media.onloadedmetadata = () => { timeEl.textContent = `0:00 / ${fmt(media.duration)}`; };
             media.onended = () => { playBtn.textContent = '\u25B6'; progBar.style.width = '0%'; };
+            media.onpause = () => { if (!media.ended) playBtn.textContent = '\u25B6'; };
             progCont.onclick = (e) => { const r = progCont.getBoundingClientRect(); const pct = (e.clientX - r.left)/r.width; media.currentTime = pct * media.duration; };
         });
     }
 
-    setInterval(() => {
-        if(currentChat) renderMessages();
-    }, 1000);
+    // Firestore snapshots already update changed messages. Re-rendering every
+    // second resets media loading on slower devices and produces 0:00 players.
 
-    // Auto-Login
-    window.auth.onAuthStateChanged(async (user) => {
-        if (user && !currentUser) {
-            if (window.isRegistering) return;
-            try {
-                const q = await window.db.collection('users').where('uid', '==', user.uid).get();
-                if (!q.empty) {
-                    const doc = q.docs[0];
-                    if (doc.data().isVerified === false && !window.isVerifying) {
-                        window.auth.signOut();
-                    } else {
-                        performLogin(doc.data().username);
-                    }
-                }
-            } catch (err) { console.error("Auto-login error", err); }
-        }
+    // Auto-login only after server-confirmed Firebase email verification.
+    window.auth.onAuthStateChanged(async user => {
+        if (!user || currentUser || window.authFlowBusy) return;
+        try {
+            await user.reload();
+            if (!user.emailVerified) { await window.auth.signOut(); return; }
+            await user.getIdToken(true);
+            const result = await authCall('ensureAccount');
+            if (!currentUser) performLogin(result.username);
+        } catch (error) { console.error('Auto-login failed', error); }
     });
 
     // --- Group Member Selection Logic ---
@@ -3635,22 +3404,22 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     window.clearGroupSelection = function() {
         selectedMembers.clear();
-        if (selectedMembersContainer) selectedMembersContainer.innerHTML = '';
+        if (selectedMembersContainer) selectedMembersContainer.innerHTML = safeHTML('');
         renderGroupContacts();
     };
 
     window.renderGroupContacts = function() {
         if (!groupContactsList) return;
-        groupContactsList.innerHTML = '';
+        groupContactsList.innerHTML = safeHTML('');
         chatData.contacts.forEach(c => {
             if (selectedMembers.has(c.id)) return;
             const div = document.createElement('div');
             div.className = 'chat-item';
-            div.innerHTML = `
+            div.innerHTML = safeHTML(`
                 <div class="avatar">${c.id.charAt(0).toUpperCase()}</div>
                 <div class="chat-item-info"><span class="chat-item-name">${c.id}</span></div>
                 <button class="icon-btn text-btn" style="color:var(--accent); font-size:1rem;">+</button>
-            `;
+            `);
             div.addEventListener('click', () => {
                 addSelectedMember(c.id);
                 renderGroupContacts();
@@ -3666,7 +3435,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const badge = document.createElement('div');
         badge.className = 'selected-member-badge';
         badge.dataset.id = username;
-        badge.innerHTML = `<span>${username}</span><span class="remove-member">✖</span>`;
+        badge.innerHTML = safeHTML(`<span>${username}</span><span class="remove-member">✖</span>`);
         badge.querySelector('.remove-member').addEventListener('click', () => {
             selectedMembers.delete(username);
             badge.remove();
@@ -3690,17 +3459,17 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (q === currentUser.toLowerCase()) return;
             
             try {
-                const docRef = window.db.collection('users').doc(q);
+                const docRef = window.db.collection('profiles').doc(q);
                 const docSnap = await docRef.get();
                 if (docSnap.exists && docSnap.data().id_number === idVal) {
                     groupMemberSearchResult.style.display = 'flex';
-                    groupMemberSearchResult.innerHTML = `
+                    groupMemberSearchResult.innerHTML = safeHTML(`
                         <div style="display:flex; align-items:center; gap:10px;">
                             <div class="avatar">${q.charAt(0).toUpperCase()}</div>
                             <span>${q}</span>
                         </div>
                         <button class="submit-btn" id="add-searched-member" style="padding: 5px 15px; font-size: 14px; min-width: auto; height: auto; border-radius: 20px;">${(window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).btn_add_user || 'Hinzufügen'}</button>
-                    `;
+                    `);
                     document.getElementById('add-searched-member').addEventListener('click', () => {
                         addSelectedMember(q);
                         groupMemberSearchResult.style.display = 'none';
@@ -3709,7 +3478,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     });
                 } else {
                     groupMemberSearchResult.style.display = 'flex';
-                    groupMemberSearchResult.innerHTML = `<span style="color:var(--danger);" data-i18n="err_user_not_found">Dieser Benutzer existiert nicht.</span>`;
+                    groupMemberSearchResult.innerHTML = safeHTML(`<span style="color:var(--danger);" data-i18n="err_user_not_found">Dieser Benutzer existiert nicht.</span>`);
                 }
             } catch (e) { console.error(e); }
         });
@@ -3770,10 +3539,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             editGroupName.value = currentChat.name || '';
             editGroupDesc.value = currentChat.description || '';
             if (currentChat.avatar) {
-                editGroupAvatarPreview.innerHTML = `<img src="${currentChat.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                editGroupAvatarPreview.innerHTML = safeHTML(`<img src="${currentChat.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`);
                 editGroupAvatarUrl = currentChat.avatar;
             } else {
-                editGroupAvatarPreview.innerHTML = '📷';
+                editGroupAvatarPreview.innerHTML = safeHTML('📷');
                 editGroupAvatarUrl = null;
             }
             editGroupModal.classList.remove('hidden');
@@ -3816,7 +3585,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         groupInfoName.textContent = currentChat.name;
         groupInfoAvatar.textContent = currentChat.name.charAt(0).toUpperCase();
         
-        groupMembersList.innerHTML = '';
+        groupMembersList.innerHTML = safeHTML('');
         
         const isMeOwner = currentChat.creator === currentUser;
         const isAdmin = isMeOwner || (currentChat.admins && currentChat.admins.includes(currentUser));
@@ -3878,21 +3647,21 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     if (canPromote && !isCreator) {
                         const adminBtnText = isMemberAdmin ? '👑-' : '👑+';
                         const adminTitle = isMemberAdmin ? (t.btn_demote || 'Demote') : (t.btn_promote || 'Promote');
-                        actions += `<button class="icon-btn" style="background: rgba(255,255,255,0.1); color: gold; border-radius: 5px; padding: 5px 8px; font-size: 14px; margin-right: 5px;" onclick="toggleGroupAdmin('${member}', ${!isMemberAdmin})" title="${adminTitle}">${adminBtnText}</button>`;
+                        actions += `<button class="icon-btn" style="background: rgba(255,255,255,0.1); color: gold; border-radius: 5px; padding: 5px 8px; font-size: 14px; margin-right: 5px;" ${actionAttrs("toggleGroupAdmin", member, !isMemberAdmin)} title="${adminTitle}">${adminBtnText}</button>`;
                     }
                     if (canMuteOrKick) {
-                        actions += `<button class="icon-btn" style="background: ${isMuted ? '#ff4757' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 5px; padding: 5px 8px; font-size: 14px; margin-right: 5px;" onclick="toggleMuteMember('${member}', ${!isMuted})" title="${isMuted ? (t.btn_unmute_member || 'Unmute') : (t.btn_mute_member || 'Mute')}">${isMuted ? '🔊' : '🔇'}</button>`;
-                        actions += `<button class="icon-btn danger" style="padding: 5px 8px; font-size: 14px;" onclick="removeGroupMember('${member}')" title="${t.btn_kick_member || 'Remove'}">✖</button>`;
+                        actions += `<button class="icon-btn" style="background: ${isMuted ? '#ff4757' : 'rgba(255,255,255,0.1)'}; color: #fff; border-radius: 5px; padding: 5px 8px; font-size: 14px; margin-right: 5px;" ${actionAttrs("toggleMuteMember", member, !isMuted)} title="${isMuted ? (t.btn_unmute_member || 'Unmute') : (t.btn_mute_member || 'Mute')}">${isMuted ? '🔊' : '🔇'}</button>`;
+                        actions += `<button class="icon-btn danger" style="padding: 5px 8px; font-size: 14px;" ${actionAttrs("removeGroupMember", member)} title="${t.btn_kick_member || 'Remove'}">✖</button>`;
                     }
                 }
                 
-                div.innerHTML = `
+                div.innerHTML = safeHTML(`
                     <div class="member-item-info">
                         <div class="avatar">${member.charAt(0).toUpperCase()}</div>
                         <span>${member} ${badges}</span>
                     </div>
                     <div style="display:flex;">${actions}</div>
-                `;
+                `);
                 groupMembersList.appendChild(div);
             });
         }
@@ -4029,10 +3798,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 try {
                     let userDoc;
                     if (/^\d{6}$/.test(query)) {
-                        const snapshot = await window.db.collection('users').where('idNumber', '==', query).get();
+                        const snapshot = await window.db.collection('profiles').where('idNumber', '==', query).get();
                         if (!snapshot.empty) userDoc = snapshot.docs[0];
                     } else {
-                        userDoc = await window.db.collection('users').doc(u).get();
+                        userDoc = await window.db.collection('profiles').doc(u).get();
                     }
 
                     if (userDoc && userDoc.exists) {
@@ -4093,28 +3862,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     };
 
     // --- Group Invitations & System Messages ---
-    window.acceptGroupInvite = async function(groupId, msgId, sender, groupName) {
+    window.acceptGroupInvite = async function(groupId, msgId) {
         try {
-            await window.db.collection('messages').doc(msgId).update({ invite_status: 'accepted' }).catch(()=>{});
-            
-            const groupRef = window.db.collection('groups').doc(groupId);
-            const doc = await groupRef.get();
-            if (doc.exists) {
-                const groupData = doc.data();
-                if (!groupData.members.includes(currentUser)) {
-                    await groupRef.update({
-                        members: firebase.firestore.FieldValue.arrayUnion(currentUser)
-                    });
-                    await window.sendSystemMessage(groupId, 'joined', currentUser);
-                }
-                
-                if (!chatData.rooms.find(r => r.id === groupId)) {
-                    if (!groupData.members.includes(currentUser)) groupData.members.push(currentUser);
-                    chatData.rooms.push(groupData);
-                    renderChatList();
-                }
-            }
-        } catch(e) { console.error(e); }
+            await authCall('acceptGroupInvitation', { groupId, messageId: msgId });
+            window.closeInviteModal?.();
+        } catch (error) { alert(authText('security_invite_error')); }
     };
 
     window.declineGroupInvite = async function(groupId, msgId, sender, groupName) {
@@ -4129,6 +3881,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             const invitesQuery = await window.db.collection('messages')
                 .where('type', '==', 'group_invite')
                 .where('recipient_username', '==', inviteeUsername.toLowerCase())
+                .where('participants', 'array-contains', currentUser.toLowerCase()).where('isPublic', '==', false)
                 .get();
             const batch = window.db.batch();
             invitesQuery.forEach(doc => {
@@ -4167,7 +3920,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (!popup) return;
         
         const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en'];
-        textEl.innerHTML = ((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).msg_invited_by || 'Du wurdest von <b>{sender}</b> in die Gruppe <b>{group}</b> eingeladen.').replace('{sender}', msg.sender_username).replace('{group}', msg.invite_group_name);
+        textEl.innerHTML = safeHTML(((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).msg_invited_by || 'Du wurdest von <b>{sender}</b> in die Gruppe <b>{group}</b> eingeladen.').replace('{sender}', escapeHTML(msg.sender_username)).replace('{group}', escapeHTML(msg.invite_group_name)));
         
         const closePopup = () => { popup.classList.add('hidden'); };
         
@@ -4190,7 +3943,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const msg = {
             id: msgRef.id,
             chat_id: groupId,
-            sender_username: 'system',
+            sender_username: currentUser,
             timestamp: Date.now(),
             text: '',
             isPublic: true,
@@ -4291,10 +4044,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     window.renderBlockedContacts = function() {
         const list = document.getElementById('blocked-contacts-list');
         if(!list) return;
-        list.innerHTML = '';
+        list.innerHTML = safeHTML('');
         const t = TRANSLATIONS[currentLang] || TRANSLATIONS['de'];
         if(blockedContacts.size === 0) {
-            list.innerHTML = `<span style="color: var(--text-secondary);">${t.msg_no_blocked || 'Keine blockierten Kontakte.'}</span>`;
+            list.innerHTML = safeHTML(`<span style="color: var(--text-secondary);">${t.msg_no_blocked || 'Keine blockierten Kontakte.'}</span>`);
             return;
         }
         blockedContacts.forEach(username => {
@@ -4304,10 +4057,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             div.style.alignItems = 'center';
             div.style.padding = '5px 0';
             div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-            div.innerHTML = `
+            div.innerHTML = safeHTML(`
                 <span>${username}</span>
-                <button class="text-btn" style="color: var(--bg-red); font-size: 12px; padding: 5px;" onclick="window.unblockUser('${username}')">${t.btn_unblock || 'Entblocken'}</button>
-            `;
+                <button class="text-btn" style="color: var(--bg-red); font-size: 12px; padding: 5px;" ${actionAttrs("unblockUser", username)}>${t.btn_unblock || 'Entblocken'}</button>
+            `);
             list.appendChild(div);
         });
     };
@@ -4356,11 +4109,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
         function renderMentionDropdown() {
             if(!mentionDropdown) return;
-            mentionDropdown.innerHTML = '';
+            mentionDropdown.innerHTML = safeHTML('');
             filteredMembers.forEach((member, idx) => {
                 const item = document.createElement('div');
                 item.className = 'mention-item' + (idx === mentionActiveIndex ? ' active' : '');
-                item.innerHTML = `<div class="mention-avatar">${member.charAt(0).toUpperCase()}</div><div>${member}</div>`;
+                item.innerHTML = safeHTML(`<div class="mention-avatar">${member.charAt(0).toUpperCase()}</div><div>${member}</div>`);
                 item.onclick = () => insertMention(member);
                 mentionDropdown.appendChild(item);
             });
@@ -4481,16 +4234,16 @@ if (menuLocationBtn) {
         }
         
         const originalHtml = menuLocationBtn.innerHTML;
-        menuLocationBtn.innerHTML = '⏳ <span data-i18n="lbl_location">Standort wird abgerufen...</span>';
+        menuLocationBtn.innerHTML = safeHTML('⏳ <span data-i18n="lbl_location">Standort wird abgerufen...</span>');
         
         navigator.geolocation.getCurrentPosition((position) => {
-            menuLocationBtn.innerHTML = originalHtml;
+            menuLocationBtn.innerHTML = safeHTML(originalHtml);
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             sendMessage('', 'location', lat + ',' + lng);
             if (plusMenuDropdown) plusMenuDropdown.classList.add('hidden');
         }, (error) => {
-            menuLocationBtn.innerHTML = originalHtml;
+            menuLocationBtn.innerHTML = safeHTML(originalHtml);
             console.error("GPS Fehler:", error);
             alert("Standort konnte nicht abgerufen werden. Bitte überprüfe die Berechtigungen deines Browsers/Geräts.");
         }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
@@ -4561,7 +4314,7 @@ function applyFontSize(size) {
         styleEl.id = 'custom-font-size-style';
         document.head.appendChild(styleEl);
     }
-    styleEl.innerHTML = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { font-size: ${px} !important; }`;
+    styleEl.textContent = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { font-size: ${px} !important; }`;
 }
 
 const savedFontSize = localStorage.getItem('doori_font_size') || 'normal';
@@ -4585,7 +4338,7 @@ if(bioInput) {
         const newBio = e.target.value.trim();
         bioSaveTimeout = setTimeout(() => {
             if(window.currentUser) {
-                window.db.collection('users').doc(window.currentUser).set({ bio: newBio }, { merge: true }).catch(console.error);
+                window.db.collection('profiles').doc(window.currentUser).set({ bio: newBio }, { merge: true }).catch(console.error);
                 if(window.users && window.users.has(window.currentUser)) {
                     let uData = window.users.get(window.currentUser);
                     uData.bio = newBio;
@@ -4600,7 +4353,7 @@ if(bioInput) {
 if(window.firebase) {
     firebase.auth().onAuthStateChanged(user => {
         if(user && user.displayName) {
-            window.db.collection('users').doc(user.displayName).get().then(doc => {
+            window.db.collection('profiles').doc(user.displayName).get().then(doc => {
                 if(doc.exists && doc.data().bio && bioInput) {
                     bioInput.value = doc.data().bio;
                 }
@@ -4728,9 +4481,9 @@ function applyFontFamily(family) {
         document.head.appendChild(styleEl);
     }
     if (family === 'Inter') {
-        styleEl.innerHTML = '';
+        styleEl.textContent = '';
     } else {
-        styleEl.innerHTML = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { font-family: ${family} !important; }`;
+        styleEl.textContent = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { font-family: ${family} !important; }`;
     }
 }
 const savedFontFamily = localStorage.getItem('doori_font_family') || 'Inter';
@@ -4754,9 +4507,9 @@ function applyFontColor(color) {
         document.head.appendChild(styleEl);
     }
     if(color === 'default') {
-        styleEl.innerHTML = '';
+        styleEl.textContent = '';
     } else {
-        styleEl.innerHTML = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { color: ${color} !important; }`;
+        styleEl.textContent = `.msg-sent .msg-bubble, .message.sent .message-bubble, #message-input { color: ${color} !important; }`;
     }
 }
 const savedFontColor = localStorage.getItem('doori_font_color') || 'default';
@@ -4783,11 +4536,11 @@ window.selectPredefinedWallpaper = function(filename) {
 // ====== PHASE 1.3: GROUP TRANSLATIONS ======
 if (window.TRANSLATIONS) {
     const tAdd = {
-        de: { lbl_font_group: 'Schrift (Eigener Text)', lbl_bio: 'Info / Über mich', lbl_font_color: 'Farbe', lbl_font_size: 'Größe' },
-        en: { lbl_font_group: 'Font (Own Text)', lbl_bio: 'About / Info', lbl_font_color: 'Color', lbl_font_size: 'Size' },
-        fa: { lbl_font_group: 'فونت (متن خود)', lbl_bio: 'درباره من', lbl_font_color: 'رنگ', lbl_font_size: 'اندازه' },
-        ar: { lbl_font_group: 'الخط (نصك الخاص)', lbl_bio: 'حول / معلومات', lbl_font_color: 'اللون', lbl_font_size: 'الحجم' },
-        tr: { lbl_font_group: 'Yazı (Kendi Metniniz)', lbl_bio: 'Hakkımda / Bilgi', lbl_font_color: 'Renk', lbl_font_size: 'Boyut' }
+        de: { lbl_font_group: 'Schrift (Eigener Text)', lbl_bio: 'Info / Über mich', lbl_font_color: 'Farbe', lbl_font_size: 'Größe', modal_add_contact: 'Kontakt hinzufügen', title_send_message: 'Nachricht senden', title_more_options: 'Weitere Optionen', err_media_playback: 'Die Sprachnachricht konnte nicht wiedergegeben werden.', recording_processing: 'Sprachnachricht wird verarbeitet …', err_empty_recording: 'Die Aufnahme enthält keine Audiodaten. Bitte nimm die Sprachnachricht erneut auf.', err_recording_failed: 'Die Aufnahme konnte nicht gestartet werden.' },
+        en: { lbl_font_group: 'Font (Own Text)', lbl_bio: 'About / Info', lbl_font_color: 'Color', lbl_font_size: 'Size', modal_add_contact: 'Add contact', title_send_message: 'Send message', title_more_options: 'More options', err_media_playback: 'The voice message could not be played.', recording_processing: 'Processing voice message …', err_empty_recording: 'The recording contains no audio. Please record the voice message again.', err_recording_failed: 'The recording could not be started.' },
+        fa: { lbl_font_group: 'فونت (متن خود)', lbl_bio: 'درباره من', lbl_font_color: 'رنگ', lbl_font_size: 'اندازه', modal_add_contact: 'افزودن مخاطب', title_send_message: 'ارسال پیام', title_more_options: 'گزینه‌های بیشتر', err_media_playback: 'پیام صوتی پخش نشد.', recording_processing: 'در حال پردازش پیام صوتی …', err_empty_recording: 'این ضبط هیچ صدایی ندارد. لطفاً پیام صوتی را دوباره ضبط کنید.', err_recording_failed: 'شروع ضبط امکان‌پذیر نبود.' },
+        ar: { lbl_font_group: 'الخط (نصك الخاص)', lbl_bio: 'حول / معلومات', lbl_font_color: 'اللون', lbl_font_size: 'الحجم', modal_add_contact: 'إضافة جهة اتصال', title_send_message: 'إرسال الرسالة', title_more_options: 'خيارات إضافية', err_media_playback: 'تعذّر تشغيل الرسالة الصوتية.', recording_processing: 'جارٍ تجهيز الرسالة الصوتية …', err_empty_recording: 'لا يحتوي التسجيل على صوت. يُرجى تسجيل الرسالة الصوتية مرة أخرى.', err_recording_failed: 'تعذّر بدء التسجيل.' },
+        tr: { lbl_font_group: 'Yazı (Kendi Metniniz)', lbl_bio: 'Hakkımda / Bilgi', lbl_font_color: 'Renk', lbl_font_size: 'Boyut', modal_add_contact: 'Kişi ekle', title_send_message: 'Mesaj gönder', title_more_options: 'Diğer seçenekler', err_media_playback: 'Sesli mesaj oynatılamadı.', recording_processing: 'Sesli mesaj işleniyor …', err_empty_recording: 'Kayıtta ses verisi yok. Lütfen sesli mesajı yeniden kaydedin.', err_recording_failed: 'Kayıt başlatılamadı.' }
     };
     ['de', 'en', 'fa', 'ar', 'tr'].forEach(lang => {
         if(window.TRANSLATIONS[lang]) {
@@ -4796,6 +4549,9 @@ if (window.TRANSLATIONS) {
     });
 }
 document.addEventListener('DOMContentLoaded', () => {
+    // Every visit starts in dark mode. Users can still switch themes for the
+    // current session from Settings > Design.
+    localStorage.setItem('doori_theme_mode', 'dark');
     setTimeout(() => { if(typeof applyTranslation === 'function') applyTranslation(window.currentLang || 'de'); }, 1500);
     
     const themeSelect = document.getElementById('setting-theme-mode');
@@ -4911,16 +4667,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isAdmin) return;
         
         modal.classList.remove('hidden');
-        let token = currentChat.inviteToken;
-        if (!token) {
-            token = Math.random().toString(36).substring(2, 10);
-            await window.db.collection('groups').doc(currentChat.id).update({ inviteToken: token });
-            currentChat.inviteToken = token;
-        }
+        const token = await window.accountClient.publishGroupLink(currentChat);
+        currentChat.inviteToken = token;
         const link = window.location.origin + window.location.pathname + '?join=' + currentChat.id + '_' + token;
         document.getElementById('invite-link-input').value = link;
         
-        document.getElementById('qrcode-container').innerHTML = '';
+        document.getElementById('qrcode-container').innerHTML = safeHTML('');
         if (typeof QRCode !== 'undefined') {
             qr = new QRCode(document.getElementById('qrcode-container'), { text: link, width: 150, height: 150, colorDark:"#000", colorLight:"#fff" });
         }
@@ -4940,13 +4692,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.getElementById('reset-invite-link-btn');
     if(resetBtn) resetBtn.addEventListener('click', async () => {
         if (!currentChat || currentChat.type !== 'room') return;
-        const token = Math.random().toString(36).substring(2, 10);
-        await window.db.collection('groups').doc(currentChat.id).update({ inviteToken: token });
+        const token = await window.accountClient.publishGroupLink(currentChat, true);
         currentChat.inviteToken = token;
         const link = window.location.origin + window.location.pathname + '?join=' + currentChat.id + '_' + token;
         document.getElementById('invite-link-input').value = link;
         
-        document.getElementById('qrcode-container').innerHTML = '';
+        document.getElementById('qrcode-container').innerHTML = safeHTML('');
         if (typeof QRCode !== 'undefined') {
             qr = new QRCode(document.getElementById('qrcode-container'), { text: link, width: 150, height: 150, colorDark:"#000", colorLight:"#fff" });
         }
@@ -4974,8 +4725,8 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (window.TRANSLATIONS) {
-            Object.assign(window.TRANSLATIONS.en, { btn_clear_chat: 'Clear Chat', ctx_clear_chat: 'Clear Chat', btn_edit_group: 'Edit Group', btn_leave_group: 'Leave Group', btn_delete_group: 'Delete Group', lbl_admin_options: 'Admin Options', lbl_admins_only: 'Only Admins can send messages', lbl_creator: 'Creator', btn_invite_link: 'Invite Link & QR-Code', tab_gif_standard: 'Standard', tab_gif_custom: 'Custom', btn_add_gif: '+ Add GIF (Max 1MB)', btn_send_message: 'Send Message', modal_crop: 'Crop Image', btn_crop_save: 'Crop & Save' });
-            Object.assign(window.TRANSLATIONS.de, { btn_clear_chat: 'Chat leeren', ctx_clear_chat: 'Chat leeren', btn_edit_group: 'Gruppe bearbeiten', btn_leave_group: 'Gruppe verlassen', btn_delete_group: 'Gruppe löschen', lbl_admin_options: 'Admin Optionen', lbl_admins_only: 'Nur Admins dürfen schreiben', lbl_creator: 'Ersteller', btn_invite_link: 'Einladungs-Link & QR-Code', tab_gif_standard: 'Standard', tab_gif_custom: 'Eigene', btn_add_gif: '+ GIF hinzufügen (Max 1MB)', btn_send_message: 'Nachricht senden', modal_crop: 'Bild zuschneiden', btn_crop_save: 'Schneiden & Speichern' });
+            Object.assign(window.TRANSLATIONS.en, { btn_clear_chat: 'Clear Chat', ctx_clear_chat: 'Clear Chat', btn_edit_group: 'Edit Group', btn_leave_group: 'Leave Group', btn_delete_group: 'Delete Group', lbl_admin_options: 'Admin Options', lbl_admins_only: 'Only Admins can send messages', lbl_creator: 'Creator', btn_invite_link: 'Invite Link & QR-Code', tab_gif_standard: 'Standard', tab_gif_custom: 'Custom', btn_add_gif: '+ Add GIF (max. 192 KB)', btn_send_message: 'Send Message', modal_crop: 'Crop Image', btn_crop_save: 'Crop & Save' });
+            Object.assign(window.TRANSLATIONS.de, { btn_clear_chat: 'Chat leeren', ctx_clear_chat: 'Chat leeren', btn_edit_group: 'Gruppe bearbeiten', btn_leave_group: 'Gruppe verlassen', btn_delete_group: 'Gruppe löschen', lbl_admin_options: 'Admin Optionen', lbl_admins_only: 'Nur Admins dürfen schreiben', lbl_creator: 'Ersteller', btn_invite_link: 'Einladungs-Link & QR-Code', tab_gif_standard: 'Standard', tab_gif_custom: 'Eigene', btn_add_gif: '+ GIF hinzufügen (max. 192 KB)', btn_send_message: 'Nachricht senden', modal_crop: 'Bild zuschneiden', btn_crop_save: 'Schneiden & Speichern' });
             Object.assign(window.TRANSLATIONS.fa, { btn_clear_chat: 'پاک کردن چت', ctx_clear_chat: 'پاک کردن چت', btn_edit_group: 'ویرایش گروه', btn_leave_group: 'ترک گروه', btn_delete_group: 'حذف گروه', lbl_admin_options: 'گزینه‌های مدیر', lbl_admins_only: 'فقط مدیران می‌توانند پیام ارسال کنند', lbl_creator: 'سازنده', btn_invite_link: 'لینک دعوت و کد QR', tab_gif_standard: 'استاندارد', tab_gif_custom: 'شخصی', btn_add_gif: '+ افزودن گیف (حداکثر ۱ مگابایت)', btn_send_message: 'ارسال پیام', modal_crop: 'برش تصویر', btn_crop_save: 'برش و ذخیره' });
             Object.assign(window.TRANSLATIONS.ar, { btn_clear_chat: 'مسح الدردشة', ctx_clear_chat: 'مسح الدردشة', btn_edit_group: 'تعديل المجموعة', btn_leave_group: 'مغادرة المجموعة', btn_delete_group: 'حذف المجموعة', lbl_admin_options: 'خيارات المشرف', lbl_admins_only: 'المشرفون فقط يمكنهم إرسال رسائل', lbl_creator: 'المنشئ', btn_invite_link: 'رابط الدعوة ورمز الاستجابة السريعة', tab_gif_standard: 'قياسي', tab_gif_custom: 'مخصص', btn_add_gif: '+ إضافة GIF (الحد الأقصى 1 ميجابايت)', btn_send_message: 'إرسال رسالة', modal_crop: 'قص الصورة', btn_crop_save: 'قص وحفظ' });
             Object.assign(window.TRANSLATIONS.tr, { btn_clear_chat: 'Sohbeti Temizle', ctx_clear_chat: 'Sohbeti Temizle', btn_edit_group: 'Grubu Düzenle', btn_leave_group: 'Gruptan Ayrıl', btn_delete_group: 'Grubu Sil', lbl_admin_options: 'Yönetici Seçenekleri', lbl_admins_only: 'Sadece yöneticiler mesaj gönderebilir', lbl_creator: 'Oluşturan', btn_invite_link: 'Davet Bağlantısı ve QR Kodu', tab_gif_standard: 'Standart', tab_gif_custom: 'Özel', btn_add_gif: '+ GIF Ekle (Maks 1MB)', btn_send_message: 'Mesaj Gönder', modal_crop: 'Resmi Kırp', btn_crop_save: 'Kırp & Kaydet' });
@@ -4990,8 +4741,8 @@ window.showUserProfileModal = async function(username, options = null) {
     document.getElementById('user-profile-name').textContent = username;
     const gallery = document.getElementById('user-profile-gallery');
     const dots = document.getElementById('user-profile-dots');
-    gallery.innerHTML = '<div style="width:250px;height:250px;display:flex;align-items:center;justify-content:center;">Lade...</div>'; 
-    dots.innerHTML = '';
+    gallery.innerHTML = safeHTML('<div style="width:250px;height:250px;display:flex;align-items:center;justify-content:center;">Lade...</div>');
+    dots.innerHTML = safeHTML('');
     
     const actionsContainer = document.getElementById('user-profile-actions');
     const msgBtn = document.getElementById('user-profile-msg-btn');
@@ -5006,10 +4757,10 @@ window.showUserProfileModal = async function(username, options = null) {
             const btnClear = document.getElementById('modal-clear-btn');
             const btnBlock = document.getElementById('modal-block-btn');
             
-            btnAdd.innerHTML = '👤 ' + (t.ctx_add_contact || 'Zu Kontakten hinzufügen');
-            btnClear.innerHTML = '🗑️ ' + (t.ctx_clear_chat || 'Chat leeren');
-            btnMute.innerHTML = options.isMuted ? '🔔 ' + (t.ctx_unmute_user || 'Stummschaltung aufheben') : '🔕 ' + (t.ctx_mute_user || 'Stummschalten');
-            btnBlock.innerHTML = options.isBlocked ? '✅ ' + (t.ctx_unblock_user || 'Entblocken') : '🚫 ' + (t.ctx_block_user || 'Blockieren');
+            btnAdd.innerHTML = safeHTML('👤 ' + (t.ctx_add_contact || 'Zu Kontakten hinzufügen'));
+            btnClear.innerHTML = safeHTML('🗑️ ' + (t.ctx_clear_chat || 'Chat leeren'));
+            btnMute.innerHTML = safeHTML(options.isMuted ? '🔔 ' + (t.ctx_unmute_user || 'Stummschaltung aufheben') : '🔕 ' + (t.ctx_mute_user || 'Stummschalten'));
+            btnBlock.innerHTML = safeHTML(options.isBlocked ? '✅ ' + (t.ctx_unblock_user || 'Entblocken') : '🚫 ' + (t.ctx_block_user || 'Blockieren'));
             
             btnAdd.style.display = options.isContact ? 'none' : 'block';
             
@@ -5029,7 +4780,7 @@ window.showUserProfileModal = async function(username, options = null) {
     
     if (!p) {
         try {
-            const doc = await window.db.collection('users').doc(username.toLowerCase()).get();
+            const doc = await window.db.collection('profiles').doc(username.toLowerCase()).get();
             if (doc.exists) {
                 p = doc.data();
                 if (window.users) window.users.set(username, p);
@@ -5042,9 +4793,9 @@ window.showUserProfileModal = async function(username, options = null) {
     let pics = window.getAllowedProfilePics ? window.getAllowedProfilePics(username, p) : [];
     
     if (pics.length === 0) {
-        gallery.innerHTML = `<div style="width:250px;height:250px;border-radius:50%;background:var(--primary-color);color:white;display:flex;align-items:center;justify-content:center;font-size:100px;flex-shrink:0;">${username.charAt(0).toUpperCase()}</div>`;
+        gallery.innerHTML = safeHTML(`<div style="width:250px;height:250px;border-radius:50%;background:var(--primary-color);color:white;display:flex;align-items:center;justify-content:center;font-size:100px;flex-shrink:0;">${username.charAt(0).toUpperCase()}</div>`);
     } else {
-        gallery.innerHTML = '';
+        gallery.innerHTML = safeHTML('');
         gallery.style.display = 'flex';
         gallery.style.justifyContent = 'center';
         gallery.style.alignItems = 'center';
@@ -5097,7 +4848,7 @@ window.showUserProfileModal = async function(username, options = null) {
             });
 
             const leftBtn = document.createElement('button');
-            leftBtn.innerHTML = '&#10094;';
+            leftBtn.innerHTML = safeHTML('&#10094;');
             leftBtn.style = "background:#ff4444;color:white;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 8px rgba(0,0,0,0.3);flex-shrink:0;";
             leftBtn.onclick = (e) => { e.stopPropagation(); currentIndex = (currentIndex - 1 + pics.length) % pics.length; updateView(); };
             gallery.appendChild(leftBtn);
@@ -5105,7 +4856,7 @@ window.showUserProfileModal = async function(username, options = null) {
             gallery.appendChild(imgContainer);
 
             const rightBtn = document.createElement('button');
-            rightBtn.innerHTML = '&#10095;';
+            rightBtn.innerHTML = safeHTML('&#10095;');
             rightBtn.style = "background:#ff4444;color:white;border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 8px rgba(0,0,0,0.3);flex-shrink:0;";
             rightBtn.onclick = (e) => { e.stopPropagation(); currentIndex = (currentIndex + 1) % pics.length; updateView(); };
             gallery.appendChild(rightBtn);

@@ -67,3 +67,7 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Generated deployment output and portable test runtime
+dist/
+.test-runtime/

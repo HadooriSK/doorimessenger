@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,13 +19,40 @@
     ],
     "rewrites": [
       {
+        "source": "/account/action",
+        "destination": "/account-action.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ],
-    "site": "doori-messenger"
+    "site": "doori-messenger",
+    "predeploy": [
+      "npm run build"
+    ]
   },
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
   }
 }

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com">
+  <title>Doori Messenger</title>
+  <link rel="icon" href="/logo.png">
+  <style>
+    :root{color-scheme:dark;--accent:#00e5ff;--panel:#151820;--text:#f4f7fb;--muted:#aab2c0;--error:#ff6b7a;--success:#5ee49b}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at top,#24314b 0,#0b0d12 55%);font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--text)}
+    main{width:min(460px,100%);padding:30px;border:1px solid #ffffff20;border-radius:22px;background:color-mix(in srgb,var(--panel) 92%,transparent);box-shadow:0 20px 60px #0008;text-align:start}header{display:flex;align-items:center;gap:14px;margin-bottom:26px}header img{width:58px;height:58px;border-radius:16px}h1{font-size:24px;margin:0}p{line-height:1.55;color:var(--muted)}label{display:block;margin:18px 0 7px;font-weight:650}input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid #ffffff2b;background:#090b10;color:var(--text);font-size:16px}button,.button{display:block;width:100%;margin-top:22px;padding:13px 16px;border:0;border-radius:11px;background:var(--accent);color:#041014;font-weight:800;font-size:16px;text-align:center;text-decoration:none;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.hidden{display:none!important}.status{padding:13px;border-radius:10px;background:#ffffff0b}.status.error{color:var(--error);border:1px solid #ff6b7a55}.status.success{color:var(--success);border:1px solid #5ee49b55}html[dir=rtl] main{text-align:right}
+  </style>
+</head>
+<body>
+  <main>
+    <header><img src="/logo.png" alt=""><div><h1 id="title">Doori Messenger</h1><p id="subtitle"></p></div></header>
+    <p id="status" class="status"></p>
+    <form id="reset-form" class="hidden">
+      <label id="password-label" for="password"></label>
+      <input id="password" type="password" minlength="6" maxlength="4096" autocomplete="new-password" required>
+      <label id="confirm-label" for="confirm-password"></label>
+      <input id="confirm-password" type="password" minlength="6" maxlength="4096" autocomplete="new-password" required>
+      <button id="submit-button" type="submit"></button>
+    </form>
+    <a id="back-link" class="button hidden" href="/"></a>
+  </main>
+  <script src="/vendor/firebase-app-compat.js"></script>
+  <script src="/vendor/firebase-auth-compat.js"></script>
+  <script src="/account-action.js?v=1"></script>
+</body>
+</html>

@@ -184,6 +184,10 @@ window.initWebRTC = function(username) {
         .where('receiver', '==', rtcCurrentUser)
         .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
+                if (change.type !== 'removed') {
+                    window.accountClient.recordMissedCall(change.doc.id, change.doc.data())
+                        .catch(error => console.error('Missed call history failed', error));
+                }
                 if (change.type === 'added') {
                     const callData = change.doc.data();
                     if (callData.status === 'calling') {
@@ -258,7 +262,7 @@ async function initiateCall(type) {
     currentCallType = type;
     
     try {
-        const receiverProfileSnap = await window.db.collection('users').doc(receiver.toLowerCase()).get();
+        const receiverProfileSnap = await window.db.collection('profiles').doc(receiver.toLowerCase()).get();
         if (receiverProfileSnap.exists) {
             const receiverProfile = receiverProfileSnap.data();
             const callPrivacy = receiverProfile.callPrivacy || 'all';
@@ -285,8 +289,8 @@ async function initiateCall(type) {
             videoCallAvatar.textContent = receiver.charAt(0).toUpperCase();
             videoCallStatus.textContent = "Wird angerufen...";
             videoAcceptBtn.style.display = 'none';
-            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = '🎙️'; }
-            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = '📹'; }
+            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
+            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
             videoLocal.srcObject = localStream;
         } else {
             callModal.classList.remove('hidden');
@@ -295,7 +299,7 @@ async function initiateCall(type) {
             callStatus.textContent = "Wird angerufen...";
             acceptCallBtn.style.display = 'none';
             if(muteCallBtn) { muteCallBtn.style.display = 'inline-block';
-                if(speakerToggleBtn) speakerToggleBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = '🎙️'; }
+                if(speakerToggleBtn) speakerToggleBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = safeHTML('🎙️'); }
             if(speakerCallBtn) { speakerCallBtn.style.display = 'inline-block'; speakerCallBtn.style.background = 'rgba(255,255,255,0.15)'; }
             isSpeaker = false;
         }
@@ -318,9 +322,13 @@ async function initiateCall(type) {
         currentCallDocRef = window.db.collection('calls').doc();
         activeCallId = currentCallDocRef.id;
         
+        let callCreated = false;
+        const pendingCallerCandidates = [];
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                currentCallDocRef.collection('callerCandidates').add(event.candidate.toJSON());
+                const candidate = event.candidate.toJSON();
+                if (!callCreated) pendingCallerCandidates.push(candidate);
+                else currentCallDocRef.collection('callerCandidates').add(candidate).catch(console.error);
             }
         };
         
@@ -337,6 +345,8 @@ async function initiateCall(type) {
         };
         
         await currentCallDocRef.set(callData);
+        callCreated = true;
+        await Promise.all(pendingCallerCandidates.map(candidate => currentCallDocRef.collection('callerCandidates').add(candidate)));
         
         let iceCandidateQueue = [];
         let isAnswerProcessed = false;
@@ -405,15 +415,15 @@ async function acceptIncomingCall() {
         
         if (currentCallType === 'video') {
             videoAcceptBtn.style.display = 'none';
-            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = '🎙️'; }
-            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = '📹'; }
+            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
+            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
             if(videoSpeakerToggleBtn) { videoSpeakerToggleBtn.style.display = 'inline-block'; videoSpeakerToggleBtn.style.background = 'rgba(255,255,255,0.15)'; }
             videoCallStatus.textContent = "Verbunden";
             if (videoCallRingingUi) videoCallRingingUi.style.display = 'none';
             videoLocal.srcObject = localStream;
         } else {
             acceptCallBtn.style.display = 'none';
-            if(muteCallBtn) { muteCallBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = '🎙️'; }
+            if(muteCallBtn) { muteCallBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = safeHTML('🎙️'); }
             if(speakerCallBtn) { speakerCallBtn.style.display = 'inline-block'; speakerCallBtn.style.background = 'rgba(255,255,255,0.15)'; }
             if(speakerToggleBtn) { speakerToggleBtn.style.display = 'inline-block'; speakerToggleBtn.style.background = 'rgba(255,255,255,0.15)'; }
             isSpeaker = false;
@@ -497,10 +507,10 @@ if(muteCallBtn) {
                 audioTrack.enabled = !isMuted;
                 if (isMuted) {
                     muteCallBtn.style.background = '#ff4757';
-                    muteCallBtn.innerHTML = '<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>';
+                    muteCallBtn.innerHTML = safeHTML('<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
                 } else {
                     muteCallBtn.style.background = 'rgba(255,255,255,0.15)';
-                    muteCallBtn.innerHTML = '🎙️';
+                    muteCallBtn.innerHTML = safeHTML('🎙️');
                 }
             }
         }
@@ -517,10 +527,10 @@ if(videoToggleMicBtn) {
                 audioTrack.enabled = !isMuted;
                 if (isMuted) {
                     videoToggleMicBtn.style.background = '#ff4757';
-                    videoToggleMicBtn.innerHTML = '<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>';
+                    videoToggleMicBtn.innerHTML = safeHTML('<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
                 } else {
                     videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)';
-                    videoToggleMicBtn.innerHTML = '🎙️';
+                    videoToggleMicBtn.innerHTML = safeHTML('🎙️');
                 }
             }
         }
@@ -535,10 +545,10 @@ if(videoToggleCamBtn) {
                 videoTrack.enabled = !isCamMuted;
                 if (isCamMuted) {
                     videoToggleCamBtn.style.background = '#ff4757';
-                    videoToggleCamBtn.innerHTML = '<span style="position:relative;">📹<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>';
+                    videoToggleCamBtn.innerHTML = safeHTML('<span style="position:relative;">📹<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
                 } else {
                     videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)';
-                    videoToggleCamBtn.innerHTML = '📹';
+                    videoToggleCamBtn.innerHTML = safeHTML('📹');
                 }
             }
         }
@@ -575,21 +585,10 @@ function endCall() {
         };
         
         // Write to own history
-        const myDocId = activeCallId ? activeCallId : window.db.collection('users').doc(rtcCurrentUser).collection('callHistory').doc().id;
-        window.db.collection('users').doc(rtcCurrentUser).collection('callHistory').doc(myDocId).set(callRecord).catch(e => console.error("Call history error", e));
+        const myDocId = activeCallId ? activeCallId : window.db.collection('users').doc(rtcCurrentUser.toLowerCase()).collection('callHistory').doc().id;
+        window.db.collection('users').doc(rtcCurrentUser.toLowerCase()).collection('callHistory').doc(myDocId).set(callRecord).catch(e => console.error("Call history error", e));
         
-        // If caller hung up before answer, write to receiver's history as missed
-        if (isCaller && !callStartTime) {
-            const receiverRecord = {
-                peer: rtcCurrentUser,
-                type: 'missed',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                duration: 0,
-                seen: false
-            };
-            const peerDocId = activeCallId ? activeCallId : window.db.collection('users').doc(currentCallPeer).collection('callHistory').doc().id;
-            window.db.collection('users').doc(currentCallPeer).collection('callHistory').doc(peerDocId).set(receiverRecord, {merge: true}).catch(e => console.error("Call history error", e));
-        }
+        // Recipients recover missed calls from their call documents on their next login.
     }
 
     callStartTime = null;
@@ -696,15 +695,15 @@ window.handleGroupCallEnded = function(groupId) {
 function showActiveGroupCallUI(type) {
     if (type === 'video') {
         videoCallModal.classList.remove('hidden');
-        if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = '🎙️'; }
-        if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = '📹'; }
+        if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
+        if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
         videoCallStatus.textContent = "Gruppen-Videoanruf";
         videoAcceptBtn.style.display = 'none';
         videoLocal.srcObject = groupLocalStream;
         
         // Setup grid columns dynamically based on participants
         const grid = document.getElementById('video-grid');
-        if (grid) grid.innerHTML = ''; // Clear previous videos
+        if (grid) grid.innerHTML = safeHTML(''); // Clear previous videos
         
         isMuted = false;
         isCamMuted = false;
@@ -749,7 +748,7 @@ async function joinGroupCallMesh(groupId) {
     
     // Listen to participants to render UI and detect newcomers
     groupCallUnsubscribe = participantsRef.onSnapshot(snapshot => {
-        groupCallParticipantsContainer.innerHTML = '';
+        groupCallParticipantsContainer.innerHTML = safeHTML('');
         let count = 0;
         snapshot.docs.forEach(doc => {
             count++;
@@ -763,7 +762,7 @@ async function joinGroupCallMesh(groupId) {
             badge.style.display = 'flex';
             badge.style.alignItems = 'center';
             badge.style.gap = '8px';
-            badge.innerHTML = `<span>${username}</span><span>${p.isMuted ? '🔇' : '🎙️'}</span>`;
+            badge.innerHTML = safeHTML(`<span>${username}</span><span>${p.isMuted ? '🔇' : '🎙️'}</span>`);
             groupCallParticipantsContainer.appendChild(badge);
         });
         if (count === 1 && snapshot.docs[0] && snapshot.docs[0].id === rtcCurrentUser) {
@@ -995,7 +994,7 @@ async function leaveGroupCall() {
     }
     
     groupCallModal.classList.add('hidden');
-    groupRemoteAudios.innerHTML = '';
+    groupRemoteAudios.innerHTML = safeHTML('');
 }
 
 if (groupLeaveBtn) {
@@ -1007,7 +1006,7 @@ if (groupMuteBtn) {
         if (!groupLocalStream) return;
         const audioTrack = groupLocalStream.getAudioTracks()[0];
         audioTrack.enabled = !audioTrack.enabled;
-        groupMuteBtn.innerHTML = audioTrack.enabled ? '🎙️' : '🔇';
+        groupMuteBtn.innerHTML = safeHTML(audioTrack.enabled ? '🎙️' : '🔇');
         groupMuteBtn.style.background = audioTrack.enabled ? 'rgba(255,255,255,0.15)' : 'rgba(255,0,0,0.5)';
         
         if (activeGroupCallId) {
@@ -1032,4 +1031,3 @@ if (groupSpeakerBtn) {
         groupSpeakerBtn.style.background = groupIsSpeaker ? '#2ed573' : 'rgba(255,255,255,0.15)';
     });
 }
-
