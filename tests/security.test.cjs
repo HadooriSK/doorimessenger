@@ -235,3 +235,44 @@ test('branded account action page covers all five languages and hides the defaul
  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'firebase.json'),'utf8')).hosting.rewrites[0].source,'/account/action');
  dom.window.close();
 });
+
+test('modern settings additions cover all five languages and preserve RTL for ar and fa',async ()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+ const dom=new JSDOM(html,{runScripts:'outside-only',url:'https://localhost/'});
+ const w=dom.window;
+ w.alert=()=>{};w.confirm=()=>false;w.matchMedia=()=>({matches:false,addListener(){},addEventListener(){}});
+ w.AudioContext=class { constructor(){this.state='running';} resume(){return Promise.resolve();} createBuffer(){return {};} createBufferSource(){return {connect(){},start(){},buffer:null};} get destination(){return {};} };
+ w.DOMPurify=createDOMPurify(w);
+ w.auth={onAuthStateChanged(){},currentUser:null};
+ w.db={clearPersistence:()=>Promise.resolve(),collection:()=>({doc:()=>({get:()=>Promise.resolve({exists:false})})})};
+ w.BroadcastChannel=class { postMessage() {} close() {} addEventListener() {} };
+ w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({}, {get:()=>()=>{}});
+ w.accountFunctions={httpsCallable:()=>async()=>({data:{}})};
+ w.firebase={auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
+ for(const file of ['security.js','auth-translations.js','account-client.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+ await new Promise(resolve=>setTimeout(resolve,100));
+ const texts=w.TRANSLATIONS;
+ const requiredKeys=[
+  'tab_account', 'lbl_account_email', 'lbl_change_password', 'lbl_current_password',
+  'lbl_new_password', 'lbl_confirm_password', 'btn_update_password', 'msg_password_updated',
+  'err_password_mismatch', 'err_wrong_current_password', 'lbl_app_lock', 'lbl_app_lock_desc',
+  'lbl_set_pin', 'btn_enable_pin', 'btn_disable_pin', 'msg_pin_enabled', 'msg_pin_disabled',
+  'err_pin_invalid', 'pin_enter_title', 'pin_enter_prompt', 'pin_unlock_btn', 'err_pin_wrong',
+  'lbl_danger_zone', 'btn_delete_account', 'msg_confirm_delete_account', 'prompt_delete_password',
+  'msg_account_deleted', 'lbl_notification_sound', 'opt_sound_chime', 'opt_sound_soft',
+  'opt_sound_bell', 'opt_sound_classic', 'btn_test_sound', 'lbl_hide_preview',
+  'lbl_hide_preview_desc', 'lbl_vibrate', 'lbl_vibrate_desc', 'lbl_auto_media',
+  'opt_media_always', 'opt_media_wifi', 'opt_media_manual', 'btn_export_chat',
+  'msg_export_success', 'err_no_chat_to_export'
+ ];
+ for (const lang of ['de','en','fa','ar','tr']) {
+  for (const key of requiredKeys) {
+   assert.ok(texts[lang] && typeof texts[lang][key] === 'string' && texts[lang][key].trim().length > 0, `Missing or empty ${lang}.${key}`);
+  }
+ }
+ assert.ok(html.includes('id="tab-account"'));
+ assert.ok(html.includes('id="app-lock-overlay"'));
+ assert.ok(html.includes('id="setting-sound-type"'));
+ assert.ok(html.includes('id="btn-export-chat"'));
+ dom.window.close();
+});

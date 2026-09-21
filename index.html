@@ -520,6 +520,7 @@
                 </div>
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-tab="tab-profile" data-i18n="tab_profile">Profil</button>
+                    <button class="tab-btn" data-tab="tab-account" data-i18n="tab_account">Konto</button>
                     <button class="tab-btn" data-tab="tab-design" data-i18n="tab_design">Design</button>
                     <button class="tab-btn" data-tab="tab-privacy" data-i18n="tab_privacy">Privatsphäre</button>
                     <button class="tab-btn" data-tab="tab-chats" data-i18n="tab_chats">Chats</button>
@@ -555,6 +556,41 @@
                         </div>
                         <div style="margin-top: 30px; text-align: center;">
                             <button id="logout-btn" class="danger-btn" style="width: 100%;" data-i18n="btn_logout">Ausloggen</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-account" class="settings-tab-content">
+                        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                            <label data-i18n="lbl_account_email">Registrierte E-Mail-Adresse</label>
+                            <input type="text" id="setting-account-email" readonly style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa; cursor: not-allowed;">
+                        </div>
+                        <div class="setting-group" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                            <label data-i18n="lbl_change_password" style="font-weight: bold; color: var(--accent); display: block; margin-bottom: 10px;">Passwort ändern</label>
+                            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                                <label data-i18n="lbl_current_password">Aktuelles Passwort</label>
+                                <input type="password" id="setting-current-pwd" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                                <label data-i18n="lbl_new_password">Neues Passwort</label>
+                                <input type="password" id="setting-new-pwd" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                                <label data-i18n="lbl_confirm_password">Neues Passwort bestätigen</label>
+                                <input type="password" id="setting-confirm-pwd" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <button class="submit-btn" id="btn-submit-change-password" style="width: 100%; margin-top: 10px;" data-i18n="btn_update_password">Passwort aktualisieren</button>
+                        </div>
+                        <div class="setting-group" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                            <label data-i18n="lbl_app_lock" style="font-weight: bold; color: var(--accent); display: block; margin-bottom: 5px;">App-Sperre (PIN-Code)</label>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;" data-i18n="lbl_app_lock_desc">Sperrt die App nach Verlassen mit einer 4-stelligen PIN.</p>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="password" id="setting-pin-input" maxlength="4" pattern="\\d{4}" data-i18n="lbl_set_pin" placeholder="4-stellige PIN" style="width: 140px; text-align: center; font-size: 16px; letter-spacing: 4px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                                <button class="submit-btn" id="btn-toggle-pin" style="flex: 1; padding: 8px 12px;" data-i18n="btn_enable_pin">PIN aktivieren</button>
+                            </div>
+                        </div>
+                        <div class="setting-group" style="margin-top: 25px; border-top: 1px solid rgba(255, 71, 87, 0.3); padding-top: 15px;">
+                            <label data-i18n="lbl_danger_zone" style="font-weight: bold; color: var(--danger); display: block; margin-bottom: 5px;">Gefahrenzone</label>
+                            <button class="danger-btn" id="btn-delete-account" style="margin-top: 5px;" data-i18n="btn_delete_account">Konto endgültig löschen</button>
                         </div>
                     </div>
                     
@@ -663,10 +699,45 @@
                             <label data-i18n="lbl_sound">Benachrichtigungstöne</label>
                             <input type="checkbox" id="setting-sound" checked>
                         </div>
+                        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <label data-i18n="lbl_notification_sound">Benachrichtigungston</label>
+                            <div style="display: flex; gap: 10px; width: 100%;">
+                                <select id="setting-sound-type" style="flex: 1; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                                    <option value="chime" data-i18n="opt_sound_chime">Modern Chime</option>
+                                    <option value="soft" data-i18n="opt_sound_soft">Sanft & Diskret</option>
+                                    <option value="bell" data-i18n="opt_sound_bell">Kristall-Glocke</option>
+                                    <option value="classic" data-i18n="opt_sound_classic">Klassischer Ton</option>
+                                </select>
+                                <button type="button" id="btn-test-sound" class="text-btn" style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; white-space: nowrap;" data-i18n="btn_test_sound">Ton testen 🔊</button>
+                            </div>
+                        </div>
+                        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                                <label data-i18n="lbl_hide_preview">Nachrichtenvorschau verbergen</label>
+                                <input type="checkbox" id="setting-hide-preview">
+                            </div>
+                            <small style="color: var(--text-secondary); font-size: 11px;" data-i18n="lbl_hide_preview_desc">Verbirgt Nachrichtentext in Benachrichtigungen zum Schutz der Privatsphäre.</small>
+                        </div>
+                        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                                <label data-i18n="lbl_vibrate">Haptisches Feedback / Vibration</label>
+                                <input type="checkbox" id="setting-vibrate" checked>
+                            </div>
+                            <small style="color: var(--text-secondary); font-size: 11px;" data-i18n="lbl_vibrate_desc">Vibriert bei neuen Nachrichten und Aktionen auf Mobilgeräten.</small>
+                        </div>
+                        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <label data-i18n="lbl_auto_media">Automatischer Medien-Download</label>
+                            <select id="setting-auto-media" style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                                <option value="always" data-i18n="opt_media_always">Immer automatisch laden</option>
+                                <option value="wifi" data-i18n="opt_media_wifi">Nur bei WLAN / Manuell</option>
+                                <option value="manual" data-i18n="opt_media_manual">Nie (Datensparmodus)</option>
+                            </select>
+                        </div>
                         <div class="setting-item">
                             <label data-i18n="lbl_storage_used">Lokaler Speicher genutzt:</label>
                             <span id="storage-usage">0.00 MB</span>
                         </div>
+                        <button class="text-btn" id="btn-export-chat" style="width: 100%; background: rgba(64, 175, 230, 0.15); border: 1px solid var(--accent); color: white; border-radius: 8px; padding: 10px; margin-top: 5px;" data-i18n="btn_export_chat">Chatverlauf exportieren (.txt)</button>
                         <button class="danger-btn" id="clear-cache-btn" data-i18n="btn_clear_cache">Cache leeren</button>
                     </div>
                 </div>
@@ -1018,6 +1089,17 @@
                 <button id="cancel-crop-btn" class="text-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;" data-i18n="btn_cancel">Abbrechen</button>
                 <button id="save-crop-btn" class="submit-btn" style="flex:1; padding:10px;" data-i18n="btn_crop_save">Speichern</button>
             </div>
+        </div>
+    </div>
+    <!-- PIN Lock Screen Modal -->
+    <div id="app-lock-overlay" class="modal hidden" style="z-index: 999999; backdrop-filter: blur(15px); background: rgba(10, 15, 20, 0.95);">
+        <div class="modal-content glass-panel" style="max-width: 320px; text-align: center; padding: 30px 20px;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+            <h3 data-i18n="pin_enter_title" style="margin-bottom: 5px;">App gesperrt</h3>
+            <p data-i18n="pin_enter_prompt" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Bitte gib deine 4-stellige PIN ein:</p>
+            <input type="password" id="app-lock-pin-input" maxlength="4" pattern="\\d{4}" style="width: 160px; margin: 0 auto 15px; font-size: 24px; text-align: center; letter-spacing: 10px; padding: 10px; border-radius: 12px; border: 1px solid var(--accent); background: rgba(255,255,255,0.05); color: white;">
+            <p id="app-lock-error" class="hidden" style="color: var(--danger); font-size: 12px; margin-bottom: 15px;" data-i18n="err_pin_wrong">Falsche PIN. Bitte erneut versuchen.</p>
+            <button id="btn-unlock-app" class="submit-btn" style="width: 100%; padding: 12px;" data-i18n="pin_unlock_btn">Entsperren</button>
         </div>
     </div>
 </body>

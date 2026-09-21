@@ -240,11 +240,56 @@ Object.assign(TRANSLATIONS.fa, { ph_username: 'نام کاربری (حداقل �
 Object.assign(TRANSLATIONS.ar, { ph_username: 'اسم المستخدم (10 أحرف على الأقل)', hint_username: 'مطلوب 10 أحرف على الأقل.', ph_id_number: 'رقم تعريف من 6 أرقام', hint_id_number: 'معرف من 6 أرقام (يُرسل عبر البريد الإلكتروني).', msg_not_verified: 'الرجاء التحقق من بريدك الإلكتروني عبر الرابط أولاً.', msg_verify_login: 'الرجاء تسجيل الدخول لتنشيط حسابك.' });
 Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakter)', hint_username: 'En az 10 karakter gereklidir.', ph_id_number: '6 haneli kimlik numarası', hint_id_number: '6 haneli kimlik (e-posta ile gönderilir).', msg_not_verified: 'Lütfen önce link üzerinden e-postanızı doğrulayın.', msg_verify_login: 'Hesabınızı etkinleştirmek için lütfen giriş yapın.' });
 
-    Object.assign(TRANSLATIONS.de, { btn_new_group: '➕ Neue Gruppe erstellen', lbl_group_desc: 'Beschreibung der Gruppe (optional)', lbl_privacy_public: 'Öffentlich', lbl_privacy_public_desc: 'Jeder kann diese Gruppe suchen und beitreten.', lbl_privacy_private: 'Privat', lbl_privacy_private_desc: 'Nur über Einladung zugänglich. Unsichtbar in der Suche.', err_no_public_groups: 'Keine öffentlichen Gruppen gefunden.', err_search_failed: 'Suche fehlgeschlagen.', lbl_public_group: 'Öffentliche Gruppe', btn_join: 'Beitreten', btn_open: 'Öffnen', call_missed: 'Verpasst', call_incoming: 'Eingehend', call_outgoing: 'Ausgehend', lbl_min: 'Min', lbl_just_now: 'Gerade eben', btn_add_user: 'Hinzufügen' });
-    Object.assign(TRANSLATIONS.en, { btn_new_group: '➕ Create New Group', lbl_group_desc: 'Group Description (optional)', lbl_privacy_public: 'Public', lbl_privacy_public_desc: 'Anyone can search and join this group.', lbl_privacy_private: 'Private', lbl_privacy_private_desc: 'Accessible via invite only. Hidden from search.', err_no_public_groups: 'No public groups found.', err_search_failed: 'Search failed.', lbl_public_group: 'Public Group', btn_join: 'Join', btn_open: 'Open', call_missed: 'Missed', call_incoming: 'Incoming', call_outgoing: 'Outgoing', lbl_min: 'Min', lbl_just_now: 'Just now', btn_add_user: 'Add' });
-    Object.assign(TRANSLATIONS.fa, { btn_new_group: '➕ ایجاد گروه جدید', lbl_group_desc: 'توضیحات گروه (اختیاری)', lbl_privacy_public: 'عمومی', lbl_privacy_public_desc: 'همه می‌توانند این گروه را جستجو کرده و به آن بپیوندند.', lbl_privacy_private: 'خصوصی', lbl_privacy_private_desc: 'فقط با دعوتنامه قابل دسترسی است. پنهان از جستجو.', err_no_public_groups: 'هیچ گروه عمومی یافت نشد.', err_search_failed: 'جستجو ناموفق بود.', lbl_public_group: 'گروه عمومی', btn_join: 'پیوستن', btn_open: 'باز کردن', call_missed: 'از دست رفته', call_incoming: 'ورودی', call_outgoing: 'خروجی', lbl_min: 'دقیقه', lbl_just_now: 'همین الان', btn_add_user: 'افزودن' });
-    Object.assign(TRANSLATIONS.ar, { btn_new_group: '➕ إنشاء مجموعة جديدة', lbl_group_desc: 'وصف المجموعة (اختياري)', lbl_privacy_public: 'عام', lbl_privacy_public_desc: 'يمكن لأي شخص البحث والانضمام إلى هذه المجموعة.', lbl_privacy_private: 'خاص', lbl_privacy_private_desc: 'يمكن الوصول إليه عبر الدعوة فقط. مخفي من البحث.', err_no_public_groups: 'لم يتم العثور على مجموعات عامة.', err_search_failed: 'فشل البحث.', lbl_public_group: 'مجموعة عامة', btn_join: 'انضمام', btn_open: 'فتح', call_missed: 'فائتة', call_incoming: 'واردة', call_outgoing: 'صادرة', lbl_min: 'دقيقة', lbl_just_now: 'الآن', btn_add_user: 'إضافة' });
-    Object.assign(TRANSLATIONS.tr, { btn_new_group: '➕ Yeni Grup Oluştur', lbl_group_desc: 'Grup Açıklaması (isteğe bağlı)', lbl_privacy_public: 'Herkese Açık', lbl_privacy_public_desc: 'Herkes bu grubu arayabilir ve katılabilir.', lbl_privacy_private: 'Gizli', lbl_privacy_private_desc: 'Yalnızca davetle erişilebilir. Aramalarda gizlidir.', err_no_public_groups: 'Herkese açık grup bulunamadı.', err_search_failed: 'Arama başarısız.', lbl_public_group: 'Herkese Açık Grup', btn_join: 'Katıl', btn_open: 'Aç', call_missed: 'Cevapsız', call_incoming: 'Gelen', call_outgoing: 'Giden', lbl_min: 'Dk', lbl_just_now: 'Az önce', btn_add_user: 'Ekle' });
+    Object.assign(TRANSLATIONS.de, { btn_new_group: '➕ Neue Gruppe erstellen', lbl_group_desc: 'Beschreibung der Gruppe (optional)', lbl_privacy_public: 'Öffentlich', lbl_privacy_public_desc: 'Jeder kann diese Gruppe suchen und beitreten.', lbl_privacy_private: 'Privat', lbl_privacy_private_desc: 'Nur über Einladung zugänglich. Unsichtbar in der Suche.', err_no_public_groups: 'Keine öffentlichen Gruppen gefunden.', err_search_failed: 'Suche fehlgeschlagen.', lbl_public_group: 'Öffentliche Gruppe', btn_join: 'Beitreten', btn_open: 'Öffnen', call_missed: 'Verpasst', call_incoming: 'Eingehend', call_outgoing: 'Ausgehend', lbl_min: 'Min', lbl_just_now: 'Gerade eben', btn_add_user: 'Hinzufügen',
+        tab_account: 'Konto', lbl_account_email: 'Registrierte E-Mail-Adresse', lbl_change_password: 'Passwort ändern', lbl_current_password: 'Aktuelles Passwort', lbl_new_password: 'Neues Passwort', lbl_confirm_password: 'Neues Passwort bestätigen', btn_update_password: 'Passwort aktualisieren', msg_password_updated: 'Passwort erfolgreich geändert!', err_password_mismatch: 'Die neuen Passwörter stimmen nicht überein.', err_wrong_current_password: 'Das aktuelle Passwort ist nicht korrekt.',
+        lbl_app_lock: 'App-Sperre (PIN-Code)', lbl_app_lock_desc: 'Sperrt die App nach Verlassen mit einer 4-stelligen PIN.', lbl_set_pin: '4-stellige PIN festlegen', btn_enable_pin: 'PIN aktivieren', btn_disable_pin: 'PIN deaktivieren', msg_pin_enabled: 'PIN-Sperre aktiviert!', msg_pin_disabled: 'PIN-Sperre deaktiviert!', err_pin_invalid: 'Die PIN muss genau 4 Ziffern lang sein.', pin_enter_title: 'App gesperrt', pin_enter_prompt: 'Bitte gib deine 4-stellige PIN ein:', pin_unlock_btn: 'Entsperren', err_pin_wrong: 'Falsche PIN. Bitte erneut versuchen.',
+        lbl_danger_zone: 'Gefahrenzone', btn_delete_account: 'Konto endgültig löschen', msg_confirm_delete_account: 'Möchtest du dein Konto wirklich unwiderruflich löschen? Alle Nachrichten und Daten gehen verloren!', prompt_delete_password: 'Bitte gib dein Passwort ein, um die Löschung zu bestätigen:', msg_account_deleted: 'Dein Konto wurde erfolgreich gelöscht.',
+        lbl_notification_sound: 'Benachrichtigungston', opt_sound_chime: 'Modern Chime', opt_sound_soft: 'Sanft & Diskret', opt_sound_bell: 'Kristall-Glocke', opt_sound_classic: 'Klassischer Ton', btn_test_sound: 'Ton testen 🔊',
+        lbl_hide_preview: 'Nachrichtenvorschau verbergen', lbl_hide_preview_desc: 'Verbirgt Nachrichtentext in Benachrichtigungen zum Schutz der Privatsphäre.',
+        lbl_vibrate: 'Haptisches Feedback / Vibration', lbl_vibrate_desc: 'Vibriert bei neuen Nachrichten und Aktionen auf Mobilgeräten.',
+        lbl_auto_media: 'Automatischer Medien-Download', opt_media_always: 'Immer automatisch laden', opt_media_wifi: 'Nur bei WLAN / Manuell', opt_media_manual: 'Nie (Datensparmodus)',
+        btn_export_chat: 'Chatverlauf exportieren (.txt)', msg_export_success: 'Chatverlauf wurde erfolgreich exportiert!', err_no_chat_to_export: 'Bitte öffne zuerst einen Chat, um ihn zu exportieren.'
+    });
+    Object.assign(TRANSLATIONS.en, { btn_new_group: '➕ Create New Group', lbl_group_desc: 'Group Description (optional)', lbl_privacy_public: 'Public', lbl_privacy_public_desc: 'Anyone can search and join this group.', lbl_privacy_private: 'Private', lbl_privacy_private_desc: 'Accessible via invite only. Hidden from search.', err_no_public_groups: 'No public groups found.', err_search_failed: 'Search failed.', lbl_public_group: 'Public Group', btn_join: 'Join', btn_open: 'Open', call_missed: 'Missed', call_incoming: 'Incoming', call_outgoing: 'Outgoing', lbl_min: 'Min', lbl_just_now: 'Just now', btn_add_user: 'Add',
+        tab_account: 'Account', lbl_account_email: 'Registered Email Address', lbl_change_password: 'Change Password', lbl_current_password: 'Current Password', lbl_new_password: 'New Password', lbl_confirm_password: 'Confirm New Password', btn_update_password: 'Update Password', msg_password_updated: 'Password successfully changed!', err_password_mismatch: 'New passwords do not match.', err_wrong_current_password: 'Current password is incorrect.',
+        lbl_app_lock: 'App Lock (PIN Code)', lbl_app_lock_desc: 'Locks the app with a 4-digit PIN when inactive.', lbl_set_pin: 'Set 4-digit PIN', btn_enable_pin: 'Enable PIN', btn_disable_pin: 'Disable PIN', msg_pin_enabled: 'PIN lock enabled!', msg_pin_disabled: 'PIN lock disabled!', err_pin_invalid: 'PIN must be exactly 4 digits.', pin_enter_title: 'App Locked', pin_enter_prompt: 'Please enter your 4-digit PIN:', pin_unlock_btn: 'Unlock', err_pin_wrong: 'Incorrect PIN. Please try again.',
+        lbl_danger_zone: 'Danger Zone', btn_delete_account: 'Permanently Delete Account', msg_confirm_delete_account: 'Are you sure you want to permanently delete your account? All messages and data will be lost!', prompt_delete_password: 'Enter your password to confirm deletion:', msg_account_deleted: 'Your account has been deleted.',
+        lbl_notification_sound: 'Notification Sound', opt_sound_chime: 'Modern Chime', opt_sound_soft: 'Soft & Discreet', opt_sound_bell: 'Crystal Bell', opt_sound_classic: 'Classic Tone', btn_test_sound: 'Test Sound 🔊',
+        lbl_hide_preview: 'Hide Message Preview', lbl_hide_preview_desc: 'Hides message content in notifications for privacy.',
+        lbl_vibrate: 'Haptic Feedback / Vibration', lbl_vibrate_desc: 'Vibrates on new messages and actions on mobile devices.',
+        lbl_auto_media: 'Automatic Media Download', opt_media_always: 'Always download automatically', opt_media_wifi: 'Wi-Fi only / Manual', opt_media_manual: 'Never (Data saver mode)',
+        btn_export_chat: 'Export Chat History (.txt)', msg_export_success: 'Chat history exported successfully!', err_no_chat_to_export: 'Please select a chat first to export.'
+    });
+    Object.assign(TRANSLATIONS.fa, { btn_new_group: '➕ ایجاد گروه جدید', lbl_group_desc: 'توضیحات گروه (اختیاری)', lbl_privacy_public: 'عمومی', lbl_privacy_public_desc: 'همه می‌توانند این گروه را جستجو کرده و به آن بپیوندند.', lbl_privacy_private: 'خصوصی', lbl_privacy_private_desc: 'فقط با دعوتنامه قابل دسترسی است. پنهان از جستجو.', err_no_public_groups: 'هیچ گروه عمومی یافت نشد.', err_search_failed: 'جستجو ناموفق بود.', lbl_public_group: 'گروه عمومی', btn_join: 'پیوستن', btn_open: 'باز کردن', call_missed: 'از دست رفته', call_incoming: 'ورودی', call_outgoing: 'خروجی', lbl_min: 'دقیقه', lbl_just_now: 'همین الان', btn_add_user: 'افزودن',
+        tab_account: 'حساب کاربری', lbl_account_email: 'آدرس ایمیل ثبت‌شده', lbl_change_password: 'تغییر گذرواژه', lbl_current_password: 'گذرواژه فعلی', lbl_new_password: 'گذرواژه جدید', lbl_confirm_password: 'تأیید گذرواژه جدید', btn_update_password: 'بروزرسانی گذرواژه', msg_password_updated: 'گذرواژه با موفقیت تغییر کرد!', err_password_mismatch: 'گذرواژه‌های جدید مطابقت ندارند.', err_wrong_current_password: 'گذرواژه فعلی نادرست است.',
+        lbl_app_lock: 'قفل برنامه (کد PIN)', lbl_app_lock_desc: 'برنامه را با پین ۴ رقمی هنگام خروج قفل می‌کند.', lbl_set_pin: 'تعیین پین ۴ رقمی', btn_enable_pin: 'فعال‌سازی پین', btn_disable_pin: 'غیرفعال‌سازی پین', msg_pin_enabled: 'قفل پین فعال شد!', msg_pin_disabled: 'قفل پین غیرفعال شد!', err_pin_invalid: 'پین باید دقیقاً ۴ رقم باشد.', pin_enter_title: 'برنامه قفل است', pin_enter_prompt: 'لطفاً پین ۴ رقمی خود را وارد کنید:', pin_unlock_btn: 'باز کردن قفل', err_pin_wrong: 'پین نادرست است. لطفاً دوباره امتحان کنید.',
+        lbl_danger_zone: 'بخش حساس', btn_delete_account: 'حذف دائمی حساب کاربری', msg_confirm_delete_account: 'آیا مطمئن هستید که می‌خواهید حساب خود را برای همیشه حذف کنید؟ تمام پیام‌ها و اطلاعات از بین خواهند رفت!', prompt_delete_password: 'برای تأیید حذف، گذرواژه خود را وارد کنید:', msg_account_deleted: 'حساب شما با موفقیت حذف شد.',
+        lbl_notification_sound: 'صدای اعلان', opt_sound_chime: 'زنگ مدرن (Chime)', opt_sound_soft: 'ملایم و آرام', opt_sound_bell: 'زنگ کریستالی', opt_sound_classic: 'صدای کلاسیک', btn_test_sound: 'آزمایش صدا 🔊',
+        lbl_hide_preview: 'پنهان کردن پیش‌نمایش پیام', lbl_hide_preview_desc: 'متن پیام را در اعلان‌ها برای حفظ حریم خصوصی پنهان می‌کند.',
+        lbl_vibrate: 'بازخورد لمسی / لرزش', lbl_vibrate_desc: 'لرزش در پیام‌های جدید و عملکردها در تلفن همراه.',
+        lbl_auto_media: 'دانلود خودکار رسانه‌ها', opt_media_always: 'همیشه خودکار دانلود شود', opt_media_wifi: 'فقط با وای‌فای / دستی', opt_media_manual: 'هرگز (حالت صرفه‌جویی داده)',
+        btn_export_chat: 'خروجی گرفتن از تاریخچه گفتگو (.txt)', msg_export_success: 'تاریخچه گفتگو با موفقیت ذخیره شد!', err_no_chat_to_export: 'لطفاً ابتدا یک گفتگو را برای خروجی گرفتن باز کنید.'
+    });
+    Object.assign(TRANSLATIONS.ar, { btn_new_group: '➕ إنشاء مجموعة جديدة', lbl_group_desc: 'وصف المجموعة (اختياري)', lbl_privacy_public: 'عام', lbl_privacy_public_desc: 'يمكن لأي شخص البحث والانضمام إلى هذه المجموعة.', lbl_privacy_private: 'خاص', lbl_privacy_private_desc: 'يمكن الوصول إليه عبر الدعوة فقط. مخفي من البحث.', err_no_public_groups: 'لم يتم العثور على مجموعات عامة.', err_search_failed: 'فشل البحث.', lbl_public_group: 'مجموعة عامة', btn_join: 'انضمام', btn_open: 'فتح', call_missed: 'فائتة', call_incoming: 'واردة', call_outgoing: 'صادرة', lbl_min: 'دقيقة', lbl_just_now: 'الآن', btn_add_user: 'إضافة',
+        tab_account: 'الحساب', lbl_account_email: 'عنوان البريد الإلكتروني المسجل', lbl_change_password: 'تغيير كلمة المرور', lbl_current_password: 'كلمة المرور الحالية', lbl_new_password: 'كلمة المرور الجديدة', lbl_confirm_password: 'تأكيد كلمة المرور الجديدة', btn_update_password: 'تحديث كلمة المرور', msg_password_updated: 'تم تغيير كلمة المرور بنجاح!', err_password_mismatch: 'كلمتا المرور غير متطابقتين.', err_wrong_current_password: 'كلمة المرور الحالية غير صحيحة.',
+        lbl_app_lock: 'قفل التطبيق (رمز PIN)', lbl_app_lock_desc: 'يقفل التطبيق برمز PIN مكوّن من 4 أرقام عند عدم النشاط.', lbl_set_pin: 'تعيين رمز PIN من 4 أرقام', btn_enable_pin: 'تفعيل الرمز', btn_disable_pin: 'تعطيل الرمز', msg_pin_enabled: 'تم تفعيل قفل الرمز!', msg_pin_disabled: 'تم تعطيل قفل الرمز!', err_pin_invalid: 'يجب أن يتكون رمز PIN من 4 أرقام بالضبط.', pin_enter_title: 'التطبيق مقفل', pin_enter_prompt: 'يرجى إدخال رمز PIN المكون من 4 أرقام:', pin_unlock_btn: 'فتح القفل', err_pin_wrong: 'رمز PIN غير صحيح. يرجى المحاولة مرة أخرى.',
+        lbl_danger_zone: 'منطقة الخطر', btn_delete_account: 'حذف الحساب نهائياً', msg_confirm_delete_account: 'هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ سيتم فقدان جميع الرسائل والبيانات!', prompt_delete_password: 'أدخل كلمة المرور لتأكيد الحذف:', msg_account_deleted: 'تم حذف حسابك بنجاح.',
+        lbl_notification_sound: 'نغمة الإشعار', opt_sound_chime: 'نغمة حديثة (Chime)', opt_sound_soft: 'هادئة ولطيفة', opt_sound_bell: 'جرس بلوري', opt_sound_classic: 'نغمة كلاسيكية', btn_test_sound: 'تجربة الصوت 🔊',
+        lbl_hide_preview: 'إخفاء معاينة الرسائل', lbl_hide_preview_desc: 'يخفي نص الرسالة في الإشعارات لحماية الخصوصية.',
+        lbl_vibrate: 'الاهتزاز والتفاعل اللمسي', lbl_vibrate_desc: 'اهتزاز عند استلام رسائل أو إجراءات على الهاتف.',
+        lbl_auto_media: 'تنزيل الوسائط تلقائياً', opt_media_always: 'تنزيل تلقائي دائماً', opt_media_wifi: 'عبر Wi-Fi فقط / يدوياً', opt_media_manual: 'أبداً (توفير البيانات)',
+        btn_export_chat: 'تصدير سجل المحادثة (.txt)', msg_export_success: 'تم تصدير سجل المحادثة بنجاح!', err_no_chat_to_export: 'يرجى اختيار محادثة أولاً لتصديرها.'
+    });
+    Object.assign(TRANSLATIONS.tr, { btn_new_group: '➕ Yeni Grup Oluştur', lbl_group_desc: 'Grup Açıklaması (isteğe bağlı)', lbl_privacy_public: 'Herkese Açık', lbl_privacy_public_desc: 'Herkes bu grubu arayabilir ve katılabilir.', lbl_privacy_private: 'Gizli', lbl_privacy_private_desc: 'Yalnızca davetle erişilebilir. Aramalarda gizlidir.', err_no_public_groups: 'Herkese açık grup bulunamadı.', err_search_failed: 'Arama başarısız.', lbl_public_group: 'Herkese Açık Grup', btn_join: 'Katıl', btn_open: 'Aç', call_missed: 'Cevapsız', call_incoming: 'Gelen', call_outgoing: 'Giden', lbl_min: 'Dk', lbl_just_now: 'Az önce', btn_add_user: 'Ekle',
+        tab_account: 'Hesap', lbl_account_email: 'Kayıtlı E-posta Adresi', lbl_change_password: 'Şifreyi Değiştir', lbl_current_password: 'Mevcut Şifre', lbl_new_password: 'Yeni Şifre', lbl_confirm_password: 'Yeni Şifreyi Onayla', btn_update_password: 'Şifreyi Güncelle', msg_password_updated: 'Şifre başarıyla değiştirildi!', err_password_mismatch: 'Yeni şifreler eşleşmiyor.', err_wrong_current_password: 'Mevcut şifre yanlış.',
+        lbl_app_lock: 'Uygulama Kilidi (PIN)', lbl_app_lock_desc: 'Uygulamayı 4 haneli bir PIN ile kilitler.', lbl_set_pin: '4 haneli PIN belirle', btn_enable_pin: 'PIN’i Etkinleştir', btn_disable_pin: 'PIN’i Devre Dışı Bırak', msg_pin_enabled: 'PIN kilidi etkinleştirildi!', msg_pin_disabled: 'PIN kilidi devre dışı bırakıldı!', err_pin_invalid: 'PIN tam olarak 4 haneli olmalıdır.', pin_enter_title: 'Uygulama Kilitli', pin_enter_prompt: 'Lütfen 4 haneli PIN kodunuzu girin:', pin_unlock_btn: 'Kilidi Aç', err_pin_wrong: 'Hatalı PIN. Lütfen tekrar deneyin.',
+        lbl_danger_zone: 'Tehlikeli Bölge', btn_delete_account: 'Hesabı Kalıcı Olarak Sil', msg_confirm_delete_account: 'Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Tüm mesajlar ve veriler kaybolacaktır!', prompt_delete_password: 'Silme işlemini onaylamak için şifrenizi girin:', msg_account_deleted: 'Hesabınız başarıyla silindi.',
+        lbl_notification_sound: 'Bildirim Sesi', opt_sound_chime: 'Modern Melodi', opt_sound_soft: 'Hafif & Kibar', opt_sound_bell: 'Kristal Çan', opt_sound_classic: 'Klasik Ses', btn_test_sound: 'Sesi Test Et 🔊',
+        lbl_hide_preview: 'Mesaj Önizlemesini Gizle', lbl_hide_preview_desc: 'Gizlilik için bildirimlerde mesaj içeriğini gizler.',
+        lbl_vibrate: 'Dokunsal Geri Bildirim / Titreşim', lbl_vibrate_desc: 'Mobil cihazlarda yeni mesajlarda ve işlemlerde titrer.',
+        lbl_auto_media: 'Otomatik Medya İndirme', opt_media_always: 'Her zaman otomatik indir', opt_media_wifi: 'Yalnızca Wi-Fi / Manuel', opt_media_manual: 'Asla (Veri tasarrufu modu)',
+        btn_export_chat: 'Sohbet Geçmişini Dışa Aktar (.txt)', msg_export_success: 'Sohbet geçmişi başarıyla dışa aktarıldı!', err_no_chat_to_export: 'Dışa aktarmak için lütfen önce bir sohbet açın.'
+    });
     function getTranslatedChatName(chat) {
         if (!chat) return '';
         if (chat.id === 'saved') return (TRANSLATIONS[currentLang] || TRANSLATIONS['en'])['chat_saved'];
@@ -630,6 +675,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         setupFirestoreListeners();
         startOnlineTracking();
         renderChatList();
+        if (typeof checkAppLock === 'function') checkAppLock();
         // selectChat('general', 'room');
         publishEvent({ type: 'user_login', username: currentUser });
     }
@@ -834,7 +880,9 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                                 } else {
                                     playSound(isMention);
                                     if (isMention && document.hidden && window.Notification && Notification.permission === "granted") {
-                                        new Notification("Erwähnung in " + chatId, { body: msg.sender_username + ": " + msg.text });
+                                        const hidePreview = document.getElementById('setting-hide-preview') ? document.getElementById('setting-hide-preview').checked : false;
+                                        const notifBody = hidePreview ? (msg.sender_username + ": " + (window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en).sec_chats) : (msg.sender_username + ": " + msg.text);
+                                        new Notification("Erwähnung in " + chatId, { body: notifBody });
                                     }
                                 }
                             }
@@ -1934,20 +1982,102 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     }
 
     function playSound(isMention = false) { 
-        if(!document.getElementById('setting-sound').checked && !isMention) return; 
-        let ctx = globalAudioCtx; 
-        if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); globalAudioCtx = ctx; } 
-        if (ctx.state === 'suspended') ctx.resume(); 
-        const osc = ctx.createOscillator(); 
-        osc.connect(ctx.destination); 
-        osc.frequency.value = isMention ? 1200 : 800;
-        if (isMention) {
-            osc.start(); osc.stop(ctx.currentTime + 0.1);
-            setTimeout(() => {
-                const osc2 = ctx.createOscillator(); osc2.connect(ctx.destination); osc2.frequency.value = 1200; osc2.start(); osc2.stop(ctx.currentTime + 0.1);
-            }, 150);
-        } else {
-            osc.start(); osc.stop(ctx.currentTime + 0.1); 
+        const soundEnabled = document.getElementById('setting-sound') ? document.getElementById('setting-sound').checked : true;
+        if(!soundEnabled && !isMention) return; 
+
+        // Haptic feedback / vibration if enabled
+        const vibrateEnabled = document.getElementById('setting-vibrate') ? document.getElementById('setting-vibrate').checked : true;
+        if (vibrateEnabled && typeof navigator !== 'undefined' && navigator.vibrate) {
+            try { navigator.vibrate(isMention ? [100, 50, 100] : 60); } catch(e) {}
+        }
+
+        try {
+            let ctx = globalAudioCtx; 
+            if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); globalAudioCtx = ctx; } 
+            if (ctx.state === 'suspended') ctx.resume(); 
+
+            const soundType = (document.getElementById('setting-sound-type') ? document.getElementById('setting-sound-type').value : (localStorage.getItem('doori_sound_type') || 'chime'));
+
+            if (isMention) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 1200;
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.start(); osc.stop(ctx.currentTime + 0.15);
+                setTimeout(() => {
+                    if (ctx.state === 'suspended') ctx.resume();
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.frequency.value = 1400;
+                    gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc2.start(); osc2.stop(ctx.currentTime + 0.2);
+                }, 120);
+                return;
+            }
+
+            if (soundType === 'soft') {
+                // Gentle bell sine wave
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.4);
+            } else if (soundType === 'bell') {
+                // Crystal bell chord (two harmonic sines)
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+                osc1.frequency.setValueAtTime(880, ctx.currentTime); // A5
+                osc2.frequency.setValueAtTime(1320, ctx.currentTime); // E6
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc1.connect(gain); osc2.connect(gain);
+                gain.connect(ctx.destination);
+                osc1.start(); osc2.start();
+                osc1.stop(ctx.currentTime + 0.5); osc2.stop(ctx.currentTime + 0.5);
+            } else if (soundType === 'classic') {
+                // Classic standard beep
+                const osc = ctx.createOscillator();
+                osc.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.start(); osc.stop(ctx.currentTime + 0.1);
+            } else {
+                // Modern Chime (dual tone cheerful ascending chime)
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+                gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+                osc1.connect(gain1); gain1.connect(ctx.destination);
+                osc1.start(); osc1.stop(ctx.currentTime + 0.18);
+
+                setTimeout(() => {
+                    if (ctx.state === 'suspended') ctx.resume();
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+                    gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.28);
+                    osc2.connect(gain2); gain2.connect(ctx.destination);
+                    osc2.start(); osc2.stop(ctx.currentTime + 0.28);
+                }, 90);
+            }
+        } catch(e) {
+            console.warn("Audio play error", e);
         }
     }
 
@@ -2409,6 +2539,35 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if(document.getElementById('setting-call-privacy')) document.getElementById('setting-call-privacy').value = p.callPrivacy || 'all';
             if(document.getElementById('setting-last-seen')) document.getElementById('setting-last-seen').checked = p.lastSeenPrivacy !== 'none';
         }
+
+        // Account tab values
+        if (document.getElementById('setting-account-email')) {
+            document.getElementById('setting-account-email').value = (window.auth && window.auth.currentUser && window.auth.currentUser.email) || '';
+        }
+
+        // Notification & Chats options
+        if (document.getElementById('setting-sound-type')) {
+            document.getElementById('setting-sound-type').value = localStorage.getItem('doori_sound_type') || 'chime';
+        }
+        if (document.getElementById('setting-hide-preview')) {
+            document.getElementById('setting-hide-preview').checked = localStorage.getItem('doori_hide_preview') === 'true';
+        }
+        if (document.getElementById('setting-vibrate')) {
+            document.getElementById('setting-vibrate').checked = localStorage.getItem('doori_vibrate') !== 'false';
+        }
+        if (document.getElementById('setting-auto-media')) {
+            document.getElementById('setting-auto-media').value = localStorage.getItem('doori_auto_media') || 'always';
+        }
+
+        // PIN button state
+        const hasPin = !!localStorage.getItem('doori_app_pin');
+        const pinToggleBtn = document.getElementById('btn-toggle-pin');
+        if (pinToggleBtn) {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            pinToggleBtn.textContent = hasPin ? (t.btn_disable_pin || 'PIN deaktivieren') : (t.btn_enable_pin || 'PIN aktivieren');
+            pinToggleBtn.className = hasPin ? 'danger-btn' : 'submit-btn';
+        }
+
         updateStorageUsage();
     });
     
@@ -2426,6 +2585,20 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     const saveSettingsBtn = document.getElementById('save-settings-btn');
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener('click', () => {
+            // Persist modern options
+            if (document.getElementById('setting-sound-type')) {
+                localStorage.setItem('doori_sound_type', document.getElementById('setting-sound-type').value);
+            }
+            if (document.getElementById('setting-hide-preview')) {
+                localStorage.setItem('doori_hide_preview', document.getElementById('setting-hide-preview').checked);
+            }
+            if (document.getElementById('setting-vibrate')) {
+                localStorage.setItem('doori_vibrate', document.getElementById('setting-vibrate').checked);
+            }
+            if (document.getElementById('setting-auto-media')) {
+                localStorage.setItem('doori_auto_media', document.getElementById('setting-auto-media').value);
+            }
+
             applyTranslation(langSelect.value);
             saveUserData();
             settingsModal.classList.add('hidden');
@@ -2438,6 +2611,197 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 window.auth.signOut().then(() => {
                     location.reload();
                 }).catch(err => console.error("Logout error", err));
+            }
+        });
+    }
+
+    // --- Modern Settings Features ---
+    // 1. Test Notification Sound Button
+    const btnTestSound = document.getElementById('btn-test-sound');
+    if (btnTestSound) {
+        btnTestSound.addEventListener('click', () => {
+            playSound(false);
+        });
+    }
+
+    // 2. Export Chat History (.txt)
+    const btnExportChat = document.getElementById('btn-export-chat');
+    if (btnExportChat) {
+        btnExportChat.addEventListener('click', () => {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            if (!currentChat) {
+                alert(t.err_no_chat_to_export || 'Bitte öffne zuerst einen Chat, um ihn zu exportieren.');
+                return;
+            }
+            const chatMsgs = messages.get(currentChat.id) || [];
+            let exportText = `Doori Messenger - Chat Export\n`;
+            exportText += `Chat: ${currentChat.name || currentChat.id}\n`;
+            exportText += `Datum: ${new Date().toLocaleString()}\n`;
+            exportText += `----------------------------------------\n\n`;
+
+            chatMsgs.forEach(m => {
+                const timeStr = m.timestamp ? new Date(m.timestamp).toLocaleString() : '';
+                const sender = m.sender_username || 'Unbekannt';
+                const text = m.text || (m.mediaType ? `[${m.mediaType}]` : '');
+                exportText += `[${timeStr}] ${sender}: ${text}\n`;
+            });
+
+            const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportText);
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `chat_export_${(currentChat.name || currentChat.id).replace(/[^a-zA-Z0-9_-]/g, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert(t.msg_export_success || 'Chatverlauf wurde erfolgreich exportiert!');
+        });
+    }
+
+    // 3. Change Password in Settings
+    const btnSubmitChangePwd = document.getElementById('btn-submit-change-password');
+    if (btnSubmitChangePwd) {
+        btnSubmitChangePwd.addEventListener('click', async () => {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            const curPwd = document.getElementById('setting-current-pwd').value;
+            const newPwd = document.getElementById('setting-new-pwd').value;
+            const confirmPwd = document.getElementById('setting-confirm-pwd').value;
+
+            if (!curPwd || !newPwd || !confirmPwd) {
+                alert(t.sec_error || 'Bitte fülle alle Passwort-Felder aus.');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                alert(t.err_password_mismatch || 'Die neuen Passwörter stimmen nicht überein.');
+                return;
+            }
+            if (newPwd.length < 6) {
+                alert(t.msg_weak_pwd || 'Das Passwort muss mindestens 6 Zeichen lang sein.');
+                return;
+            }
+
+            btnSubmitChangePwd.disabled = true;
+            try {
+                const user = window.auth.currentUser;
+                if (!user || !user.email) throw new Error("No active authenticated user");
+
+                // Re-authenticate user before changing sensitive password
+                const credential = window.firebase.auth.EmailAuthProvider.credential(user.email, curPwd);
+                await user.reauthenticateWithCredential(credential);
+                await user.updatePassword(newPwd);
+
+                alert(t.msg_password_updated || 'Passwort erfolgreich geändert!');
+                document.getElementById('setting-current-pwd').value = '';
+                document.getElementById('setting-new-pwd').value = '';
+                document.getElementById('setting-confirm-pwd').value = '';
+            } catch(err) {
+                console.error("Password update error", err);
+                if (err.code === 'auth/wrong-password') {
+                    alert(t.err_wrong_current_password || 'Das aktuelle Passwort ist nicht korrekt.');
+                } else {
+                    alert(t.err_login_failed || 'Fehler beim Ändern des Passworts: ' + (err.message || ''));
+                }
+            } finally {
+                btnSubmitChangePwd.disabled = false;
+            }
+        });
+    }
+
+    // 4. PIN App Lock Logic
+    const btnTogglePin = document.getElementById('btn-toggle-pin');
+    const pinInput = document.getElementById('setting-pin-input');
+    const appLockOverlay = document.getElementById('app-lock-overlay');
+    const appLockInput = document.getElementById('app-lock-pin-input');
+    const appLockError = document.getElementById('app-lock-error');
+    const btnUnlockApp = document.getElementById('btn-unlock-app');
+
+    function checkAppLock() {
+        const storedPin = localStorage.getItem('doori_app_pin');
+        if (storedPin && appLockOverlay) {
+            appLockOverlay.classList.remove('hidden');
+            if (appLockInput) { appLockInput.value = ''; appLockInput.focus(); }
+            if (appLockError) appLockError.classList.add('hidden');
+        }
+    }
+
+    if (btnTogglePin && pinInput) {
+        btnTogglePin.addEventListener('click', () => {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            const currentPin = localStorage.getItem('doori_app_pin');
+            if (currentPin) {
+                // Disable PIN
+                localStorage.removeItem('doori_app_pin');
+                pinInput.value = '';
+                btnTogglePin.textContent = t.btn_enable_pin || 'PIN aktivieren';
+                btnTogglePin.className = 'submit-btn';
+                alert(t.msg_pin_disabled || 'PIN-Sperre deaktiviert!');
+            } else {
+                // Enable PIN
+                const val = pinInput.value.trim();
+                if (!/^\d{4}$/.test(val)) {
+                    alert(t.err_pin_invalid || 'Die PIN muss genau 4 Ziffern lang sein.');
+                    return;
+                }
+                localStorage.setItem('doori_app_pin', val);
+                btnTogglePin.textContent = t.btn_disable_pin || 'PIN deaktivieren';
+                btnTogglePin.className = 'danger-btn';
+                alert(t.msg_pin_enabled || 'PIN-Sperre aktiviert!');
+            }
+        });
+    }
+
+    if (btnUnlockApp && appLockInput) {
+        const tryUnlock = () => {
+            const storedPin = localStorage.getItem('doori_app_pin');
+            if (appLockInput.value === storedPin) {
+                appLockOverlay.classList.add('hidden');
+                appLockInput.value = '';
+                if (appLockError) appLockError.classList.add('hidden');
+            } else {
+                if (appLockError) appLockError.classList.remove('hidden');
+                appLockInput.value = '';
+                appLockInput.focus();
+            }
+        };
+        btnUnlockApp.addEventListener('click', tryUnlock);
+        appLockInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') tryUnlock();
+        });
+    }
+
+    // Auto-lock when tab becomes visible again if PIN is set
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && localStorage.getItem('doori_app_pin')) {
+            checkAppLock();
+        }
+    });
+
+    // 5. Delete Account Handler
+    const btnDeleteAccount = document.getElementById('btn-delete-account');
+    if (btnDeleteAccount) {
+        btnDeleteAccount.addEventListener('click', async () => {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            if (!confirm(t.msg_confirm_delete_account || 'Möchtest du dein Konto wirklich unwiderruflich löschen?')) {
+                return;
+            }
+            const pwd = prompt(t.prompt_delete_password || 'Bitte gib dein Passwort ein, um die Löschung zu bestätigen:');
+            if (!pwd) return;
+
+            btnDeleteAccount.disabled = true;
+            try {
+                const user = window.auth.currentUser;
+                if (!user || !user.email) throw new Error("Kein Benutzer angemeldet");
+
+                const credential = window.firebase.auth.EmailAuthProvider.credential(user.email, pwd);
+                await user.reauthenticateWithCredential(credential);
+                await user.delete();
+
+                alert(t.msg_account_deleted || 'Dein Konto wurde gelöscht.');
+                localStorage.clear();
+                location.reload();
+            } catch(e) {
+                console.error("Delete account error", e);
+                alert(t.err_login_failed || 'Fehler beim Löschen des Kontos: ' + (e.message || ''));
+                btnDeleteAccount.disabled = false;
             }
         });
     }
