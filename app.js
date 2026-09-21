@@ -1413,6 +1413,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" loading="lazy" decoding="async" class="gif-msg"><br>${escapeHTML(msg.text)}`; }
             else if (msg.mediaType === 'buzz') { contentHtml += `<div class="buzz-message">⚡ BUZZ! ⚡</div>`; }
             else if (msg.mediaType === 'game_invite' && window.renderDooriGameInvite) { contentHtml += window.renderDooriGameInvite(msg); }
+            else if (msg.mediaType === 'game_status' && window.renderDooriGameStatus) { contentHtml += window.renderDooriGameStatus(msg); }
             else if (msg.mediaType === 'doodle_invite') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
                     <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username)}>${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;
@@ -2516,6 +2517,44 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         }
     }
 
+    async function loadSelectedDMHistory(id) {
+        const canonical = value => '@' + String(value || '').replace(/^@/, '').toLowerCase();
+        const wanted = canonical(id);
+        let cursor = null;
+        let pages = 0;
+        const found = [];
+        try {
+            while (pages < 5 && found.length < PAGE_SIZE) {
+                let query = window.db.collection('messages')
+                    .where('participants', 'array-contains', currentUser.toLowerCase())
+                    .where('isPublic', '==', false)
+                    .orderBy('timestamp', 'desc');
+                if (cursor) query = query.startAfter(cursor);
+                const page = await query.limit(200).get();
+                if (page.empty) break;
+                cursor = page.docs.at(-1);
+                page.docs.forEach(doc => {
+                    const msg = { ...doc.data(), id: doc.id };
+                    const counterpart = msg.chat_id === 'saved' ? 'saved' :
+                        (canonical(msg.sender_username) === canonical(currentUser) ? msg.recipient_username : msg.sender_username);
+                    if (canonical(counterpart) === wanted) found.push(msg);
+                });
+                pages++;
+                if (page.docs.length < 200) break;
+            }
+            if (!found.length) return;
+            const existing = messages.get(id) || [];
+            const merged = new Map(existing.map(message => [message.id, message]));
+            found.forEach(message => merged.set(message.id, message));
+            const list = [...merged.values()].sort((a, b) => a.timestamp - b.timestamp);
+            messages.set(id, list);
+            if (window.MessageCache?.saveMessages) await window.MessageCache.saveMessages(id, list);
+            if (currentChat?.id === id) renderMessages();
+        } catch (error) {
+            console.error('Selected chat history could not be loaded', error);
+        }
+    }
+
     function selectChat(id, type) {
         // Switch to chat view
         document.getElementById('start-page').classList.remove('active');
@@ -2681,6 +2720,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             }).catch(()=>{});
         }
         renderMessages();
+        if (type === 'dm') loadSelectedDMHistory(id);
         markMessagesAsRead(id);
     };
 

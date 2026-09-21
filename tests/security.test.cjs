@@ -233,7 +233,7 @@ test('native two-player game center covers all games and five languages',()=>{
  assert.match(games,/runTransaction/);
  assert.doesNotMatch(games,/<iframe|https?:\/\//i,'game module remains native');
  assert.match(html,/id="games-btn"/);
- assert.match(html,/games\.js\?v=2/);
+ assert.match(html,/games\.js\?v=3/);
  assert.match(rules,/match \/gameSessions\/\{gameId\}/);
  assert.match(rules,/participants\.size\(\) == 2/);
  assert.match(build,/'games\.js'/);

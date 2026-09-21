@@ -17,20 +17,26 @@ function client(username = '@alice') {
   w.TRANSLATIONS = { de:{}, en:{}, ar:{}, fa:{}, tr:{} };
   w.escapeHTML = value => String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
   const sessions = new Map();
+  const sentMessages = new Map();
   let idCounter = 0;
   const snapshots = new Map();
   const makeRef = id => ({
     id,
     async set(data) { sessions.set(id, structuredClone(data)); },
     async delete() { sessions.delete(id); },
+    async update(changes) {
+      sessions.set(id, { ...sessions.get(id), ...structuredClone(changes) });
+      snapshots.get(id)?.({ exists: true, data: () => structuredClone(sessions.get(id)) });
+    },
     onSnapshot(next) { snapshots.set(id, next); next({ exists: sessions.has(id), data: () => structuredClone(sessions.get(id)) }); return () => snapshots.delete(id); }
   });
   w.db = {
     collection(name) {
+      if (name === 'messages') return { doc(id) { return { async set(data) { sentMessages.set(id, structuredClone(data)); } }; } };
       assert.equal(name, 'gameSessions');
       return {
         doc(id) { return makeRef(id || `game-${++idCounter}`); },
-        where() { return { limit() { return { async get() { return { docs: [] }; } }; } }; }
+        where() { return { limit() { return { async get() { return { docs: [...sessions.entries()].map(([id, data]) => ({ id, data: () => structuredClone(data) })) }; } }; } }; }
       };
     },
     async runTransaction(run) {
@@ -45,7 +51,7 @@ function client(username = '@alice') {
   };
   w.eval(fs.readFileSync(path.join(root, 'games.js'), 'utf8'));
   w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
-  return { dom, w, sessions };
+  return { dom, w, sessions, sentMessages };
 }
 
 test('games menu and invitation strings exist in all five languages', () => {
@@ -87,5 +93,36 @@ test('failed invitation message removes the orphaned game session', async () => 
   w.sendMessage = async () => false;
   await w.DooriGamesTest.create('memory');
   assert.equal(sessions.size, 0);
+  dom.window.close();
+});
+
+test('only one unanswered request per game and opponent is allowed', async () => {
+  const { dom, w, sessions } = client('@alice');
+  const alerts = [];
+  w.alert = text => alerts.push(text);
+  w.sendMessage = async () => true;
+  await w.DooriGamesTest.create('quiz');
+  await w.DooriGamesTest.create('quiz');
+  assert.equal(sessions.size, 1);
+  assert.match(alerts.at(-1), /bereits eine Anfrage/);
+  dom.window.close();
+});
+
+test('declining and leaving create durable chat notifications', async () => {
+  const { dom, w, sessions, sentMessages } = client('@alice');
+  w.sendMessage = async () => true;
+  await w.DooriGamesTest.create('connect4');
+  const id = [...sessions.keys()][0];
+  w.currentUser = '@bob';
+  await w.DooriGamesTest.decide(id, 'declined');
+  assert.equal(sessions.get(id).status, 'declined');
+  assert.equal([...sentMessages.values()].at(-1).mediaType, 'game_status');
+  assert.equal(JSON.parse([...sentMessages.values()].at(-1).mediaUrl).event, 'declined');
+
+  sessions.set(id, { ...sessions.get(id), status: 'active' });
+  w.openDooriGame(id);
+  await w.DooriGamesTest.close();
+  assert.equal(sessions.get(id).status, 'left');
+  assert.equal(JSON.parse([...sentMessages.values()].at(-1).mediaUrl).event, 'left');
   dom.window.close();
 });

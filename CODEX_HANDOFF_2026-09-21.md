@@ -353,3 +353,12 @@ Validierung:
 - Firestore-Regeln erzwingen `pending` beim Erstellen und erlauben die erste Aktivierung beziehungsweise Ablehnung nur dem eingeladenen Teilnehmer.
 - Der Service-Worker-Cache wurde auf `web-messenger-v98-game-invitations` erhöht.
 - Verifikation: `npm.cmd test` umfasst 25 Tests. Dazu gehören neue Zwei-Benutzer-Tests für pending -> active, fehlgeschlagene Einladungen sowie vollständige Einladungsübersetzungen in fünf Sprachen. `npm.cmd run build` bündelt 27 freigegebene Dateien.
+## Spiele-Nachbesserung: Verlauf, Duplikate und Austritt
+
+- Die Liste alter/offener Spielsitzungen unterhalb der vier Spielkarten wurde vollständig aus dem Spiele-Hub entfernt.
+- Beim Öffnen eines privaten Chats lädt `loadSelectedDMHistory` dessen Verlauf gezielt aus Firestore nach. Es durchsucht bei Bedarf bis zu fünf Seiten mit je 200 privaten Nachrichten, führt sie dedupliziert mit Speicher und IndexedDB zusammen und rendert den Chat anschließend erneut.
+- Pro Kontakt und Spieltyp ist nur eine unbeantwortete Anfrage erlaubt. Eine lokale Sperre verhindert zusätzlich Doppelanfragen durch schnelle Doppelklicks.
+- Ablehnung und Verlassen werden als dauerhafte, lokalisierte `game_status`-Nachrichten im privaten Chat gespeichert. Beide Teilnehmer sehen außerdem die Statusänderung in Echtzeit in der Spielsitzung.
+- Aktive Sitzungen wechseln beim Schließen auf `left`; Firestore erlaubt diesen Übergang nur für den Teilnehmer, der sich selbst als `leftBy` einträgt.
+- Alle neuen Texte sind in `de`, `en`, `ar`, `fa` und `tr` enthalten.
+- Teststand: 27/27 Tests bestanden, einschließlich Duplikatsperre und dauerhafter Benachrichtigungen für Ablehnung und Verlassen.

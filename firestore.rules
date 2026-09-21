@@ -105,11 +105,12 @@ service cloud.firestore {
     request.resource.data.participants == resource.data.participants &&
     request.resource.data.createdBy == resource.data.createdBy &&
     request.resource.data.type == resource.data.type &&
-    request.resource.data.status in ['pending', 'active', 'declined', 'finished'] &&
+    request.resource.data.status in ['pending', 'active', 'declined', 'finished', 'left'] &&
     ((resource.data.status == 'pending' && key() != resource.data.createdBy && request.resource.data.status in ['active', 'declined']) ||
-     (resource.data.status == 'active' && request.resource.data.status in ['active', 'finished']) ||
+     (resource.data.status == 'active' && request.resource.data.status in ['active', 'finished', 'left']) ||
      (resource.data.status == 'finished' && request.resource.data.status == 'active')) &&
-    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state', 'status', 'updatedAt', 'round', 'stateVersion']);
+    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state', 'status', 'updatedAt', 'round', 'stateVersion', 'leftBy']) &&
+    (request.resource.data.status != 'left' || request.resource.data.leftBy == key());
    allow delete: if verified() && key() in resource.data.participants;
   }
   match /groups/{groupId} {
