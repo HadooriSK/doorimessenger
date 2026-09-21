@@ -54,22 +54,39 @@ In dieser Session wurden wie gewünscht drei neue Einstellungsbereiche mit moder
   * Rate-Limiting über `_rateLimits` verhindert Spam oder DoS.
   * Alle Brevo-API-Aufrufe verbleiben geschützt auf dem Server via Secret `BREVO_API_KEY`.
 
+### 5. Fünf moderne Messenger-Features (Vollständig in 5 Sprachen)
+* **1. Chat-Filter-Tabs (Telegram-Style):**
+  * Horizontale Filter-Pill-Leiste (`#chat-filter-bar`) im Chats-Reiter: `Alle`, `Direkt`, `Gruppen`, `Ungelesen`.
+  * Reagiert in Echtzeit und filtert die Chat-Liste ohne Page-Reload.
+* **2. Sprachnachrichten-Wiedergabegeschwindigkeit (1x / 1.5x / 2x):**
+  * Schneller Umschalt-Pill (`.player-speed-btn`) in den Player-Controls jeder Sprachnachricht.
+  * Zykliert `1x` $\to$ `1.5x` $\to$ `2x` $\to$ `1x`, steuert die Audio-Engine per `playbackRate` sofort und speichert die Vorliebe in `localStorage` (`doori_audio_speed`).
+* **3. Markierte & wichtige Nachrichten (Starred Messages):**
+  * Nachrichten-Kontextmenü bietet `⭐ Nachricht markieren` / `⭐ Markierung entfernen`.
+  * Markierte Nachrichten tragen ein elegantes goldenes ⭐-Symbol neben Zeit und Lesebestätigung.
+  * Eigener Button im Chat-Header (`#chat-starred-btn`) und Dropdown öffnet `#starred-messages-modal` mit Nachrichten-Vorschau und „Zum Chat springen“-Navigation samt Hervorhebungseffekt.
+* **4. Profil-Status & Bio mit Emojis:**
+  * Vordefinierte Status-Presets (`🟢 Verfügbar`, `☕ Beschäftigt`, `🚀 Bei der Arbeit`, `🚗 Unterwegs`, `🏖️ Im Urlaub`, `💤 Schlafen`) sowie ein eigenes Textfeld in den Profil-Einstellungen.
+  * Speicherung im Firestore-Profil (`bio`), wodurch andere Kontakte den Status sicher und regeltreu abrufen können.
+  * Anzeige des Status im Chat-Header-Badge (`#current-chat-status-badge`), in der Chatliste neben Kontaktnamen und im Profil-Modal (`#user-profile-bio`).
+* **5. Medienspeicher & Chat-Galerie (Shared Media Viewer):**
+  * Eigener Button im Chat-Header (`#chat-media-btn`) und Header-Dropdown öffnet `#shared-media-modal`.
+  * Drei übersichtliche Kategorien: `Fotos & Videos` (Thumbnail-Grid mit Klick-Vollbildansicht), `Sprachnachrichten` (mit interaktivem Player) und `Dateien` (mit direktem Download-Link).
+
 ---
 
 ## 2. Eingehaltene Richtlinien (AGENTS.md)
-* **Alle 5 Projektsprachen synchron:** Deutsch (`de`), Englisch (`en`), Persisch (`fa`), Arabisch (`ar`) und Türkisch (`tr`) wurden vollständig in allen Komponenten (`app.js`, `account-action.js`, `functions/index.js`, `tests/security.test.cjs`) eingepflegt.
+* **Alle 5 Projektsprachen synchron:** Deutsch (`de`), Englisch (`en`), Persisch (`fa`), Arabisch (`ar`) und Türkisch (`tr`) wurden ausnahmslos in allen 5 neuen Features und allen Modalen eingepflegt.
 * **RTL-Unterstützung:** Persisch und Arabisch sind mit korrekter Textausrichtung (`dir="rtl"`) eingebunden.
-* **Sicherheit:** Keine Klartext-Passwörter oder API-Schlüssel im Frontend.
-* **Tests:** 20/20 automatische Tests bestanden (`npm test`).
-* **Firebase Deploy:** Deployment von Cloud Functions und Hosting wird automatisch durchgeführt.
+* **Sicherheit:** Strikte Beachtung der Firestore Security Rules (`profiles/{username}` erlaubt `bio`, `userData/{username}` speichert erweiterte Nutzerdaten).
+* **Tests:** 21/21 automatische Tests bestanden (`npm test`).
+* **Firebase Deploy:** Deployment von Hosting (`https://doori-messenger.web.app`) erfolgreich durchgeführt.
 
 ---
 
 ## 3. Betroffene & geänderte Dateien
-* `functions/index.js`: Cloud Functions `requestAccountDeletion` und `confirmAccountDeletion` mit Brevo-E-Mail-Templates (roter Button, 5 Sprachen, RTL).
-* `account-action.html`: CSP um europe-west3 Cloud Functions erweitert, Firebase Functions Compat SDK eingebunden, Deletion-Box `#delete-box` integriert.
-* `account-action.js`: `deleteAccount`-Modus mit Bestätigungs-Workflow in 5 Sprachen.
-* `app.js`: Zweistufiger Löschaufruf via `requestAccountDeletion`, Sprachschlüssel `msg_deletion_email_sent` in allen 5 Sprachen.
-* `tests/security.test.cjs`: Erweiterte Tests für Account-Löschung, rote E-Mail-Buttons, Cloud Functions und alle 5 Sprachen (20 Tests bestanden).
-* `scripts/build-hosting.cjs`: Produktionsbuild generiert.
-* `CODEX_HANDOFF_2026-09-21.md`: Diese Dokumentation.
+* `index.html`: Chat-Filter-Pills, Header-Aktionsbuttons (Starred, Media), Profil-Status-Presets, User-Profile-Bio, Modale für markierte Nachrichten und geteilte Medien.
+* `style.css`: Styling für Filter-Pills, Speed-Buttons, Star-Badges, Status-Presets und Shared-Media-Grid.
+* `app.js`: Vollständige Übersetzungen (de, en, fa, ar, tr) für alle 5 Features, Filter-Engine, Player-PlaybackRate-Logik, Starred-Messages-Management, Firestore-Bio-Synchronisation und Media-Galerie.
+* `tests/security.test.cjs`: Vollständigkeitsprüfung aller Übersetzungsschlüssel und E2E/Unit-Tests für die 5 modernen Messenger-Funktionen (21/21 Tests grün).
+* `CODEX_HANDOFF_2026-09-21.md`: Aktualisierte Dokumentation.

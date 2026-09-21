@@ -257,30 +257,46 @@ test('modern settings additions cover all five languages and preserve RTL for ar
  for(const file of ['security.js','auth-translations.js','account-client.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
  await new Promise(resolve=>setTimeout(resolve,100));
  const texts=w.TRANSLATIONS;
- const requiredKeys=[
-  'tab_account', 'lbl_account_email', 'lbl_change_password', 'lbl_current_password',
-  'lbl_new_password', 'lbl_confirm_password', 'btn_update_password', 'msg_password_updated',
-  'err_password_mismatch', 'err_wrong_current_password', 'lbl_app_lock', 'lbl_app_lock_desc',
-  'lbl_set_pin', 'btn_enable_pin', 'btn_disable_pin', 'msg_pin_enabled', 'msg_pin_disabled',
-  'err_pin_invalid', 'pin_enter_title', 'pin_enter_prompt', 'pin_unlock_btn', 'err_pin_wrong',
-  'lbl_danger_zone', 'btn_delete_account', 'msg_confirm_delete_account', 'prompt_delete_password',
-  'msg_account_deleted', 'msg_deletion_email_sent', 'lbl_notification_sound', 'opt_sound_chime', 'opt_sound_soft',
-  'opt_sound_bell', 'opt_sound_classic', 'btn_test_sound', 'lbl_hide_preview',
-  'lbl_hide_preview_desc', 'lbl_vibrate', 'lbl_vibrate_desc', 'lbl_auto_media',
-  'opt_media_always', 'opt_media_wifi', 'opt_media_manual', 'btn_export_chat',
-  'msg_export_success', 'err_no_chat_to_export'
- ];
- for (const lang of ['de','en','fa','ar','tr']) {
-  for (const key of requiredKeys) {
-   assert.ok(texts[lang] && typeof texts[lang][key] === 'string' && texts[lang][key].trim().length > 0, `Missing or empty ${lang}.${key}`);
+  const requiredKeys=[
+   'tab_account', 'lbl_account_email', 'lbl_change_password', 'lbl_current_password',
+   'lbl_new_password', 'lbl_confirm_password', 'btn_update_password', 'msg_password_updated',
+   'err_password_mismatch', 'err_wrong_current_password', 'lbl_app_lock', 'lbl_app_lock_desc',
+   'lbl_set_pin', 'btn_enable_pin', 'btn_disable_pin', 'msg_pin_enabled', 'msg_pin_disabled',
+   'err_pin_invalid', 'pin_enter_title', 'pin_enter_prompt', 'pin_unlock_btn', 'err_pin_wrong',
+   'lbl_danger_zone', 'btn_delete_account', 'msg_confirm_delete_account', 'prompt_delete_password',
+   'msg_account_deleted', 'msg_deletion_email_sent', 'lbl_notification_sound', 'opt_sound_chime', 'opt_sound_soft',
+   'opt_sound_bell', 'opt_sound_classic', 'btn_test_sound', 'lbl_hide_preview',
+   'lbl_hide_preview_desc', 'lbl_vibrate', 'lbl_vibrate_desc', 'lbl_auto_media',
+   'opt_media_always', 'opt_media_wifi', 'opt_media_manual', 'btn_export_chat',
+   'msg_export_success', 'err_no_chat_to_export',
+   'tab_filter_all', 'tab_filter_direct', 'tab_filter_groups', 'tab_filter_unread',
+   'ctx_star', 'ctx_unstar', 'btn_starred_messages', 'modal_starred_title', 'msg_starred_empty',
+   'btn_unstar', 'btn_jump_to_chat', 'btn_shared_media', 'modal_shared_media_title',
+   'tab_media_photos', 'tab_media_audio', 'tab_media_files', 'msg_no_media_found',
+   'lbl_profile_status', 'lbl_profile_status_desc', 'ph_custom_status',
+   'opt_status_available', 'opt_status_busy', 'opt_status_work', 'opt_status_travel',
+   'opt_status_vacation', 'opt_status_sleep', 'btn_save_status', 'msg_status_updated'
+  ];
+  for (const lang of ['de','en','fa','ar','tr']) {
+   for (const key of requiredKeys) {
+    assert.ok(texts[lang] && typeof texts[lang][key] === 'string' && texts[lang][key].trim().length > 0, `Missing or empty ${lang}.${key}`);
+   }
   }
- }
- assert.ok(html.includes('id="tab-account"'));
- assert.ok(html.includes('id="app-lock-overlay"'));
- assert.ok(html.includes('id="setting-sound-type"'));
- assert.ok(html.includes('id="btn-export-chat"'));
- dom.window.close();
-});
+  assert.ok(html.includes('id="tab-account"'));
+  assert.ok(html.includes('id="app-lock-overlay"'));
+  assert.ok(html.includes('id="setting-sound-type"'));
+  assert.ok(html.includes('id="btn-export-chat"'));
+  assert.ok(html.includes('id="chat-filter-bar"'));
+  assert.ok(html.includes('id="list-chats-items"'));
+  assert.ok(html.includes('id="starred-messages-modal"'));
+  assert.ok(html.includes('id="shared-media-modal"'));
+  assert.ok(html.includes('id="status-presets"'));
+  assert.ok(html.includes('id="btn-save-status"'));
+  assert.ok(html.includes('id="current-chat-status-badge"'));
+  assert.ok(html.includes('id="chat-starred-btn"'));
+  assert.ok(html.includes('id="chat-media-btn"'));
+  dom.window.close();
+ });
 
 test('two-step account deletion sends red confirmation email and second deleted email in 5 languages', ()=>{
  const funcCode=fs.readFileSync(path.join(root,'functions','index.js'),'utf8');
@@ -297,4 +313,58 @@ test('two-step account deletion sends red confirmation email and second deleted 
  assert.ok(actionHtml.includes('europe-west3-doori-messenger.cloudfunctions.net'));
  const appCode=fs.readFileSync(path.join(root,'app.js'),'utf8');
  assert.match(appCode,/requestAccountDeletion/);
+});
+
+test('five modern features (chat filter, voice speed, starred messages, profile status, shared media) are fully functional', async () => {
+ const html = fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+ const dom = new JSDOM(html,{runScripts:'outside-only',url:'https://localhost/'});
+ const w = dom.window;
+ w.alert = () => {};
+ w.confirm = () => true;
+ w.matchMedia = () => ({matches:false,addListener(){},addEventListener(){}});
+ w.DOMPurify = createDOMPurify(w);
+ w.auth = {onAuthStateChanged(){},currentUser:null};
+ w.db = {clearPersistence:()=>Promise.resolve(),collection:()=>({doc:()=>({get:()=>Promise.resolve({exists:false}),set:()=>Promise.resolve(),onSnapshot:()=>()=>{}})})};
+ w.BroadcastChannel = class { postMessage() {} close() {} addEventListener() {} };
+ w.HTMLCanvasElement.prototype.getContext = () => new Proxy({}, {get:()=>()=>{}});
+ w.accountFunctions = {httpsCallable:()=>async()=>({data:{}})};
+ w.firebase = {auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
+ for(const file of ['security.js','auth-translations.js','account-client.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+ await new Promise(resolve=>setTimeout(resolve,100));
+
+ // 1. Chat filter bar and pills exist
+ const filterBar = w.document.getElementById('chat-filter-bar');
+ assert.ok(filterBar, 'chat-filter-bar exists');
+ const pills = filterBar.querySelectorAll('.filter-pill');
+ assert.equal(pills.length, 4, '4 filter pills');
+
+ // 2. Audio player playback speed button
+ const playerHtml = w.renderCustomPlayer('https://example.com/audio.mp3', 'audio');
+ assert.ok(playerHtml.includes('player-speed-btn'), 'custom player has speed toggle button');
+
+ // 3. Starred messages helper and modal
+ assert.ok(typeof w.isMessageStarred === 'function');
+ assert.ok(typeof w.toggleStarMessage === 'function');
+ const testMsg = { id: 'msg123', sender_username: '@alice', text: 'Hello star', timestamp: Date.now() };
+ assert.equal(w.isMessageStarred('msg123'), false);
+ w.toggleStarMessage(testMsg);
+ assert.equal(w.isMessageStarred('msg123'), true);
+ w.toggleStarMessage(testMsg);
+ assert.equal(w.isMessageStarred('msg123'), false);
+
+ // 4. Status presets exist and custom status input exists
+ const presets = w.document.querySelectorAll('.status-preset-btn');
+ assert.ok(presets.length >= 6, 'at least 6 status presets');
+ const customStatus = w.document.getElementById('setting-custom-status');
+ assert.ok(customStatus, 'custom status input exists');
+ const saveStatusBtn = w.document.getElementById('btn-save-status');
+ assert.ok(saveStatusBtn, 'btn-save-status exists');
+
+ // 5. Shared media modal and tabs exist
+ const mediaModal = w.document.getElementById('shared-media-modal');
+ assert.ok(mediaModal, 'shared-media-modal exists');
+ const mediaTabs = mediaModal.querySelectorAll('.shared-media-tab');
+ assert.equal(mediaTabs.length, 3, '3 media tabs (photos, audio, files)');
+
+ dom.window.close();
 });

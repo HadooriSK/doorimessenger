@@ -1024,3 +1024,118 @@ body.light-mode .mention-item {
 body.light-mode .mention-item:hover, body.light-mode .mention-item.active {
     background: rgba(0,0,0,0.05);
 }
+
+/* --- Modern Feature 1: Chat Filter Pills --- */
+.chat-filter-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.chat-filter-bar::-webkit-scrollbar { display: none; }
+.filter-pill {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.filter-pill:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+.filter-pill.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+}
+
+/* --- Modern Feature 2: Voice Playback Speed --- */
+.player-speed-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: background 0.15s;
+    user-select: none;
+}
+.player-speed-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* --- Modern Feature 3: Starred Messages --- */
+.msg-star-badge {
+    color: #f1c40f;
+    font-size: 11px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+.starred-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.starred-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+/* --- Modern Feature 4: Status Preset Buttons --- */
+.status-preset-btn.active {
+    background: var(--accent) !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.user-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --- Modern Feature 5: Shared Media Grid --- */
+.shared-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+    padding: 5px 0;
+}
+.shared-media-item {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: rgba(0,0,0,0.2);
+}
+.shared-media-item img, .shared-media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.shared-audio-item, .shared-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}

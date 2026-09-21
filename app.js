@@ -34,6 +34,32 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     let unsubListeners = [];
     let unreadChats = new Set();
     let mentionedChats = new Set();
+    let activeChatFilter = 'all';
+    window.starredMessages = [];
+    window.isMessageStarred = function(msgId) {
+        return Array.isArray(window.starredMessages) && window.starredMessages.some(m => String(m.id) === String(msgId));
+    };
+    window.toggleStarMessage = function(msg) {
+        if (!window.starredMessages) window.starredMessages = [];
+        const idx = window.starredMessages.findIndex(m => String(m.id) === String(msg.id));
+        if (idx >= 0) {
+            window.starredMessages.splice(idx, 1);
+        } else {
+            window.starredMessages.push({
+                id: msg.id,
+                chatId: currentChat ? currentChat.id : (msg.chatId || ''),
+                chatType: currentChat ? currentChat.type : (msg.chatType || 'dm'),
+                chatName: currentChat ? currentChat.name : (msg.sender_username || ''),
+                sender: msg.sender_username,
+                text: msg.text || '',
+                mediaType: msg.mediaType || null,
+                mediaUrl: msg.mediaUrl || null,
+                timestamp: msg.timestamp || Date.now()
+            });
+        }
+        if (typeof saveUserData === 'function') saveUserData();
+        if (currentChat) renderMessages();
+    };
 
     const screens = { login: document.getElementById('login-screen'), chat: document.getElementById('chat-screen') };
     const loginForm = document.getElementById('login-form'); const usernameInput = document.getElementById('username-input'); const emailInput = document.getElementById('email-input'); const passwordInput = document.getElementById('password-input'); const idInput = document.getElementById('id-input'); const idHint = document.getElementById('id-hint'); const loginSubmitBtn = document.getElementById('login-submit-btn'); const loginError = document.getElementById('login-error');
@@ -289,6 +315,66 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_vibrate: 'Dokunsal Geri Bildirim / Titreşim', lbl_vibrate_desc: 'Mobil cihazlarda yeni mesajlarda ve işlemlerde titrer.',
         lbl_auto_media: 'Otomatik Medya İndirme', opt_media_always: 'Her zaman otomatik indir', opt_media_wifi: 'Yalnızca Wi-Fi / Manuel', opt_media_manual: 'Asla (Veri tasarrufu modu)',
         btn_export_chat: 'Sohbet Geçmişini Dışa Aktar (.txt)', msg_export_success: 'Sohbet geçmişi başarıyla dışa aktarıldı!', err_no_chat_to_export: 'Dışa aktarmak için lütfen önce bir sohbet açın.'
+    });
+    Object.assign(TRANSLATIONS.de, {
+        tab_filter_all: 'Alle', tab_filter_direct: 'Direkt', tab_filter_groups: 'Gruppen', tab_filter_unread: 'Ungelesen',
+        ctx_star: '⭐ Nachricht markieren', ctx_unstar: '⭐ Markierung entfernen', btn_starred_messages: 'Markierte Nachrichten',
+        modal_starred_title: 'Wichtige & markierte Nachrichten', msg_starred_empty: 'Keine markierten Nachrichten vorhanden.',
+        btn_unstar: 'Entfernen', btn_jump_to_chat: 'Zum Chat springen',
+        btn_shared_media: 'Geteilte Medien', modal_shared_media_title: 'Geteilte Medien in diesem Chat',
+        tab_media_photos: 'Fotos & Videos', tab_media_audio: 'Sprachnachrichten', tab_media_files: 'Dateien', msg_no_media_found: 'Keine Medien in dieser Kategorie vorhanden.',
+        lbl_profile_status: 'Status & Emoji', lbl_profile_status_desc: 'Wähle deinen aktuellen Status für deine Kontakte.', ph_custom_status: 'Eigener Status...',
+        opt_status_available: '🟢 Verfügbar', opt_status_busy: '☕ Beschäftigt', opt_status_work: '🚀 Bei der Arbeit',
+        opt_status_travel: '🚗 Unterwegs', opt_status_vacation: '🏖️ Im Urlaub', opt_status_sleep: '💤 Schlafen',
+        btn_save_status: 'Status speichern', msg_status_updated: 'Status wurde erfolgreich aktualisiert!'
+    });
+    Object.assign(TRANSLATIONS.en, {
+        tab_filter_all: 'All', tab_filter_direct: 'Direct', tab_filter_groups: 'Groups', tab_filter_unread: 'Unread',
+        ctx_star: '⭐ Star message', ctx_unstar: '⭐ Unstar message', btn_starred_messages: 'Starred Messages',
+        modal_starred_title: 'Important & Starred Messages', msg_starred_empty: 'No starred messages found.',
+        btn_unstar: 'Remove', btn_jump_to_chat: 'Jump to chat',
+        btn_shared_media: 'Shared Media', modal_shared_media_title: 'Shared Media in this chat',
+        tab_media_photos: 'Photos & Videos', tab_media_audio: 'Voice Notes', tab_media_files: 'Files', msg_no_media_found: 'No media found in this category.',
+        lbl_profile_status: 'Status & Emoji', lbl_profile_status_desc: 'Choose your status for contacts to see.', ph_custom_status: 'Custom status...',
+        opt_status_available: '🟢 Available', opt_status_busy: '☕ Busy', opt_status_work: '🚀 At work',
+        opt_status_travel: '🚗 On the road', opt_status_vacation: '🏖️ On vacation', opt_status_sleep: '💤 Sleeping',
+        btn_save_status: 'Save Status', msg_status_updated: 'Status updated successfully!'
+    });
+    Object.assign(TRANSLATIONS.fa, {
+        tab_filter_all: 'همه', tab_filter_direct: 'مستقیم', tab_filter_groups: 'گروه‌ها', tab_filter_unread: 'خوانده‌نشده',
+        ctx_star: '⭐ نشان کردن پیام', ctx_unstar: '⭐ برداشتن نشان', btn_starred_messages: 'پیام‌های نشان‌شده',
+        modal_starred_title: 'پیام‌های مهم و نشان‌شده', msg_starred_empty: 'هیچ پیام نشان‌شده‌ای وجود ندارد.',
+        btn_unstar: 'حذف', btn_jump_to_chat: 'رفتن به گفتگو',
+        btn_shared_media: 'رسانه‌های مشترک', modal_shared_media_title: 'رسانه‌های مشترک در این گفتگو',
+        tab_media_photos: 'عکس‌ها و ویدیوها', tab_media_audio: 'پیام‌های صوتی', tab_media_files: 'فایل‌ها', msg_no_media_found: 'هیچ رسانه‌ای در این بخش یافت نشد.',
+        lbl_profile_status: 'وضعیت و ایموجی', lbl_profile_status_desc: 'یک وضعیت برای نمایش به مخاطبین انتخاب کنید.', ph_custom_status: 'وضعیت دلخواه...',
+        opt_status_available: '🟢 در دسترس', opt_status_busy: '☕ مشغول', opt_status_work: '🚀 در حال کار',
+        opt_status_travel: '🚗 در سفر', opt_status_vacation: '🏖️ در تعطیلات', opt_status_sleep: '💤 در خواب',
+        btn_save_status: 'ذخیره وضعیت', msg_status_updated: 'وضعیت با موفقیت به‌روزرسانی شد!'
+    });
+    Object.assign(TRANSLATIONS.ar, {
+        tab_filter_all: 'الكل', tab_filter_direct: 'مباشر', tab_filter_groups: 'المجموعات', tab_filter_unread: 'غير مقروءة',
+        ctx_star: '⭐ تمييز بنجمة', ctx_unstar: '⭐ إزالة النجمة', btn_starred_messages: 'الرسائل المميزة بنجمة',
+        modal_starred_title: 'الرسائل المهمة والمميزة', msg_starred_empty: 'لا توجد رسائل مميزة بنجمة.',
+        btn_unstar: 'إزالة', btn_jump_to_chat: 'الانتقال إلى المحادثة',
+        btn_shared_media: 'الوسائط المشتركة', modal_shared_media_title: 'الوسائط المشتركة في هذه المحادثة',
+        tab_media_photos: 'الصور ومقاطع الفيديو', tab_media_audio: 'الرسائل الصوتية', tab_media_files: 'الملفات', msg_no_media_found: 'لم يتم العثور على وسائط في هذا القسم.',
+        lbl_profile_status: 'الحالة والرمز التعبيري', lbl_profile_status_desc: 'اختر حالتك الحالية لتظهر لجهات اتصالك.', ph_custom_status: 'حالة مخصصة...',
+        opt_status_available: '🟢 متاح', opt_status_busy: '☕ مشغول', opt_status_work: '🚀 في العمل',
+        opt_status_travel: '🚗 في الطريق', opt_status_vacation: '🏖️ في عطلة', opt_status_sleep: '💤 نائم',
+        btn_save_status: 'حفظ الحالة', msg_status_updated: 'تم تحديث الحالة بنجاح!'
+    });
+    Object.assign(TRANSLATIONS.tr, {
+        tab_filter_all: 'Tümü', tab_filter_direct: 'Direkt', tab_filter_groups: 'Gruplar', tab_filter_unread: 'Okunmamış',
+        ctx_star: '⭐ Mesajı yıldızla', ctx_unstar: '⭐ Yıldızı kaldır', btn_starred_messages: 'Yıldızlı Mesajlar',
+        modal_starred_title: 'Önemli ve Yıldızlı Mesajlar', msg_starred_empty: 'Yıldızlı mesaj bulunamadı.',
+        btn_unstar: 'Kaldır', btn_jump_to_chat: 'Sohbete git',
+        btn_shared_media: 'Paylaşılan Medya', modal_shared_media_title: 'Bu sohbette paylaşılan medya',
+        tab_media_photos: 'Fotoğraflar ve Videolar', tab_media_audio: 'Sesli Mesajlar', tab_media_files: 'Dosyalar', msg_no_media_found: 'Bu kategoride medya bulunamadı.',
+        lbl_profile_status: 'Durum ve Emoji', lbl_profile_status_desc: 'Kişilerinizin görmesi için bir durum seçin.', ph_custom_status: 'Özel durum...',
+        opt_status_available: '🟢 Uygun', opt_status_busy: '☕ Meşgul', opt_status_work: '🚀 İşte',
+        opt_status_travel: '🚗 Yolda', opt_status_vacation: '🏖️ Tatilde', opt_status_sleep: '💤 Uyuyor',
+        btn_save_status: 'Durumu Kaydet', msg_status_updated: 'Durum başarıyla güncellendi!'
     });
     function getTranslatedChatName(chat) {
         if (!chat) return '';
@@ -623,6 +709,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 if (data.mutedChats) mutedChats = new Set(data.mutedChats);
                 if (data.pinnedChats) pinnedChats = data.pinnedChats;
                 if (data.dmPins) dmPins = data.dmPins;
+                if (data.starredMessages) window.starredMessages = data.starredMessages;
             } else {
                 // Fallback / Auto-Migration from old localStorage
                 const saved = localStorage.getItem(`doori_${currentUser}`);
@@ -638,6 +725,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                         }
                         if (parsed.blockedContacts) blockedContacts = new Set(parsed.blockedContacts);
                         if (parsed.mutedChats) mutedChats = new Set(parsed.mutedChats);
+                        if (parsed.starredMessages) window.starredMessages = parsed.starredMessages;
                         // Push old data to cloud
                         saveUserData();
                         migrateOldMessages();
@@ -1003,7 +1091,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             blockedContacts: Array.from(blockedContacts),
             mutedChats: Array.from(mutedChats),
             pinnedChats: pinnedChats,
-            dmPins: dmPins
+            dmPins: dmPins,
+            starredMessages: window.starredMessages || []
         };
         
         window.db.collection('userData').doc(currentUser.toLowerCase()).set(dataToSave, { merge: true })
@@ -1156,8 +1245,10 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             let ttlHtml = ''; 
             if (msg.ttl) { if(msg.expires_at) { const remaining = Math.max(0, Math.ceil((msg.expires_at - now)/1000)); ttlHtml = `<span class="ttl-indicator">⏳ ${remaining}s</span>`; } else ttlHtml = `<span class="ttl-indicator">⏳ ${msg.ttl}s</span>`; }
             let statusHtml = ''; if(msg.silent) statusHtml += `<span class="status-indicator">🔕</span>`; if(msg.isSecret) statusHtml += `<span class="status-indicator">🔒</span>`;
+            const isStarred = window.isMessageStarred ? window.isMessageStarred(msg.id) : false;
+            const starHtml = isStarred ? '<span class="msg-star-badge" title="Markiert">⭐</span>' : '';
             
-            const hash = (msg.text || '') + (msg.edited ? '1':'0') + msg.mediaType + timeStr + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
+            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
             
             let expectedInner = '';
             let className = '';
@@ -1188,7 +1279,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                             ${inviteText}
                             ${btnHtml}
                         </div>
-                        <div class="time">${timeStr}</div>
+                        <div class="time">${timeStr}${starHtml}</div>
                     </div>
                 `;
             }
@@ -1232,7 +1323,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 }
                 const aUrl = window.getAllowedProfilePics ? (window.getAllowedProfilePics(msg.sender_username, p)[0] || null) : p.avatarUrl;
                 let msgAvatar = aUrl ? `<img src="${aUrl}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>` : `<div style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.1);display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle;margin-right:5px;cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>${msg.sender_username.charAt(0).toUpperCase()}</div>`;
-                expectedInner = `<div class="message-sender" style="display:flex;align-items:center;">${msgAvatar}<span style="cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>${isSentByMe ? 'Du' : msg.sender_username}</span></div><div class="message-bubble"${styleAttr}><div>${contentHtml}</div></div>${reactionsHtml}<div class="message-time">${ttlHtml} ${statusHtml} ${timeStr}${ticks}</div>`;
+                expectedInner = `<div class="message-sender" style="display:flex;align-items:center;">${msgAvatar}<span style="cursor:pointer;" ${actionAttrs("showUserProfileModal", msg.sender_username)}>${isSentByMe ? 'Du' : msg.sender_username}</span></div><div class="message-bubble"${styleAttr}><div>${contentHtml}</div></div>${reactionsHtml}<div class="message-time">${ttlHtml} ${statusHtml} ${timeStr}${ticks}${starHtml}</div>`;
     
                 className = `message ${isSentByMe ? 'sent' : 'received'}`;
             }
@@ -1415,6 +1506,11 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                     } else {
                         alert('Teilen wird in diesem Browser nicht unterstützt.');
                     }
+                });
+
+                const isMsgStarred = window.isMessageStarred ? window.isMessageStarred(msg.id) : false;
+                addOpt(isMsgStarred ? (t['ctx_unstar'] || '⭐ Markierung entfernen') : (t['ctx_star'] || '⭐ Nachricht markieren'), false, () => {
+                    if (window.toggleStarMessage) window.toggleStarMessage(msg);
                 });
 
                 if (isSentByMe) {
@@ -2221,6 +2317,22 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             else { currentChatAvatar.textContent = chat.name.replace('@','').charAt(0).toUpperCase(); }
         }
 
+        const statusBadge = document.getElementById('current-chat-status-badge');
+        if (statusBadge) {
+            if (type === 'dm') {
+                const profile = users.get(chat.name);
+                const sText = profile && (profile.bio || profile.status) ? (profile.bio || profile.status) : '';
+                if (sText) {
+                    statusBadge.textContent = sText;
+                    statusBadge.classList.remove('hidden');
+                } else {
+                    statusBadge.classList.add('hidden');
+                }
+            } else {
+                statusBadge.classList.add('hidden');
+            }
+        }
+
         const bBtn = document.getElementById('buzz-btn');
         const iBtn = document.getElementById('group-info-btn');
         if (type === 'room' || type === 'channel') {
@@ -2289,8 +2401,19 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
             window.currentChatStatusUserListener = window.db.collection('profiles').doc(id.toLowerCase()).onSnapshot(uDoc => {
                 if (uDoc.exists) {
-                    users.set(id, uDoc.data());
+                    const uData = uDoc.data();
+                    users.set(id, uData);
                     updateText();
+                    const statusBadge = document.getElementById('current-chat-status-badge');
+                    if (statusBadge && currentChat && currentChat.id === id) {
+                        const sText = (uData && (uData.bio || uData.status)) ? (uData.bio || uData.status) : '';
+                        if (sText) {
+                            statusBadge.textContent = sText;
+                            statusBadge.classList.remove('hidden');
+                        } else {
+                            statusBadge.classList.add('hidden');
+                        }
+                    }
                 }
             });
 
@@ -2510,7 +2633,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 if(aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img">`; else avatarHtml = chat.name.replace('@','').charAt(0).toUpperCase();
             }
             const mentionBadgeHtml = mentionedChats.has(chat.id) ? '<div class="mention-badge" style="position:absolute; top:-5px; right:-5px; background:var(--accent); color:#000; border-radius:50%; width:16px; height:16px; font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 5px rgba(0,0,0,0.5);">@</div>' : '';
-            div.innerHTML = safeHTML(`<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${escapeHTML(getTranslatedChatName(chat))}</span></div>`);
+            let statusBadgeHtml = '';
+            if (chat.type !== 'room' && chat.type !== 'channel' && chat.type !== 'saved') {
+                let p = users.get(chat.name);
+                if (p && (p.bio || p.status)) {
+                    statusBadgeHtml = ` <span class="user-status-badge" style="font-size: 11px; opacity: 0.8; margin-left: 4px; color: var(--accent);">${escapeHTML(p.bio || p.status)}</span>`;
+                }
+            }
+            div.innerHTML = safeHTML(`<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${escapeHTML(getTranslatedChatName(chat))}${statusBadgeHtml}</span></div>`);
             div.addEventListener('click', () => {
                 if (mentionedChats.has(chat.id)) {
                     mentionedChats.delete(chat.id);
@@ -2523,7 +2653,271 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         chatData.personal.forEach(c => lists.personal.appendChild(createItem(c)));
         chatData.rooms.forEach(c => lists.rooms.appendChild(createItem(c)));
         chatData.contacts.forEach(c => lists.contacts.appendChild(createItem(c)));
+
+        const chatsItemsContainer = document.getElementById('list-chats-items');
+        if (chatsItemsContainer) {
+            chatsItemsContainer.innerHTML = safeHTML('');
+            const allMap = new Map();
+            (chatData.personal || []).forEach(c => allMap.set(c.id, c));
+            (chatData.rooms || []).forEach(c => allMap.set(c.id, c));
+            (chatData.contacts || []).forEach(c => allMap.set(c.id, c));
+            (chatData.active_chats || []).forEach(c => allMap.set(c.id, c));
+
+            let filtered = Array.from(allMap.values());
+            if (activeChatFilter === 'direct') {
+                filtered = filtered.filter(c => c.type === 'dm' || (!c.type && c.id !== 'saved'));
+            } else if (activeChatFilter === 'groups') {
+                filtered = filtered.filter(c => c.type === 'room' || c.type === 'channel' || c.type === 'group');
+            } else if (activeChatFilter === 'unread') {
+                filtered = filtered.filter(c => unreadChats.has(c.id));
+            }
+            filtered.forEach(c => chatsItemsContainer.appendChild(createItem(c)));
+        }
     }
+
+    document.querySelectorAll('#chat-filter-bar .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#chat-filter-bar .filter-pill').forEach(p => {
+                p.classList.remove('active');
+                p.style.background = 'rgba(255,255,255,0.06)';
+                p.style.color = 'white';
+                p.style.fontWeight = 'normal';
+            });
+            pill.classList.add('active');
+            pill.style.background = 'var(--accent)';
+            pill.style.color = '#000';
+            pill.style.fontWeight = 'bold';
+            activeChatFilter = pill.getAttribute('data-filter') || 'all';
+            renderChatList();
+        });
+    });
+
+    // --- Starred Messages Modal Logic ---
+    function openStarredMessagesModal(chatIdFilter = null) {
+        const modal = document.getElementById('starred-messages-modal');
+        const listContainer = document.getElementById('starred-messages-list');
+        if (!modal || !listContainer) return;
+        
+        const t = window.TRANSLATIONS[currentLang] || window.TRANSLATIONS['en'] || {};
+        listContainer.innerHTML = safeHTML('');
+        
+        let items = window.starredMessages || [];
+        if (chatIdFilter) {
+            items = items.filter(m => m.chatId === chatIdFilter);
+        }
+        
+        if (items.length === 0) {
+            listContainer.innerHTML = safeHTML(`<div style="text-align: center; color: var(--text-secondary); padding: 40px 10px;">${t.msg_starred_empty || 'Keine markierten Nachrichten vorhanden.'}</div>`);
+        } else {
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'starred-item';
+                const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '';
+                const senderName = escapeHTML(item.sender || 'Unbekannt');
+                const chatName = escapeHTML(item.chatName || item.chatId || '');
+                let body = escapeHTML(item.text || '');
+                if (item.mediaType) {
+                    body = `[${item.mediaType}] ` + body;
+                }
+                
+                el.innerHTML = safeHTML(`
+                    <div class="starred-item-header">
+                        <span style="font-weight: 600; color: var(--accent);">${senderName} <span style="font-size: 11px; opacity: 0.7; color: white;">(${chatName})</span></span>
+                        <span style="font-size: 11px; color: var(--text-secondary);">${dateStr}</span>
+                    </div>
+                    <div style="font-size: 14px; word-break: break-word; line-height: 1.4; color: #fff;">${body}</div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;">
+                        <button type="button" class="btn-jump-chat submit-btn" style="padding: 4px 10px; font-size: 11px;">${t.btn_jump_to_chat || 'Zum Chat springen'}</button>
+                        <button type="button" class="btn-remove-star danger-btn" style="padding: 4px 10px; font-size: 11px;">${t.btn_unstar || 'Entfernen'}</button>
+                    </div>
+                `);
+                
+                el.querySelector('.btn-jump-chat').addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    if (item.chatId) {
+                        selectChat(item.chatId, item.chatType || 'dm');
+                        setTimeout(() => {
+                            const targetEl = document.querySelector(`.message[data-id="${item.id}"]`);
+                            if (targetEl) {
+                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                targetEl.style.transition = 'box-shadow 0.5s';
+                                targetEl.style.boxShadow = '0 0 15px var(--accent)';
+                                setTimeout(() => { targetEl.style.boxShadow = ''; }, 2000);
+                            }
+                        }, 500);
+                    }
+                });
+                
+                el.querySelector('.btn-remove-star').addEventListener('click', () => {
+                    window.toggleStarMessage({ id: item.id });
+                    openStarredMessagesModal(chatIdFilter);
+                });
+                
+                listContainer.appendChild(el);
+            });
+        }
+        modal.classList.remove('hidden');
+    }
+
+    const starredBtn = document.getElementById('chat-starred-btn');
+    if (starredBtn) starredBtn.addEventListener('click', () => openStarredMessagesModal(currentChat ? currentChat.id : null));
+
+    const dropdownStarredBtn = document.getElementById('dropdown-starred-messages');
+    if (dropdownStarredBtn) dropdownStarredBtn.addEventListener('click', () => {
+        if (chatHeaderDropdown) chatHeaderDropdown.classList.add('hidden');
+        openStarredMessagesModal(currentChat ? currentChat.id : null);
+    });
+
+    const closeStarredBtn = document.getElementById('close-starred-modal-btn');
+    if (closeStarredBtn) closeStarredBtn.addEventListener('click', () => {
+        const modal = document.getElementById('starred-messages-modal');
+        if (modal) modal.classList.add('hidden');
+    });
+
+    // --- Shared Media Modal Logic ---
+    let currentMediaTab = 'photos';
+
+    function renderSharedMediaContent() {
+        const container = document.getElementById('shared-media-content');
+        if (!container) return;
+        container.innerHTML = safeHTML('');
+        
+        if (!currentChat) return;
+        const msgs = messages.get(currentChat.id) || [];
+        const t = window.TRANSLATIONS[currentLang] || window.TRANSLATIONS['en'] || {};
+        
+        if (currentMediaTab === 'photos') {
+            const photoMsgs = msgs.filter(m => m.mediaType === 'image' || m.mediaType === 'video' || m.mediaType === 'gif');
+            if (photoMsgs.length === 0) {
+                container.innerHTML = safeHTML(`<div style="text-align: center; color: var(--text-secondary); padding: 40px 10px;">${t.msg_no_media_found || 'Keine Medien in dieser Kategorie vorhanden.'}</div>`);
+                return;
+            }
+            const grid = document.createElement('div');
+            grid.className = 'shared-media-grid';
+            photoMsgs.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'shared-media-item';
+                if (m.mediaType === 'image' || m.mediaType === 'gif') {
+                    item.innerHTML = safeHTML(`<img src="${m.mediaUrl}" alt="Media" loading="lazy">`);
+                    item.addEventListener('click', () => {
+                        window.open(m.mediaUrl, '_blank');
+                    });
+                } else if (m.mediaType === 'video') {
+                    const vidSrc = getCachedBlobUrl(m) || m.mediaUrl;
+                    item.innerHTML = safeHTML(`<video src="${vidSrc}" muted playsinline></video><div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); font-size: 24px; color: #fff;">▶</div>`);
+                    item.addEventListener('click', () => {
+                        window.open(m.mediaUrl || vidSrc, '_blank');
+                    });
+                }
+                grid.appendChild(item);
+            });
+            container.appendChild(grid);
+        } else if (currentMediaTab === 'audio') {
+            const audioMsgs = msgs.filter(m => m.mediaType === 'audio');
+            if (audioMsgs.length === 0) {
+                container.innerHTML = safeHTML(`<div style="text-align: center; color: var(--text-secondary); padding: 40px 10px;">${t.msg_no_media_found || 'Keine Medien in dieser Kategorie vorhanden.'}</div>`);
+                return;
+            }
+            audioMsgs.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'shared-audio-item';
+                const timeStr = new Date(m.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                const sender = escapeHTML(m.sender_username || '');
+                item.innerHTML = safeHTML(`
+                    <div style="flex: 1; margin-right: 10px;">
+                        <div style="font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 4px;">${sender} <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">• ${timeStr}</span></div>
+                        ${renderCustomPlayer(getCachedBlobUrl(m), 'audio')}
+                    </div>
+                `);
+                container.appendChild(item);
+            });
+            initCustomPlayers();
+        } else if (currentMediaTab === 'files') {
+            const fileMsgs = msgs.filter(m => m.mediaType === 'file' || m.mediaType === 'location');
+            if (fileMsgs.length === 0) {
+                container.innerHTML = safeHTML(`<div style="text-align: center; color: var(--text-secondary); padding: 40px 10px;">${t.msg_no_media_found || 'Keine Medien in dieser Kategorie vorhanden.'}</div>`);
+                return;
+            }
+            fileMsgs.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'shared-file-item';
+                const timeStr = new Date(m.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                const sender = escapeHTML(m.sender_username || '');
+                if (m.mediaType === 'location') {
+                    item.innerHTML = safeHTML(`
+                        <div>
+                            <div style="font-weight: 600; color: #fff;">📍 Standort</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">${sender} • ${timeStr}</div>
+                        </div>
+                        <a href="https://maps.google.com/?q=${m.mediaUrl}" target="_blank" class="submit-btn" style="padding: 5px 12px; font-size: 12px; text-decoration: none;">Öffnen</a>
+                    `);
+                } else {
+                    const fileName = escapeHTML(m.fileName || m.text || 'Datei');
+                    item.innerHTML = safeHTML(`
+                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px;">
+                            <div style="font-weight: 600; color: #fff;">📄 ${fileName}</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">${sender} • ${timeStr}</div>
+                        </div>
+                        <a href="${m.mediaUrl}" target="_blank" download class="submit-btn" style="padding: 5px 12px; font-size: 12px; text-decoration: none;">Download</a>
+                    `);
+                }
+                container.appendChild(item);
+            });
+        }
+    }
+
+    function openSharedMediaModal() {
+        const modal = document.getElementById('shared-media-modal');
+        if (!modal) return;
+        currentMediaTab = 'photos';
+        document.querySelectorAll('.shared-media-tab').forEach(b => {
+            if (b.dataset.tab === 'photos') {
+                b.classList.add('active');
+                b.style.background = 'var(--accent)';
+                b.style.color = '#000';
+                b.style.fontWeight = 'bold';
+            } else {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.color = 'white';
+                b.style.fontWeight = 'normal';
+            }
+        });
+        renderSharedMediaContent();
+        modal.classList.remove('hidden');
+    }
+
+    document.querySelectorAll('.shared-media-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.shared-media-tab').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.color = 'white';
+                b.style.fontWeight = 'normal';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--accent)';
+            btn.style.color = '#000';
+            btn.style.fontWeight = 'bold';
+            currentMediaTab = btn.dataset.tab || 'photos';
+            renderSharedMediaContent();
+        });
+    });
+
+    const mediaBtn = document.getElementById('chat-media-btn');
+    if (mediaBtn) mediaBtn.addEventListener('click', openSharedMediaModal);
+
+    const dropdownMediaBtn = document.getElementById('dropdown-shared-media');
+    if (dropdownMediaBtn) dropdownMediaBtn.addEventListener('click', () => {
+        if (chatHeaderDropdown) chatHeaderDropdown.classList.add('hidden');
+        openSharedMediaModal();
+    });
+
+    const closeMediaBtn = document.getElementById('close-shared-media-btn');
+    if (closeMediaBtn) closeMediaBtn.addEventListener('click', () => {
+        const modal = document.getElementById('shared-media-modal');
+        if (modal) modal.classList.add('hidden');
+    });
 
 
 
@@ -2538,6 +2932,18 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if(document.getElementById('setting-avatar-visibility')) document.getElementById('setting-avatar-visibility').value = p.avatarVisibility || 'all';
             if(document.getElementById('setting-call-privacy')) document.getElementById('setting-call-privacy').value = p.callPrivacy || 'all';
             if(document.getElementById('setting-last-seen')) document.getElementById('setting-last-seen').checked = p.lastSeenPrivacy !== 'none';
+        }
+
+        const customStatusInput = document.getElementById('setting-custom-status');
+        if (customStatusInput) {
+            customStatusInput.value = (p && (p.bio || p.status)) ? (p.bio || p.status) : '';
+            document.querySelectorAll('.status-preset-btn').forEach(b => {
+                if (b.dataset.status === customStatusInput.value) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
         }
 
         // Account tab values
@@ -3693,18 +4099,41 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             safeUrl = safeUrl.replace(/(data:(audio|video)\/[a-zA-Z0-9]+);.*?base64,/, '$1;base64,');
         }
         const id = 'player_' + Math.random().toString(36).substr(2,9);
+        const savedSpeed = localStorage.getItem('doori_audio_speed') || '1';
+        const speedText = (savedSpeed === '1' ? '1' : savedSpeed) + 'x';
         let html = `<div class="custom-player" id="${id}" style="${playerGlass ? '' : 'backdrop-filter:none; background:rgba(16,30,38,0.9);'} border-color:${playerColor};">`;
         if(type === 'video') html += `<div class="custom-player-video-container"><video src="${safeUrl}" playsinline preload="metadata"></video></div>`;
         else html += `<audio src="${safeUrl}" playsinline preload="metadata"></audio>`;
-        html += `<div class="custom-player-controls"><button class="player-btn play-btn" style="background:${playerColor};">▶</button><div class="player-progress-container"><div class="player-progress-bar" style="background:${playerColor};"></div></div><span class="player-time">0:00 / 0:00</span></div></div>`;
+        html += `<div class="custom-player-controls"><button class="player-btn play-btn" style="background:${playerColor};">▶</button><div class="player-progress-container"><div class="player-progress-bar" style="background:${playerColor};"></div></div><span class="player-time">0:00 / 0:00</span><button class="player-speed-btn" type="button" title="Wiedergabegeschwindigkeit">${speedText}</button></div></div>`;
         return html;
     }
+    window.renderCustomPlayer = renderCustomPlayer;
     function initCustomPlayers() {
         document.querySelectorAll('.custom-player').forEach(playerEl => {
             if(playerEl.dataset.initialized) return; playerEl.dataset.initialized = 'true';
             const media = playerEl.querySelector('video, audio'); const playBtn = playerEl.querySelector('.play-btn'); const progBar = playerEl.querySelector('.player-progress-bar'); const progCont = playerEl.querySelector('.player-progress-container'); const timeEl = playerEl.querySelector('.player-time');
             if(!media) return;
             const fmt = (s) => `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+            const speedBtn = playerEl.querySelector('.player-speed-btn');
+            const savedSpeed = parseFloat(localStorage.getItem('doori_audio_speed') || '1');
+            media.playbackRate = savedSpeed;
+            if (speedBtn) {
+                speedBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    let currentRate = media.playbackRate || 1;
+                    let nextRate = 1;
+                    if (currentRate === 1) nextRate = 1.5;
+                    else if (currentRate === 1.5) nextRate = 2;
+                    else nextRate = 1;
+                    localStorage.setItem('doori_audio_speed', nextRate.toString());
+                    document.querySelectorAll('.custom-player').forEach(p => {
+                        const m = p.querySelector('video, audio');
+                        const sBtn = p.querySelector('.player-speed-btn');
+                        if (m) m.playbackRate = nextRate;
+                        if (sBtn) sBtn.textContent = nextRate + 'x';
+                    });
+                };
+            }
             playBtn.onclick = () => {
                 if (media.paused) {
                     media.dataset.playPending = 'true';
@@ -4709,6 +5138,56 @@ if(bioInput) {
     });
 }
 
+// --- Status Presets Logic ---
+const statusPresetBtns = document.querySelectorAll('.status-preset-btn');
+const customStatusInput = document.getElementById('setting-custom-status');
+const saveStatusBtn = document.getElementById('btn-save-status');
+
+if (statusPresetBtns.length > 0 && customStatusInput) {
+    statusPresetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            statusPresetBtns.forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.06)';
+                b.style.color = 'white';
+                b.style.fontWeight = 'normal';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--accent)';
+            btn.style.color = '#000';
+            btn.style.fontWeight = 'bold';
+            customStatusInput.value = btn.dataset.status || btn.textContent.trim();
+        });
+    });
+}
+
+if (saveStatusBtn && customStatusInput) {
+    saveStatusBtn.addEventListener('click', async () => {
+        const statusVal = customStatusInput.value.trim();
+        const userKey = (window.currentUser || '').replace('@','').toLowerCase();
+        if (!userKey) return;
+        
+        try {
+            if (window.db) {
+                await window.db.collection('profiles').doc(userKey).set({ bio: statusVal }, { merge: true });
+                await window.db.collection('userData').doc(userKey).set({ status: statusVal }, { merge: true });
+            }
+            if (bioInput) bioInput.value = statusVal;
+            if (window.users && window.users.has(window.currentUser)) {
+                let u = window.users.get(window.currentUser);
+                u.bio = statusVal;
+                u.status = statusVal;
+                window.users.set(window.currentUser, u);
+            }
+            const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
+            alert(t.msg_status_updated || 'Status wurde erfolgreich aktualisiert!');
+            if (typeof renderChatList === 'function') renderChatList();
+        } catch(err) {
+            console.error('Failed to update status', err);
+        }
+    });
+}
+
 // Subscribe to auth state or listen for currentUser changes to populate bio
 if(window.firebase) {
     firebase.auth().onAuthStateChanged(user => {
@@ -5148,6 +5627,13 @@ window.showUserProfileModal = async function(username, options = null) {
         } catch (e) {
             console.error("Fehler beim Laden des Profils:", e);
         }
+    }
+
+    const profileBioEl = document.getElementById('user-profile-bio');
+    if (profileBioEl) {
+        const b = p && (p.bio || p.status) ? (p.bio || p.status) : '';
+        profileBioEl.textContent = b;
+        profileBioEl.style.display = b ? 'block' : 'none';
     }
 
     let pics = window.getAllowedProfilePics ? window.getAllowedProfilePics(username, p) : [];
