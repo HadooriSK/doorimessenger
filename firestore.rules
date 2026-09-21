@@ -94,6 +94,19 @@ service cloud.firestore {
     (resource.data.isPublic && admin(resource.data.chat_id)) ||
     (resource.data.get('expires_at', null) != null && resource.data.expires_at <= request.time.toMillis()));
   }
+  match /gameSessions/{gameId} {
+   allow read: if verified() && key() in resource.data.participants;
+   allow create: if verified() && request.resource.data.createdBy == key() &&
+    request.resource.data.participants is list && request.resource.data.participants.size() == 2 &&
+    key() in request.resource.data.participants &&
+    request.resource.data.type in ['tictactoe', 'connect4', 'memory', 'quiz', 'battleship'];
+   allow update: if verified() && key() in resource.data.participants &&
+    request.resource.data.participants == resource.data.participants &&
+    request.resource.data.createdBy == resource.data.createdBy &&
+    request.resource.data.type == resource.data.type &&
+    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state', 'status', 'updatedAt', 'round', 'stateVersion']);
+   allow delete: if verified() && key() in resource.data.participants;
+  }
   match /groups/{groupId} {
    allow read: if verified() && (resource.data.privacy == 'public' || name() in resource.data.members);
    allow create: if verified() && request.resource.data.id == groupId && request.resource.data.creator == name() &&

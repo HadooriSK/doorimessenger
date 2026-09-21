@@ -222,6 +222,22 @@ test('removed third-party games are absent from the public application',()=>{
  const publicSource=['index.html','app.js','style.css'].map(file=>fs.readFileSync(path.join(root,file),'utf8')).join('\n');
  assert.doesNotMatch(publicSource,/games-menu-btn|games-list-modal|game-player-iframe|GAMES_LIST|billiards\.vercel|clumsy-bird|hextris\.io|react-tetris|flappy-bird|gabrielecirulli/i);
 });
+
+test('native two-player game center covers all games and five languages',()=>{
+ const games=fs.readFileSync(path.join(root,'games.js'),'utf8');
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const rules=fs.readFileSync(path.join(root,'firestore.rules'),'utf8');
+ const build=fs.readFileSync(path.join(root,'scripts/build-hosting.cjs'),'utf8');
+ for(const lang of ['de','en','ar','fa','tr']) assert.match(games,new RegExp(`\\b${lang}:\\{`));
+ for(const type of ['tictactoe','connect4','memory','quiz','battleship']) assert.ok(games.includes(type),type);
+ assert.match(games,/runTransaction/);
+ assert.doesNotMatch(games,/<iframe|https?:\/\//i,'game module remains native');
+ assert.match(html,/id="games-btn"/);
+ assert.match(html,/games\.js\?v=1/);
+ assert.match(rules,/match \/gameSessions\/\{gameId\}/);
+ assert.match(rules,/participants\.size\(\) == 2/);
+ assert.match(build,/'games\.js'/);
+});
 test('branded account action page covers all five languages and hides the default handler',()=>{
  const html=fs.readFileSync(path.join(root,'account-action.html'),'utf8');
  const script=fs.readFileSync(path.join(root,'account-action.js'),'utf8');

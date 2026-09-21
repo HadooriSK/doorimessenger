@@ -1408,6 +1408,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             else if (msg.mediaType === 'audio') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'audio') + (msg.text ? `<br>${escapeHTML(msg.text)}`:''); }
             else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" loading="lazy" decoding="async" class="gif-msg"><br>${escapeHTML(msg.text)}`; }
             else if (msg.mediaType === 'buzz') { contentHtml += `<div class="buzz-message">⚡ BUZZ! ⚡</div>`; }
+            else if (msg.mediaType === 'game_invite' && window.renderDooriGameInvite) { contentHtml += window.renderDooriGameInvite(msg); }
             else if (msg.mediaType === 'doodle_invite') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
                     <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username)}>${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;

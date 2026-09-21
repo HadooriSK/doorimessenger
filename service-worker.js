@@ -1,9 +1,10 @@
-const CACHE_NAME = 'web-messenger-v96-audio-source';
+const CACHE_NAME = 'web-messenger-v97-native-games';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css',
-  '/app.js?v=340',
+  '/style.css?v=323',
+  '/app.js?v=342',
+  '/games.js?v=1',
   '/security.js?v=1',
   '/auth-translations.js?v=9',
   '/account-client.js?v=1',

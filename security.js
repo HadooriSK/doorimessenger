@@ -39,7 +39,7 @@
         if (!button) return;
         const allowed = new Set(['acceptGroupInvite', 'declineGroupInvite', 'showUserProfileModal',
             'toggleGroupAdmin', 'toggleMuteMember', 'removeGroupMember', 'unblockUser',
-            'acceptDoodleInvite', 'rejectDoodleInvite']);
+            'acceptDoodleInvite', 'rejectDoodleInvite', 'openDooriGame']);
         const action = button.dataset.dooriAction;
         if (!allowed.has(action) || typeof root[action] !== 'function') return;
         try { root[action](...JSON.parse(button.dataset.dooriArgs || '[]')); }
