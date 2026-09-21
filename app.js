@@ -384,6 +384,64 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         return chat.name;
     }
 
+    const STATUS_PRESET_KEYS = [
+        'opt_status_available',
+        'opt_status_busy',
+        'opt_status_work',
+        'opt_status_travel',
+        'opt_status_vacation',
+        'opt_status_sleep'
+    ];
+
+    function getPresetKeyFromStatus(statusStr) {
+        if (!statusStr || typeof statusStr !== 'string') return null;
+        const clean = statusStr.trim();
+        if (!clean) return null;
+        const stripEmoji = s => s.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim().toLowerCase();
+        const cleanNoEmoji = stripEmoji(clean);
+        for (const key of STATUS_PRESET_KEYS) {
+            for (const l of ['de', 'en', 'fa', 'ar', 'tr']) {
+                const val = (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || '';
+                if (!val) continue;
+                if (val.trim() === clean) return key;
+                if (cleanNoEmoji && stripEmoji(val) === cleanNoEmoji) return key;
+            }
+        }
+        return null;
+    }
+
+    function syncSettingsStatusUI() {
+        const customStatusInput = document.getElementById('setting-custom-status');
+        if (!customStatusInput) return;
+        const p = users.get(currentUser);
+        const currentStatus = (p && (p.bio || p.status)) ? (p.bio || p.status) : '';
+        const presetKey = customStatusInput.dataset.presetKey || getPresetKeyFromStatus(customStatusInput.value) || getPresetKeyFromStatus(currentStatus);
+        const activeLang = window.currentLang || currentLang || 'en';
+        const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'] || {};
+        if (presetKey && t[presetKey]) {
+            customStatusInput.value = t[presetKey];
+            customStatusInput.dataset.presetKey = presetKey;
+        } else if (!customStatusInput.dataset.presetKey && currentStatus) {
+            customStatusInput.value = currentStatus;
+        }
+        document.querySelectorAll('.status-preset-btn').forEach(b => {
+            const bKey = b.getAttribute('data-status-key') || b.getAttribute('data-i18n');
+            if (bKey === presetKey) {
+                b.classList.add('active');
+                b.style.background = 'var(--accent)';
+                b.style.color = '#000';
+                b.style.fontWeight = 'bold';
+            } else {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.06)';
+                b.style.color = 'white';
+                b.style.fontWeight = 'normal';
+            }
+        });
+    }
+    window.getPresetKeyFromStatus = getPresetKeyFromStatus;
+    window.syncSettingsStatusUI = syncSettingsStatusUI;
+
     function applyTranslation(lang) {
         currentLang = lang; localStorage.setItem('doori_lang', lang);
         window.currentLang = lang;
@@ -407,6 +465,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         });
         if (langSelect.value !== lang) langSelect.value = lang;
         if (loginLangSelect && loginLangSelect.value !== lang) loginLangSelect.value = lang;
+        syncSettingsStatusUI();
         renderChatList();
         if (currentChat) {
             currentChatName.textContent = getTranslatedChatName(currentChat);
@@ -2323,7 +2382,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 const profile = users.get(chat.name);
                 const sText = profile && (profile.bio || profile.status) ? (profile.bio || profile.status) : '';
                 if (sText) {
-                    statusBadge.textContent = sText;
+                    const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(sText) : null;
+                    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
+                    statusBadge.textContent = (pKey && t[pKey]) ? t[pKey] : sText;
                     statusBadge.classList.remove('hidden');
                 } else {
                     statusBadge.classList.add('hidden');
@@ -2408,7 +2469,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     if (statusBadge && currentChat && currentChat.id === id) {
                         const sText = (uData && (uData.bio || uData.status)) ? (uData.bio || uData.status) : '';
                         if (sText) {
-                            statusBadge.textContent = sText;
+                            const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(sText) : null;
+                            const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
+                            statusBadge.textContent = (pKey && t[pKey]) ? t[pKey] : sText;
                             statusBadge.classList.remove('hidden');
                         } else {
                             statusBadge.classList.add('hidden');
@@ -2571,6 +2634,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     if(document.getElementById('setting-call-privacy')) document.getElementById('setting-call-privacy').value = p.callPrivacy || 'all';
                 if(document.getElementById('setting-last-seen')) document.getElementById('setting-last-seen').checked = p.lastSeenPrivacy !== 'none';
                 }
+                syncSettingsStatusUI();
                 updateStorageUsage();
                 return;
             }
@@ -2637,7 +2701,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (chat.type !== 'room' && chat.type !== 'channel' && chat.type !== 'saved') {
                 let p = users.get(chat.name);
                 if (p && (p.bio || p.status)) {
-                    statusBadgeHtml = ` <span class="user-status-badge" style="font-size: 11px; opacity: 0.8; margin-left: 4px; color: var(--accent);">${escapeHTML(p.bio || p.status)}</span>`;
+                    const rawStatus = p.bio || p.status;
+                    const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(rawStatus) : null;
+                    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
+                    const displayStatus = (pKey && t[pKey]) ? t[pKey] : rawStatus;
+                    statusBadgeHtml = ` <span class="user-status-badge" style="font-size: 11px; opacity: 0.8; margin-left: 4px; color: var(--accent);">${escapeHTML(displayStatus)}</span>`;
                 }
             }
             div.innerHTML = safeHTML(`<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${escapeHTML(getTranslatedChatName(chat))}${statusBadgeHtml}</span></div>`);
@@ -2934,17 +3002,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if(document.getElementById('setting-last-seen')) document.getElementById('setting-last-seen').checked = p.lastSeenPrivacy !== 'none';
         }
 
-        const customStatusInput = document.getElementById('setting-custom-status');
-        if (customStatusInput) {
-            customStatusInput.value = (p && (p.bio || p.status)) ? (p.bio || p.status) : '';
-            document.querySelectorAll('.status-preset-btn').forEach(b => {
-                if (b.dataset.status === customStatusInput.value) {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
-                }
-            });
-        }
+        syncSettingsStatusUI();
 
         // Account tab values
         if (document.getElementById('setting-account-email')) {
@@ -5156,7 +5214,21 @@ if (statusPresetBtns.length > 0 && customStatusInput) {
             btn.style.background = 'var(--accent)';
             btn.style.color = '#000';
             btn.style.fontWeight = 'bold';
-            customStatusInput.value = btn.dataset.status || btn.textContent.trim();
+            const presetKey = btn.getAttribute('data-status-key') || btn.getAttribute('data-i18n');
+            const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
+            const localized = (presetKey && t[presetKey]) ? t[presetKey] : btn.textContent.trim();
+            customStatusInput.value = localized;
+            customStatusInput.dataset.presetKey = presetKey || '';
+        });
+    });
+
+    customStatusInput.addEventListener('input', () => {
+        delete customStatusInput.dataset.presetKey;
+        statusPresetBtns.forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'rgba(255,255,255,0.06)';
+            b.style.color = 'white';
+            b.style.fontWeight = 'normal';
         });
     });
 }
@@ -5223,7 +5295,10 @@ if(originalRenderGroupInfo) {
                         bioEl.style.fontStyle = 'italic';
                         bioEl.style.color = 'var(--text-secondary)';
                         bioEl.style.fontSize = '13px';
-                        bioEl.textContent = '"' + uData.bio + '"';
+                        const pKey = typeof window.getPresetKeyFromStatus === 'function' ? window.getPresetKeyFromStatus(uData.bio) : null;
+                        const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
+                        const displayBio = (pKey && t[pKey]) ? t[pKey] : uData.bio;
+                        bioEl.textContent = '"' + displayBio + '"';
                         sideHeader.appendChild(bioEl);
                     }
                 }
@@ -5632,8 +5707,11 @@ window.showUserProfileModal = async function(username, options = null) {
     const profileBioEl = document.getElementById('user-profile-bio');
     if (profileBioEl) {
         const b = p && (p.bio || p.status) ? (p.bio || p.status) : '';
-        profileBioEl.textContent = b;
-        profileBioEl.style.display = b ? 'block' : 'none';
+        const pKey = typeof window.getPresetKeyFromStatus === 'function' ? window.getPresetKeyFromStatus(b) : null;
+        const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
+        const displayBio = (pKey && t[pKey]) ? t[pKey] : b;
+        profileBioEl.textContent = displayBio;
+        profileBioEl.style.display = displayBio ? 'block' : 'none';
     }
 
     let pics = window.getAllowedProfilePics ? window.getAllowedProfilePics(username, p) : [];

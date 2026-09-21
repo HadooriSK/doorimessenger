@@ -352,13 +352,28 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  w.toggleStarMessage(testMsg);
  assert.equal(w.isMessageStarred('msg123'), false);
 
- // 4. Status presets exist and custom status input exists
- const presets = w.document.querySelectorAll('.status-preset-btn');
- assert.ok(presets.length >= 6, 'at least 6 status presets');
- const customStatus = w.document.getElementById('setting-custom-status');
- assert.ok(customStatus, 'custom status input exists');
- const saveStatusBtn = w.document.getElementById('btn-save-status');
- assert.ok(saveStatusBtn, 'btn-save-status exists');
+  // 4. Status presets exist and custom status input exists
+  const presets = w.document.querySelectorAll('.status-preset-btn');
+  assert.ok(presets.length >= 6, 'at least 6 status presets');
+  const customStatus = w.document.getElementById('setting-custom-status');
+  assert.ok(customStatus, 'custom status input exists');
+  const saveStatusBtn = w.document.getElementById('btn-save-status');
+  assert.ok(saveStatusBtn, 'btn-save-status exists');
+
+  // Verify multilingual status preset resolution across languages
+  assert.ok(typeof w.getPresetKeyFromStatus === 'function', 'getPresetKeyFromStatus exists');
+  assert.equal(w.getPresetKeyFromStatus('🚀 Bei der Arbeit'), 'opt_status_work');
+  assert.equal(w.getPresetKeyFromStatus('🚀 At work'), 'opt_status_work');
+  assert.equal(w.getPresetKeyFromStatus('🚀 در حال کار'), 'opt_status_work');
+  assert.equal(w.getPresetKeyFromStatus('🚀 في العمل'), 'opt_status_work');
+  assert.equal(w.getPresetKeyFromStatus('🚀 İşte'), 'opt_status_work');
+  customStatus.value = '🚀 Bei der Arbeit';
+  w.currentLang = 'fa';
+  w.syncSettingsStatusUI();
+  assert.equal(customStatus.value, '🚀 در حال کار', 'Status preset translated to Persian');
+  w.currentLang = 'ar';
+  w.syncSettingsStatusUI();
+  assert.equal(customStatus.value, '🚀 في العمل', 'Status preset translated to Arabic');
 
  // 5. Shared media modal and tabs exist
  const mediaModal = w.document.getElementById('shared-media-modal');

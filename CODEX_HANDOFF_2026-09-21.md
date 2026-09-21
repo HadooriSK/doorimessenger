@@ -87,6 +87,15 @@ In dieser Session wurden wie gewünscht drei neue Einstellungsbereiche mit moder
 ## 3. Betroffene & geänderte Dateien
 * `index.html`: Chat-Filter-Pills, Header-Aktionsbuttons (Starred, Media), Profil-Status-Presets, User-Profile-Bio, Modale für markierte Nachrichten und geteilte Medien.
 * `style.css`: Styling für Filter-Pills, Speed-Buttons, Star-Badges, Status-Presets und Shared-Media-Grid.
-* `app.js`: Vollständige Übersetzungen (de, en, fa, ar, tr) für alle 5 Features, Filter-Engine, Player-PlaybackRate-Logik, Starred-Messages-Management, Firestore-Bio-Synchronisation und Media-Galerie.
-* `tests/security.test.cjs`: Vollständigkeitsprüfung aller Übersetzungsschlüssel und E2E/Unit-Tests für die 5 modernen Messenger-Funktionen (21/21 Tests grün).
+* `app.js`: Vollständige Übersetzungen (de, en, fa, ar, tr) für alle 5 Features, Filter-Engine, Player-PlaybackRate-Logik, Starred-Messages-Management, dynamische mehrsprachige Preset-Status-Synchronisation (`getPresetKeyFromStatus`, `syncSettingsStatusUI`), Firestore-Bio-Synchronisation und Media-Galerie.
+* `tests/security.test.cjs`: Vollständigkeitsprüfung aller Übersetzungsschlüssel, Validierung der mehrsprachigen Preset-Auflösung und automatische Tests für alle Funktionen (21/21 Tests bestanden).
 * `CODEX_HANDOFF_2026-09-21.md`: Aktualisierte Dokumentation.
+
+### 6. Mehrsprachige Status-Preset-Synchronisation (Fix vom 21.09.2026)
+* **Problemstellung:** Bei Sprachwechsel auf Persisch (`fa`) oder andere Sprachen blieb im Eingabefeld „Status & Emoji“ der deutsche Preset-Text („🚀 Bei der Arbeit“) stehen.
+* **Lösung:**
+  * Preset-Buttons in `index.html` verwenden `data-status-key` statt statischer Texte.
+  * Funktion `getPresetKeyFromStatus(statusStr)` erkennt Presets sprachunabhängig in allen 5 Sprachen (de, en, fa, ar, tr) mit Emoji-Stripping.
+  * `syncSettingsStatusUI()` synchronisiert das Eingabefeld `#setting-custom-status` und die Preset-Highlights bei jedem Sprachwechsel und beim Öffnen der Einstellungen automatisch in die aktive Sprache.
+  * Dynamische Übersetzung auch in Chat-Liste, Chat-Header und Profil-Info für alle Kontakte.
+
