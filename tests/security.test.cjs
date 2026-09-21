@@ -423,6 +423,12 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  const renderedCount = container.children.length;
  assert.ok(renderedCount <= 40, `Only up to 40 messages rendered initially, actual: ${renderedCount}`);
 
+ // A contact stored without @ must still render messages indexed with canonical @.
+ w.messages.delete('chat_paginated');
+ w.messages.set('@chat_paginated', [{ id: 'alias_msg', text: 'Existing aliased history', timestamp: 9000, sender_username: '@chat_paginated' }]);
+ w.renderMessages();
+ assert.match(container.textContent, /Existing aliased history/, 'history renders across username/@username aliases');
+
  // 8. Status appears in parentheses in chat list next to name/ID and does not overwrite Online status
  w.users.set('bob', { status: '☕ Beschäftigt', bio: '☕ Beschäftigt' });
  w.users.set('@bob', { status: '☕ Beschäftigt', bio: '☕ Beschäftigt' });

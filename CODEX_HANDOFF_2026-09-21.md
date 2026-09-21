@@ -362,3 +362,9 @@ Validierung:
 - Aktive Sitzungen wechseln beim Schließen auf `left`; Firestore erlaubt diesen Übergang nur für den Teilnehmer, der sich selbst als `leftBy` einträgt.
 - Alle neuen Texte sind in `de`, `en`, `ar`, `fa` und `tr` enthalten.
 - Teststand: 27/27 Tests bestanden, einschließlich Duplikatsperre und dauerhafter Benachrichtigungen für Ablehnung und Verlassen.
+## Chatverlauf: kanonische Kontaktschlüssel
+
+- Ursache der weiterhin leeren privaten Chats war eine uneinheitliche Ablage von Kontaktschlüsseln (`username` gegenüber `@username`). Der Verlauf war geladen, wurde aber unter einem anderen Map-Schlüssel gesucht.
+- Listener, historische Seiten und der gezielte Verlaufslader verwenden jetzt durchgehend `normalizeUsername`.
+- `renderMessages` führt alle Nachrichtenlisten zusammen, deren Schlüssel nach der Normalisierung zum geöffneten privaten Chat gehören, dedupliziert sie nach Nachrichten-ID und sortiert sie chronologisch.
+- Ein DOM-Regressionstest bestätigt ausdrücklich, dass ein als `username` geöffneter Chat Nachrichten aus dem Schlüssel `@username` anzeigt.

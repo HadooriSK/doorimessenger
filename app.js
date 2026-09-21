@@ -987,7 +987,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         const mergeHistoricalDMs = snapshot => {
             snapshot.docs.forEach(doc => {
                 const msg = { ...doc.data(), id: doc.id };
-                const chatId = msg.chat_id === 'saved' ? 'saved' : (msg.sender_username === currentUser ? msg.recipient_username : msg.sender_username);
+                const chatId = msg.chat_id === 'saved' ? 'saved' : normalizeUsername(normalizeUsername(msg.sender_username) === normalizeUsername(currentUser) ? msg.recipient_username : msg.sender_username);
                 if (!messages.has(chatId)) messages.set(chatId, []);
                 const list = messages.get(chatId);
                 if (!list.some(item => item.id === msg.id)) list.push(msg);
@@ -996,7 +996,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             saveUserData(); renderMessages();
         };
         const dmQuery = () => window.db.collection('messages')
-            .where('participants', 'array-contains', currentUser.toLowerCase())
+            .where('participants', 'array-contains', normalizeUsername(currentUser))
             .where('isPublic', '==', false)
             .orderBy('timestamp', 'desc');
         const dmListener = dmQuery().limit(200).onSnapshot(snapshot => {
@@ -1005,7 +1005,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 snapshot.docChanges().forEach(change => {
                     const msg = change.doc.data();
                     msg.id = change.doc.id;
-                    const chatId = (msg.isPublic || msg.chat_id === 'saved') ? msg.chat_id : (msg.sender_username === currentUser ? msg.recipient_username : msg.sender_username);
+                    const chatId = (msg.isPublic || msg.chat_id === 'saved') ? msg.chat_id : normalizeUsername(normalizeUsername(msg.sender_username) === normalizeUsername(currentUser) ? msg.recipient_username : msg.sender_username);
                     
                     // A limited live query also emits "removed" when an older item
                     // falls outside the window. Keep paged history in memory.
@@ -1346,7 +1346,15 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         if (!currentChat && window.currentChat) currentChat = window.currentChat;
         if (!currentChat) return;
         const msgMap = window.messages || messages;
-        const allMsgs = msgMap.get(currentChat.id) || [];
+        const wantedChatKey = currentChat.type === 'dm' ? normalizeUsername(currentChat.id) : currentChat.id;
+        const mergedMessages = new Map();
+        msgMap.forEach((list, key) => {
+            const normalizedKey = currentChat.type === 'dm' ? normalizeUsername(key) : key;
+            if (normalizedKey === wantedChatKey && Array.isArray(list)) {
+                list.forEach(message => { if (message?.id) mergedMessages.set(message.id, message); });
+            }
+        });
+        const allMsgs = [...mergedMessages.values()].sort((a, b) => a.timestamp - b.timestamp);
         const limitMap = window.visibleMessageLimits || visibleMessageLimits;
         const limit = limitMap.get(currentChat.id) || PAGE_SIZE;
         const msgs = allMsgs.length > limit ? allMsgs.slice(-limit) : allMsgs;
@@ -1371,6 +1379,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         const doodleTypes = ['doodle_invite', 'doodle_accept', 'doodle_close', 'doodle_reject'];
         let latestDoodleIndex = -1;
         msgs.forEach((msg, idx) => {
+            msg.sender_username = String(msg.sender_username || '');
             if (doodleTypes.includes(msg.mediaType) || (msg.text && msg.text.includes('Doodle Einladung abgelehnt'))) {
                 latestDoodleIndex = idx;
             }
@@ -2526,7 +2535,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         try {
             while (pages < 5 && found.length < PAGE_SIZE) {
                 let query = window.db.collection('messages')
-                    .where('participants', 'array-contains', currentUser.toLowerCase())
+                    .where('participants', 'array-contains', normalizeUsername(currentUser))
                     .where('isPublic', '==', false)
                     .orderBy('timestamp', 'desc');
                 if (cursor) query = query.startAfter(cursor);
