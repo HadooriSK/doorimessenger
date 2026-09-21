@@ -6,15 +6,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if(window.logDebug) window.logDebug('App v300 initialized');
     // --- State & DOM Elements ---
     let currentUser = null;
-    let users = new Map(); // username -> profile { avatarUrl, status, lastSeen }
-    let chatData = {
+    let users = window.users || new Map(); // username -> profile { avatarUrl, status, lastSeen }
+    window.users = users;
+    let chatData = window.chatData || {
         personal: [{ id: 'saved', name: 'Gespeichertes', type: 'saved' }],
         rooms: [{ id: 'general', name: 'Allgemein', type: 'room' }],
         contacts: [],
         active_chats: []
     };
-    let messages = new Map(); // chatId -> [msgObj]
+    window.chatData = chatData;
+    let messages = window.messages || new Map(); // chatId -> [msgObj]
+    window.messages = messages;
     let currentChat = null;
+    try {
+        Object.defineProperty(window, 'currentChat', {
+            get() { return currentChat; },
+            set(v) { currentChat = v; },
+            configurable: true
+        });
+    } catch(e) { window.currentChat = currentChat; }
 
 document.getElementById('back-to-list-btn').addEventListener('click', () => {
     document.getElementById('chat-page').classList.remove('active');
@@ -35,6 +45,10 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     let unreadChats = new Set();
     let mentionedChats = new Set();
     let activeChatFilter = 'all';
+    const PAGE_SIZE = 40;
+    const visibleMessageLimits = new Map();
+    window.PAGE_SIZE = PAGE_SIZE;
+    window.visibleMessageLimits = visibleMessageLimits;
     window.starredMessages = [];
     window.isMessageStarred = function(msgId) {
         return Array.isArray(window.starredMessages) && window.starredMessages.some(m => String(m.id) === String(msgId));
@@ -326,7 +340,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_profile_status: 'Status & Emoji', lbl_profile_status_desc: 'Wähle deinen aktuellen Status für deine Kontakte.', ph_custom_status: 'Eigener Status...',
         opt_status_available: '🟢 Verfügbar', opt_status_busy: '☕ Beschäftigt', opt_status_work: '🚀 Bei der Arbeit',
         opt_status_travel: '🚗 Unterwegs', opt_status_vacation: '🏖️ Im Urlaub', opt_status_sleep: '💤 Schlafen',
-        btn_save_status: 'Status speichern', msg_status_updated: 'Status wurde erfolgreich aktualisiert!'
+        btn_save_status: 'Status speichern', msg_status_updated: 'Status wurde erfolgreich aktualisiert!',
+        lbl_logged_in_as: 'Angemeldet als:'
     });
     Object.assign(TRANSLATIONS.en, {
         tab_filter_all: 'All', tab_filter_direct: 'Direct', tab_filter_groups: 'Groups', tab_filter_unread: 'Unread',
@@ -338,7 +353,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_profile_status: 'Status & Emoji', lbl_profile_status_desc: 'Choose your status for contacts to see.', ph_custom_status: 'Custom status...',
         opt_status_available: '🟢 Available', opt_status_busy: '☕ Busy', opt_status_work: '🚀 At work',
         opt_status_travel: '🚗 On the road', opt_status_vacation: '🏖️ On vacation', opt_status_sleep: '💤 Sleeping',
-        btn_save_status: 'Save Status', msg_status_updated: 'Status updated successfully!'
+        btn_save_status: 'Save Status', msg_status_updated: 'Status updated successfully!',
+        lbl_logged_in_as: 'Logged in as:'
     });
     Object.assign(TRANSLATIONS.fa, {
         tab_filter_all: 'همه', tab_filter_direct: 'مستقیم', tab_filter_groups: 'گروه‌ها', tab_filter_unread: 'خوانده‌نشده',
@@ -350,7 +366,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_profile_status: 'وضعیت و ایموجی', lbl_profile_status_desc: 'یک وضعیت برای نمایش به مخاطبین انتخاب کنید.', ph_custom_status: 'وضعیت دلخواه...',
         opt_status_available: '🟢 در دسترس', opt_status_busy: '☕ مشغول', opt_status_work: '🚀 در حال کار',
         opt_status_travel: '🚗 در سفر', opt_status_vacation: '🏖️ در تعطیلات', opt_status_sleep: '💤 در خواب',
-        btn_save_status: 'ذخیره وضعیت', msg_status_updated: 'وضعیت با موفقیت به‌روزرسانی شد!'
+        btn_save_status: 'ذخیره وضعیت', msg_status_updated: 'وضعیت با موفقیت به‌روزرسانی شد!',
+        lbl_logged_in_as: 'وارد شده به عنوان:'
     });
     Object.assign(TRANSLATIONS.ar, {
         tab_filter_all: 'الكل', tab_filter_direct: 'مباشر', tab_filter_groups: 'المجموعات', tab_filter_unread: 'غير مقروءة',
@@ -362,7 +379,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_profile_status: 'الحالة والرمز التعبيري', lbl_profile_status_desc: 'اختر حالتك الحالية لتظهر لجهات اتصالك.', ph_custom_status: 'حالة مخصصة...',
         opt_status_available: '🟢 متاح', opt_status_busy: '☕ مشغول', opt_status_work: '🚀 في العمل',
         opt_status_travel: '🚗 في الطريق', opt_status_vacation: '🏖️ في عطلة', opt_status_sleep: '💤 نائم',
-        btn_save_status: 'حفظ الحالة', msg_status_updated: 'تم تحديث الحالة بنجاح!'
+        btn_save_status: 'حفظ الحالة', msg_status_updated: 'تم تحديث الحالة بنجاح!',
+        lbl_logged_in_as: 'تم تسجيل الدخول كـ:'
     });
     Object.assign(TRANSLATIONS.tr, {
         tab_filter_all: 'Tümü', tab_filter_direct: 'Direkt', tab_filter_groups: 'Gruplar', tab_filter_unread: 'Okunmamış',
@@ -374,7 +392,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         lbl_profile_status: 'Durum ve Emoji', lbl_profile_status_desc: 'Kişilerinizin görmesi için bir durum seçin.', ph_custom_status: 'Özel durum...',
         opt_status_available: '🟢 Uygun', opt_status_busy: '☕ Meşgul', opt_status_work: '🚀 İşte',
         opt_status_travel: '🚗 Yolda', opt_status_vacation: '🏖️ Tatilde', opt_status_sleep: '💤 Uyuyor',
-        btn_save_status: 'Durumu Kaydet', msg_status_updated: 'Durum başarıyla güncellendi!'
+        btn_save_status: 'Durumu Kaydet', msg_status_updated: 'Durum başarıyla güncellendi!',
+        lbl_logged_in_as: 'Olarak giriş yapıldı:'
     });
     function getTranslatedChatName(chat) {
         if (!chat) return '';
@@ -442,6 +461,42 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     window.getPresetKeyFromStatus = getPresetKeyFromStatus;
     window.syncSettingsStatusUI = syncSettingsStatusUI;
 
+    function getUserProfile(username) {
+        if (!username || typeof username !== 'string') return null;
+        const clean = username.trim();
+        const cleanNoAt = clean.replace(/^@/, '');
+        const cleanWithAt = '@' + cleanNoAt;
+        const map = (typeof users !== 'undefined' && users) ? users : (window.users || null);
+        if (!map) return null;
+        return map.get(clean) || map.get(clean.toLowerCase()) ||
+               map.get(cleanNoAt) || map.get(cleanNoAt.toLowerCase()) ||
+               map.get(cleanWithAt) || map.get(cleanWithAt.toLowerCase()) || null;
+    }
+    window.getUserProfile = getUserProfile;
+
+    function updateCurrentUserDisplay() {
+        if (typeof currentUserDisplay !== 'undefined' && currentUserDisplay && currentUser) {
+            currentUserDisplay.textContent = currentUser;
+        }
+        const statusEl = document.getElementById('current-user-status-display');
+        if (statusEl && currentUser) {
+            const p = getUserProfile(currentUser);
+            const rawStatus = p && (p.bio || p.status) ? (p.bio || p.status) : '';
+            if (rawStatus && rawStatus.toLowerCase() !== 'online') {
+                const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(rawStatus) : null;
+                const activeLang = window.currentLang || currentLang || 'en';
+                const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'] || {};
+                const displayStatus = (pKey && t[pKey]) ? t[pKey] : rawStatus;
+                statusEl.textContent = ` (${displayStatus})`;
+                statusEl.style.display = 'inline';
+            } else {
+                statusEl.textContent = '';
+                statusEl.style.display = 'none';
+            }
+        }
+    }
+    window.updateCurrentUserDisplay = updateCurrentUserDisplay;
+
     function applyTranslation(lang) {
         currentLang = lang; localStorage.setItem('doori_lang', lang);
         window.currentLang = lang;
@@ -466,6 +521,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         if (langSelect.value !== lang) langSelect.value = lang;
         if (loginLangSelect && loginLangSelect.value !== lang) loginLangSelect.value = lang;
         syncSettingsStatusUI();
+        updateCurrentUserDisplay();
         renderChatList();
         if (currentChat) {
             currentChatName.textContent = getTranslatedChatName(currentChat);
@@ -796,7 +852,19 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             const userSnap = await window.db.collection('profiles').doc(currentUser.toLowerCase()).get();
             if (userSnap.exists) {
                 const uData = userSnap.data();
-                users.set(currentUser, { avatarUrl: uData.avatarUrl || null, profilePics: uData.profilePics || [], status: 'Online', searchable: uData.searchable !== false, avatarVisibility: uData.avatarVisibility || 'all', callPrivacy: uData.callPrivacy || 'all', lastSeenPrivacy: uData.lastSeenPrivacy || 'all' });
+                const selfProfile = { 
+                    avatarUrl: uData.avatarUrl || null, 
+                    profilePics: uData.profilePics || [], 
+                    status: uData.bio || uData.status || 'Online', 
+                    bio: uData.bio || uData.status || '', 
+                    searchable: uData.searchable !== false, 
+                    avatarVisibility: uData.avatarVisibility || 'all', 
+                    callPrivacy: uData.callPrivacy || 'all', 
+                    lastSeenPrivacy: uData.lastSeenPrivacy || 'all' 
+                };
+                users.set(currentUser, selfProfile);
+                users.set(currentUser.toLowerCase(), selfProfile);
+                users.set(currentUser.replace(/^@/,'').toLowerCase(), selfProfile);
                 
                 const searchableToggle = document.getElementById('setting-searchable');
                 if (searchableToggle) searchableToggle.checked = uData.searchable !== false;
@@ -809,19 +877,20 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 const lastSeenToggle = document.getElementById('setting-last-seen');
                 if (lastSeenToggle) lastSeenToggle.checked = (uData.lastSeenPrivacy !== 'none');
             } else {
-                if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, profilePics: [], status: 'Online' });
+                if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, profilePics: [], status: 'Online', bio: '' });
             }
             
             migrateOldMessages();
         } catch(e) {
             console.error("Load UserData error", e);
-            if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, profilePics: [], status: 'Online' });
+            if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, profilePics: [], status: 'Online', bio: '' });
         }
         
         applyTranslation(currentLang);
         setupFirestoreListeners();
         startOnlineTracking();
         renderChatList();
+        updateCurrentUserDisplay();
         if (typeof checkAppLock === 'function') checkAppLock();
         // selectChat('general', 'room');
         publishEvent({ type: 'user_login', username: currentUser });
@@ -973,6 +1042,9 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                                 if (window.showGlobalInvitePopup) window.showGlobalInvitePopup(msg);
                             }
                         }
+                        if (window.MessageCache && window.MessageCache.saveMessages) {
+                            window.MessageCache.saveMessages(chatId, [msg]);
+                        }
                         
                         if (!initialDMLoad && change.type === 'added' && !msg.silent && msg.sender_username !== currentUser && !blockedContacts.has(msg.sender_username) && !mutedChats.has(msg.sender_username)) {
                             if (msg.mediaType === 'buzz') {
@@ -1014,6 +1086,9 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                             if (!historical && change.type === 'added' && msg.sender_username !== currentUser && chatId !== currentChat?.id) {
                                 unreadChats.add(chatId);
                             }
+                        }
+                        if (window.MessageCache && window.MessageCache.saveMessages) {
+                            window.MessageCache.saveMessages(chatId, [msg]);
                         }
                         
                         if (!historical && !initialRoomLoad && change.type === 'added' && !msg.silent && msg.sender_username !== currentUser && !blockedContacts.has(msg.sender_username)) {
@@ -1116,21 +1191,88 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         unsubListeners.push(dmListener, roomListener, groupsListener);
 
         messagesContainer.onscroll = async () => {
-            if (messagesContainer.scrollTop > 40 || olderMessagesLoading || !currentChat) return;
+            if (messagesContainer.scrollTop > 50 || olderMessagesLoading || !currentChat) return;
             olderMessagesLoading = true;
+            const chatId = currentChat.id;
+            const currentLimit = visibleMessageLimits.get(chatId) || PAGE_SIZE;
+            const allMsgs = messages.get(chatId) || [];
+            const oldScrollHeight = messagesContainer.scrollHeight;
+            const oldScrollTop = messagesContainer.scrollTop;
+
             try {
+                // 1. If we already have older messages in memory that are currently hidden by limit
+                if (allMsgs.length > currentLimit) {
+                    visibleMessageLimits.set(chatId, currentLimit + PAGE_SIZE);
+                    renderMessages();
+                    messagesContainer.scrollTop = oldScrollTop + (messagesContainer.scrollHeight - oldScrollHeight);
+                    olderMessagesLoading = false;
+                    return;
+                }
+
+                // 2. Check local MessageCache before querying Firestore
+                const oldestMsg = allMsgs[0];
+                const oldestTimestamp = oldestMsg ? oldestMsg.timestamp : Date.now();
+                if (window.MessageCache && window.MessageCache.getOlderMessages) {
+                    const cachedOlder = await window.MessageCache.getOlderMessages(chatId, oldestTimestamp, PAGE_SIZE);
+                    if (cachedOlder && cachedOlder.length > 0) {
+                        const newAll = [...cachedOlder, ...allMsgs];
+                        const seen = new Set();
+                        const deduped = [];
+                        newAll.forEach(m => {
+                            if (!seen.has(m.id)) { seen.add(m.id); deduped.push(m); }
+                        });
+                        deduped.sort((a,b) => a.timestamp - b.timestamp);
+                        messages.set(chatId, deduped);
+                        visibleMessageLimits.set(chatId, currentLimit + cachedOlder.length);
+                        renderMessages();
+                        messagesContainer.scrollTop = oldScrollTop + (messagesContainer.scrollHeight - oldScrollHeight);
+                        olderMessagesLoading = false;
+                        return;
+                    }
+                }
+
+                // 3. Query Firestore for older messages
                 if (currentChat.type === 'room') {
                     const cursor = roomOldest.get(currentChat.id); if (!cursor) return;
                     const page = await window.db.collection('messages').where('isPublic', '==', true)
                         .where('chat_id', '==', currentChat.id).orderBy('timestamp', 'desc')
-                        .startAfter(cursor).limit(50).get();
-                    if (!page.empty) handleRoomSnapshot(page, currentChat.id, true);
-                    else roomOldest.delete(currentChat.id);
+                        .startAfter(cursor).limit(PAGE_SIZE).get();
+                    if (!page.empty) {
+                        handleRoomSnapshot(page, currentChat.id, true);
+                        if (window.MessageCache && window.MessageCache.saveMessages) {
+                            window.MessageCache.saveMessages(chatId, page.docs.map(d => ({ ...d.data(), id: d.id })));
+                        }
+                        visibleMessageLimits.set(chatId, currentLimit + page.docs.length);
+                        renderMessages();
+                        messagesContainer.scrollTop = oldScrollTop + (messagesContainer.scrollHeight - oldScrollHeight);
+                    } else {
+                        roomOldest.delete(currentChat.id);
+                    }
                 } else {
                     if (!dmOldest) return;
-                    const page = await dmQuery().startAfter(dmOldest).limit(200).get();
-                    if (!page.empty) { dmOldest = page.docs.at(-1); mergeHistoricalDMs(page); }
-                    else dmOldest = null;
+                    const page = await dmQuery().startAfter(dmOldest).limit(50).get();
+                    if (!page.empty) {
+                        dmOldest = page.docs.at(-1);
+                        mergeHistoricalDMs(page);
+                        if (window.MessageCache && window.MessageCache.saveMessages) {
+                            const dmMsgs = page.docs.map(d => {
+                                const m = { ...d.data(), id: d.id };
+                                const cId = m.chat_id === 'saved' ? 'saved' : (m.sender_username === currentUser ? m.recipient_username : m.sender_username);
+                                return { ...m, chatId: cId };
+                            });
+                            const byChat = new Map();
+                            dmMsgs.forEach(m => {
+                                if (!byChat.has(m.chatId)) byChat.set(m.chatId, []);
+                                byChat.get(m.chatId).push(m);
+                            });
+                            byChat.forEach((mList, cId) => window.MessageCache.saveMessages(cId, mList));
+                        }
+                        visibleMessageLimits.set(chatId, currentLimit + 50);
+                        renderMessages();
+                        messagesContainer.scrollTop = oldScrollTop + (messagesContainer.scrollHeight - oldScrollHeight);
+                    } else {
+                        dmOldest = null;
+                    }
                 }
             } catch (error) { console.error('Older messages could not be loaded', error); }
             finally { olderMessagesLoading = false; }
@@ -1177,22 +1319,36 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
     const missingUsersToFetch = new Set();
     window.fetchMissingProfile = function(username) {
-        if (!username || missingUsersToFetch.has(username)) return;
-        missingUsersToFetch.add(username);
-        window.db.collection('profiles').doc(username.toLowerCase()).get().then(doc => {
+        if (!username || typeof username !== 'string') return;
+        const clean = username.trim();
+        const cleanNoAt = clean.replace(/^@/, '').toLowerCase();
+        if (missingUsersToFetch.has(cleanNoAt)) return;
+        missingUsersToFetch.add(cleanNoAt);
+        window.db.collection('profiles').doc(cleanNoAt).get().then(doc => {
             if (doc.exists) {
-                users.set(username, doc.data());
+                const data = doc.data();
+                users.set(cleanNoAt, data);
+                users.set('@' + cleanNoAt, data);
+                users.set(clean, data);
+                users.set(username, data);
+                renderChatList();
                 renderMessages();
-                updateText();
+                if (typeof updateText === 'function') updateText();
             }
         }).catch(e => console.error(e));
     };
 
     function renderMessages() {
+        if (!currentChat && window.currentChat) currentChat = window.currentChat;
         if (!currentChat) return;
-        const msgs = messages.get(currentChat.id) || [];
+        const msgMap = window.messages || messages;
+        const allMsgs = msgMap.get(currentChat.id) || [];
+        const limitMap = window.visibleMessageLimits || visibleMessageLimits;
+        const limit = limitMap.get(currentChat.id) || PAGE_SIZE;
+        const msgs = allMsgs.length > limit ? allMsgs.slice(-limit) : allMsgs;
         const now = Date.now();
-        const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+        const activeLang = window.currentLang || currentLang || 'en';
+        const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'];
         
         let shouldScroll = false;
         const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
@@ -1247,10 +1403,10 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                 contentHtml += `<div class="reply-preview"><span class="reply-preview-sender">${escapeHTML(msg.replyTo.sender)}</span>${escapeHTML(msg.replyTo.text)}</div>`;
             }
             
-            if (msg.mediaType === 'image') { contentHtml += `<img src="${msg.mediaUrl}" style="max-width:100%; border-radius:8px; margin-bottom:5px;"><br>${escapeHTML(msg.text)}`; }
+            if (msg.mediaType === 'image') { contentHtml += `<img src="${msg.mediaUrl}" loading="lazy" decoding="async" style="max-width:100%; border-radius:8px; margin-bottom:5px;"><br>${escapeHTML(msg.text)}`; }
             else if (msg.mediaType === 'video') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'video') + (msg.text ? `<br>${escapeHTML(msg.text)}`:''); }
             else if (msg.mediaType === 'audio') { contentHtml += renderCustomPlayer(getCachedBlobUrl(msg), 'audio') + (msg.text ? `<br>${escapeHTML(msg.text)}`:''); }
-            else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" class="gif-msg"><br>${escapeHTML(msg.text)}`; }
+            else if (msg.mediaType === 'gif') { contentHtml += `<img src="${msg.mediaUrl}" loading="lazy" decoding="async" class="gif-msg"><br>${escapeHTML(msg.text)}`; }
             else if (msg.mediaType === 'buzz') { contentHtml += `<div class="buzz-message">⚡ BUZZ! ⚡</div>`; }
             else if (msg.mediaType === 'doodle_invite') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
@@ -1422,6 +1578,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         }
         initCustomPlayers();
     }
+    window.renderMessages = renderMessages;
 
     // --- Context Menu Logic ---
         function openContextMenu(e, msg) {
@@ -2379,12 +2536,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const statusBadge = document.getElementById('current-chat-status-badge');
         if (statusBadge) {
             if (type === 'dm') {
-                const profile = users.get(chat.name);
+                const profile = getUserProfile(chat.name || chat.id);
                 const sText = profile && (profile.bio || profile.status) ? (profile.bio || profile.status) : '';
-                if (sText) {
+                if (sText && sText.toLowerCase() !== 'online') {
                     const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(sText) : null;
-                    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
-                    statusBadge.textContent = (pKey && t[pKey]) ? t[pKey] : sText;
+                    const activeLang = window.currentLang || currentLang || 'en';
+                    const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'] || {};
+                    statusBadge.textContent = `(${pKey && t[pKey] ? t[pKey] : sText})`;
                     statusBadge.classList.remove('hidden');
                 } else {
                     statusBadge.classList.add('hidden');
@@ -2444,7 +2602,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             const updateText = () => {
                 if (!window.currentChatLastSeenData) return;
                 const data = window.currentChatLastSeenData;
-                const otherProfile = users.get(id);
+                const otherProfile = getUserProfile(id);
                 const privacy = (otherProfile && otherProfile.lastSeenPrivacy) ? otherProfile.lastSeenPrivacy : 'all';
                 const amIContact = (data.chatData && data.chatData.contacts && data.chatData.contacts.some(c => c.id === currentUser));
 
@@ -2464,14 +2622,16 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 if (uDoc.exists) {
                     const uData = uDoc.data();
                     users.set(id, uData);
+                    users.set(id.toLowerCase(), uData);
                     updateText();
                     const statusBadge = document.getElementById('current-chat-status-badge');
                     if (statusBadge && currentChat && currentChat.id === id) {
                         const sText = (uData && (uData.bio || uData.status)) ? (uData.bio || uData.status) : '';
-                        if (sText) {
+                        if (sText && sText.toLowerCase() !== 'online') {
                             const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(sText) : null;
-                            const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
-                            statusBadge.textContent = (pKey && t[pKey]) ? t[pKey] : sText;
+                            const activeLang = window.currentLang || currentLang || 'en';
+                            const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'] || {};
+                            statusBadge.textContent = `(${pKey && t[pKey] ? t[pKey] : sText})`;
                             statusBadge.classList.remove('hidden');
                         } else {
                             statusBadge.classList.add('hidden');
@@ -2498,6 +2658,20 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 console.error("Status Listener Error:", err);
                 currentChatStatus.textContent = '';
             });
+        }
+        if (!visibleMessageLimits.has(id)) {
+            visibleMessageLimits.set(id, PAGE_SIZE);
+        }
+        if ((!messages.has(id) || messages.get(id).length === 0) && window.MessageCache && window.MessageCache.getLatestMessages) {
+            window.MessageCache.getLatestMessages(id, PAGE_SIZE).then(cached => {
+                if (cached && cached.length > 0 && currentChat && currentChat.id === id) {
+                    const existing = messages.get(id) || [];
+                    if (existing.length === 0) {
+                        messages.set(id, cached);
+                        renderMessages();
+                    }
+                }
+            }).catch(()=>{});
         }
         renderMessages();
         markMessagesAsRead(id);
@@ -2677,7 +2851,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     });
     
     function renderChatList() {
-        lists.personal.innerHTML = safeHTML(''); lists.rooms.innerHTML = safeHTML(''); lists.contacts.innerHTML = safeHTML('');
+        const cData = window.chatData || chatData || {};
+        if (lists && lists.personal) lists.personal.innerHTML = safeHTML('');
+        if (lists && lists.rooms) lists.rooms.innerHTML = safeHTML('');
+        if (lists && lists.contacts) lists.contacts.innerHTML = safeHTML('');
         const createItem = (chat) => {
             const div = document.createElement('div'); 
             let classNames = 'chat-item';
@@ -2688,10 +2865,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             let avatarHtml = '';
             if (chat.type === 'saved') avatarHtml = '💾'; else if (chat.type === 'room' || chat.type === 'channel') avatarHtml = '#';
             else {
-                let p = users.get(chat.name);
+                let p = getUserProfile(chat.name || chat.id);
                 if (!p) {
                     p = {};
-                    if(window.fetchMissingProfile) window.fetchMissingProfile(chat.name);
+                    if(window.fetchMissingProfile) window.fetchMissingProfile(chat.name || chat.id);
                 }
                 const aUrl = window.getAllowedProfilePics ? (window.getAllowedProfilePics(chat.name, p)[0] || null) : getAllowedAvatarUrl(chat.name, p);
                 if(aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img">`; else avatarHtml = chat.name.replace('@','').charAt(0).toUpperCase();
@@ -2699,13 +2876,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             const mentionBadgeHtml = mentionedChats.has(chat.id) ? '<div class="mention-badge" style="position:absolute; top:-5px; right:-5px; background:var(--accent); color:#000; border-radius:50%; width:16px; height:16px; font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 5px rgba(0,0,0,0.5);">@</div>' : '';
             let statusBadgeHtml = '';
             if (chat.type !== 'room' && chat.type !== 'channel' && chat.type !== 'saved') {
-                let p = users.get(chat.name);
-                if (p && (p.bio || p.status)) {
-                    const rawStatus = p.bio || p.status;
+                let p = getUserProfile(chat.name || chat.id);
+                const rawStatus = p && (p.bio || p.status) ? (p.bio || p.status) : '';
+                if (rawStatus && rawStatus.toLowerCase() !== 'online') {
                     const pKey = typeof getPresetKeyFromStatus === 'function' ? getPresetKeyFromStatus(rawStatus) : null;
-                    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'] || {};
+                    const activeLang = window.currentLang || currentLang || 'en';
+                    const t = TRANSLATIONS[activeLang] || TRANSLATIONS['en'] || {};
                     const displayStatus = (pKey && t[pKey]) ? t[pKey] : rawStatus;
-                    statusBadgeHtml = ` <span class="user-status-badge" style="font-size: 11px; opacity: 0.8; margin-left: 4px; color: var(--accent);">${escapeHTML(displayStatus)}</span>`;
+                    statusBadgeHtml = ` <span class="user-status-badge" style="font-size: 11px; opacity: 0.85; margin-left: 4px; color: var(--accent); font-weight: normal;">(${escapeHTML(displayStatus)})</span>`;
                 }
             }
             div.innerHTML = safeHTML(`<div class="avatar ${chat.type === 'room' || chat.type === 'channel' ? 'room-avatar' : ''}" style="position:relative;">${avatarHtml}${mentionBadgeHtml}</div><div class="chat-item-info"><span class="chat-item-name">${escapeHTML(getTranslatedChatName(chat))}${statusBadgeHtml}</span></div>`);
@@ -2718,18 +2896,18 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             });
             return div;
         };
-        chatData.personal.forEach(c => lists.personal.appendChild(createItem(c)));
-        chatData.rooms.forEach(c => lists.rooms.appendChild(createItem(c)));
-        chatData.contacts.forEach(c => lists.contacts.appendChild(createItem(c)));
+        if (lists && lists.personal && cData.personal) cData.personal.forEach(c => lists.personal.appendChild(createItem(c)));
+        if (lists && lists.rooms && cData.rooms) cData.rooms.forEach(c => lists.rooms.appendChild(createItem(c)));
+        if (lists && lists.contacts && cData.contacts) cData.contacts.forEach(c => lists.contacts.appendChild(createItem(c)));
 
         const chatsItemsContainer = document.getElementById('list-chats-items');
         if (chatsItemsContainer) {
             chatsItemsContainer.innerHTML = safeHTML('');
             const allMap = new Map();
-            (chatData.personal || []).forEach(c => allMap.set(c.id, c));
-            (chatData.rooms || []).forEach(c => allMap.set(c.id, c));
-            (chatData.contacts || []).forEach(c => allMap.set(c.id, c));
-            (chatData.active_chats || []).forEach(c => allMap.set(c.id, c));
+            (cData.personal || []).forEach(c => allMap.set(c.id, c));
+            (cData.rooms || []).forEach(c => allMap.set(c.id, c));
+            (cData.contacts || []).forEach(c => allMap.set(c.id, c));
+            (cData.active_chats || []).forEach(c => allMap.set(c.id, c));
 
             let filtered = Array.from(allMap.values());
             if (activeChatFilter === 'direct') {
@@ -2742,6 +2920,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             filtered.forEach(c => chatsItemsContainer.appendChild(createItem(c)));
         }
     }
+    window.renderChatList = renderChatList;
 
     document.querySelectorAll('#chat-filter-bar .filter-pill').forEach(pill => {
         pill.addEventListener('click', () => {
@@ -3452,7 +3631,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             btn.disabled = false;
         }
     });
-    document.getElementById('clear-cache-btn').addEventListener('click', () => { if(confirm("Gesamten Chatverlauf löschen?")) { messages.clear(); saveUserData(); renderMessages(); } });
+    document.getElementById('clear-cache-btn').addEventListener('click', () => { 
+        if(confirm("Gesamten Chatverlauf löschen?")) { 
+            messages.clear(); 
+            if (window.MessageCache && window.MessageCache.clearCache) window.MessageCache.clearCache();
+            saveUserData(); 
+            renderMessages(); 
+        } 
+    });
     function updateStorageUsage() { let total = 0; for(let i in localStorage) { if(localStorage.hasOwnProperty(i)) { total += ((localStorage[i].length + i.length) * 2); } } document.getElementById('storage-usage').textContent = (total / (1024*1024)).toFixed(2) + " MB"; }
 
     addContactBtn.addEventListener('click', () => addContactModal.classList.remove('hidden')); closeAddContactBtn.addEventListener('click', () => addContactModal.classList.add('hidden'));
@@ -4053,7 +4239,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     function performLogin(username) {
         currentUser = username; window.currentUser = username;
         if(window.initWebRTC) window.initWebRTC(username);
-        if(currentUserDisplay) currentUserDisplay.textContent = currentUser;
+        if(typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
+        else if(currentUserDisplay) currentUserDisplay.textContent = currentUser;
         screens.login.classList.remove('active');
         screens.chat.classList.add('active');
         loadUserData();
@@ -4160,8 +4347,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const savedSpeed = localStorage.getItem('doori_audio_speed') || '1';
         const speedText = (savedSpeed === '1' ? '1' : savedSpeed) + 'x';
         let html = `<div class="custom-player" id="${id}" style="${playerGlass ? '' : 'backdrop-filter:none; background:rgba(16,30,38,0.9);'} border-color:${playerColor};">`;
-        if(type === 'video') html += `<div class="custom-player-video-container"><video src="${safeUrl}" playsinline preload="metadata"></video></div>`;
-        else html += `<audio src="${safeUrl}" playsinline preload="metadata"></audio>`;
+        if(type === 'video') html += `<div class="custom-player-video-container"><video src="${safeUrl}" playsinline preload="none"></video></div>`;
+        else html += `<audio src="${safeUrl}" playsinline preload="none"></audio>`;
         html += `<div class="custom-player-controls"><button class="player-btn play-btn" style="background:${playerColor};">▶</button><div class="player-progress-container"><div class="player-progress-bar" style="background:${playerColor};"></div></div><span class="player-time">0:00 / 0:00</span><button class="player-speed-btn" type="button" title="Wiedergabegeschwindigkeit">${speedText}</button></div></div>`;
         return html;
     }
@@ -5245,12 +5432,15 @@ if (saveStatusBtn && customStatusInput) {
                 await window.db.collection('userData').doc(userKey).set({ status: statusVal }, { merge: true });
             }
             if (bioInput) bioInput.value = statusVal;
-            if (window.users && window.users.has(window.currentUser)) {
-                let u = window.users.get(window.currentUser);
-                u.bio = statusVal;
-                u.status = statusVal;
-                window.users.set(window.currentUser, u);
+            const profileObj = (typeof getUserProfile === 'function' ? getUserProfile(window.currentUser) : null) || (window.users ? window.users.get(window.currentUser) : null) || {};
+            profileObj.bio = statusVal;
+            profileObj.status = statusVal;
+            if (window.users) {
+                window.users.set(window.currentUser, profileObj);
+                window.users.set(userKey, profileObj);
+                window.users.set('@' + userKey, profileObj);
             }
+            if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
             const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
             alert(t.msg_status_updated || 'Status wurde erfolgreich aktualisiert!');
             if (typeof renderChatList === 'function') renderChatList();

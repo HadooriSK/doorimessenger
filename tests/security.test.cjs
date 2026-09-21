@@ -100,7 +100,7 @@ test('application always starts dark and still supports switching to light mode'
   w.db={clearPersistence:()=>Promise.resolve()};
   w.accountFunctions={httpsCallable:()=>async()=>({data:{}})};
   w.firebase={auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
-  for(const file of ['security.js','auth-translations.js','account-client.js','app.js','webrtc.js','doodle.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+  for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js','webrtc.js','doodle.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
   await new Promise(resolve=>setTimeout(resolve,100));
   const schedule=w.document.getElementById('send-schedule-btn');
   assert.equal(w.document.getElementById('email-input').classList.contains('hidden'),true);
@@ -254,7 +254,7 @@ test('modern settings additions cover all five languages and preserve RTL for ar
  w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({}, {get:()=>()=>{}});
  w.accountFunctions={httpsCallable:()=>async()=>({data:{}})};
  w.firebase={auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
- for(const file of ['security.js','auth-translations.js','account-client.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+ for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
  await new Promise(resolve=>setTimeout(resolve,100));
  const texts=w.TRANSLATIONS;
   const requiredKeys=[
@@ -329,7 +329,7 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  w.HTMLCanvasElement.prototype.getContext = () => new Proxy({}, {get:()=>()=>{}});
  w.accountFunctions = {httpsCallable:()=>async()=>({data:{}})};
  w.firebase = {auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
- for(const file of ['security.js','auth-translations.js','account-client.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+ for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
  await new Promise(resolve=>setTimeout(resolve,100));
 
  // 1. Chat filter bar and pills exist
@@ -338,9 +338,10 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  const pills = filterBar.querySelectorAll('.filter-pill');
  assert.equal(pills.length, 4, '4 filter pills');
 
- // 2. Audio player playback speed button
+ // 2. Audio player playback speed button and preload="none" for bandwidth optimization
  const playerHtml = w.renderCustomPlayer('https://example.com/audio.mp3', 'audio');
  assert.ok(playerHtml.includes('player-speed-btn'), 'custom player has speed toggle button');
+ assert.ok(playerHtml.includes('preload="none"'), 'custom player has preload none for bandwidth saving');
 
  // 3. Starred messages helper and modal
  assert.ok(typeof w.isMessageStarred === 'function');
@@ -380,6 +381,45 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  assert.ok(mediaModal, 'shared-media-modal exists');
  const mediaTabs = mediaModal.querySelectorAll('.shared-media-tab');
  assert.equal(mediaTabs.length, 3, '3 media tabs (photos, audio, files)');
+
+ // 6. MessageCache functionality (IndexedDB / Memory fallback)
+ assert.ok(w.MessageCache, 'MessageCache is defined');
+ const sampleMsgs = [
+   { id: 'm1', text: 'Old msg', timestamp: 1000 },
+   { id: 'm2', text: 'New msg', timestamp: 2000 }
+ ];
+ await w.MessageCache.saveMessages('chat_test', sampleMsgs);
+ const latest = await w.MessageCache.getLatestMessages('chat_test', 10);
+ assert.equal(latest.length, 2, 'MessageCache stores and returns latest messages');
+ assert.equal(latest[0].id, 'm1');
+ assert.equal(latest[1].id, 'm2');
+
+ // 7. Message pagination in DOM (only latest 40 messages rendered initially)
+ const container = w.document.getElementById('messages-container');
+ const bigMsgList = [];
+ for (let i = 1; i <= 60; i++) {
+   bigMsgList.push({ id: 'msg_' + i, text: 'Message ' + i, timestamp: i * 1000, sender_username: '@alice' });
+ }
+ w.messages.set('chat_paginated', bigMsgList);
+ w.currentChat = { id: 'chat_paginated', type: 'dm', name: '@alice' };
+ w.visibleMessageLimits.set('chat_paginated', 40);
+ w.renderMessages();
+ const renderedCount = container.children.length;
+ assert.ok(renderedCount <= 40, `Only up to 40 messages rendered initially, actual: ${renderedCount}`);
+
+ // 8. Status appears in parentheses in chat list next to name/ID and does not overwrite Online status
+ w.users.set('bob', { status: '☕ Beschäftigt', bio: '☕ Beschäftigt' });
+ w.users.set('@bob', { status: '☕ Beschäftigt', bio: '☕ Beschäftigt' });
+ w.chatData.contacts = [{ id: 'bob', name: 'bob', type: 'dm', isSecret: false }];
+ w.currentLang = 'de';
+ w.renderChatList();
+ const contactItem = w.document.querySelector('.chat-item[data-id="bob"]');
+ assert.ok(contactItem, 'contactItem exists');
+ assert.ok(contactItem.innerHTML.includes('(☕ Beschäftigt)'), 'Status appears in parentheses next to name in list');
+ const onlineStatusEl = w.document.getElementById('current-chat-status');
+ assert.ok(onlineStatusEl, 'current-chat-status indicator exists independently');
+ const currentUserStatusDisplay = w.document.getElementById('current-user-status-display');
+ assert.ok(currentUserStatusDisplay, 'current-user-status-display exists in sidebar header');
 
  dom.window.close();
 });

@@ -6,7 +6,7 @@
 **Hosting URL:** `https://doori-messenger.web.app/`  
 **Eigene Domain:** `https://doori-messenger.de/`  
 **Git Commit:** `acb0421`  
-**Tests:** 19/19 bestanden (`node --test tests/security.test.cjs`)  
+**Tests:** 21/21 bestanden (`node --test tests/security.test.cjs`)  
 
 ---
 
@@ -98,4 +98,21 @@ In dieser Session wurden wie gewünscht drei neue Einstellungsbereiche mit moder
   * Funktion `getPresetKeyFromStatus(statusStr)` erkennt Presets sprachunabhängig in allen 5 Sprachen (de, en, fa, ar, tr) mit Emoji-Stripping.
   * `syncSettingsStatusUI()` synchronisiert das Eingabefeld `#setting-custom-status` und die Preset-Highlights bei jedem Sprachwechsel und beim Öffnen der Einstellungen automatisch in die aktive Sprache.
   * Dynamische Übersetzung auch in Chat-Liste, Chat-Header und Profil-Info für alle Kontakte.
+
+### 7. Chat- & Medien-Paginierung mit lokalem IndexedDB-Cache & Status-Anzeige in Klammern (21.09.2026)
+* **Problemstellung & Anforderung:**
+  * Bisher wurden beim Öffnen eines Chats potentiell alle alten Nachrichten und Mediendateien auf einmal geladen, was Firebase-Lesevorgänge und Bandbreite unnötig beanspruchte.
+  * Gewünscht: Initiales Laden von nur 30–50 Nachrichten, Nachladen älterer Nachrichten beim Hochscrollen (Infinite Scroll upwards) und lokales Caching in IndexedDB, um Firebase-Reads zu minimieren.
+  * Zusätzlich: Wenn ein Benutzer einen Status einstellt (z. B. `☕ Beschäftigt`), soll dieser in Klammern `(...)` neben seinem Namen in der Kontakt- und Chat-Liste sowie im Seitenleisten-Header (`Angemeldet als: @username (☕ Beschäftigt)`) sichtbar sein, ohne den unabhängigen Online-Status / Präsenz-Indikator im Chat-Header zu beeinträchtigen.
+* **Umsetzung:**
+  * **`message-cache.js`:** Vollständiges clientseitiges Message-Caching auf Basis von HTML5 IndexedDB (`doori_message_cache`, Store `messages`, zusammengesetzter Index `[chatId+timestamp]`) mit automatischem In-Memory-Fallback.
+  * **Paginierung (`PAGE_SIZE = 40`):** Beim Öffnen eines Chats werden nur die neuesten 40 Nachrichten aus dem lokalen Cache oder Speicher gerendert. Beim Hochscrollen wird nahtlos nachgeladen (erst aus dem lokalen Speicher, dann aus dem IndexedDB-Cache, zuletzt Firestore Cursor), wobei die Scrollposition präzise beibehalten wird.
+  * **Medien- & Bandbreiten-Optimierung:** Bilder und GIFs nutzen `loading="lazy"` und `decoding="async"`. Audio- und Videoplayer setzen `preload="none"`, sodass vor dem Klick auf Abspielen keinerlei Daten gestreamt werden.
+  * **Status in Klammern `(...)`:**
+    * In der Chat- und Kontaktliste wird der Status als ` <span class="user-status-badge">(...)</span>` neben dem Namen gerendert (sofern ungleich Standard `Online`).
+    * Im Seitenleisten-Header wird der eigene Status via `#current-user-status-display` als `(☕ Beschäftigt)` neben dem Benutzernamen angezeigt.
+    * Der Chat-Header behält die strikte Trennung: Eigener Badge `#current-chat-status-badge` für den Profilstatus und `#current-chat-status` für den Echtzeit-Präsenzstatus („Online“ / „Zuletzt online vor...“).
+  * **Mehrsprachigkeit & RTL:** Vollständige Unterstützung in allen 5 Sprachen (`de`, `en`, `fa`, `ar`, `tr`) mit dynamischer Übersetzung der Preset-Schlüssel.
+  * **Automatisierte Tests:** Alle 21 Tests in `tests/security.test.cjs` validieren die Paginierung, das Caching und die Statusanzeige und bestehen zu 100%.
+
 

@@ -156,7 +156,7 @@
                     
                                         <div class="sidebar-search" style="padding: 10px; border-bottom: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 5px;">
                         <div style="font-size: 11px; color: var(--text-secondary); text-align: right; padding-right: 5px;">
-                            Angemeldet als: <span id="current-user-display" class="username" style="color: var(--accent); font-weight: 600;"></span>
+                            <span data-i18n="lbl_logged_in_as">Angemeldet als:</span> <span id="current-user-display" class="username" style="color: var(--accent); font-weight: 600;"></span> <span id="current-user-status-display" style="font-size: 11px; color: var(--accent); opacity: 0.85;"></span>
                         </div>
                         <div style="display: flex; gap: 5px;">
                             <input type="text" id="message-search-input" data-i18n="ph_search_content" placeholder="Inhalte durchsuchen..." autocomplete="off" style="flex: 1; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); outline: none;">
@@ -967,7 +967,8 @@
     <script src="auth-translations.js?v=9"></script>
     <script src="firebase-config.js?v=28"></script>
     <script src="account-client.js?v=1"></script>
-    <script src="app.js?v=340"></script>
+    <script src="message-cache.js?v=1"></script>
+    <script src="app.js?v=341"></script>
     <script src="webrtc.js?v=59"></script>
     <script src="doodle.js?v=276"></script>
 
