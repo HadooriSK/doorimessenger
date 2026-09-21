@@ -1,10 +1,11 @@
-const CACHE_NAME = 'web-messenger-v101-shared-message-store';
+const CACHE_NAME = 'web-messenger-v102-games-quiz';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=324',
-  '/app.js?v=346',
-  '/games.js?v=3',
+  '/app.js?v=347',
+  '/quiz-questions.js?v=1',
+  '/games.js?v=4',
   '/security.js?v=1',
   '/auth-translations.js?v=9',
   '/account-client.js?v=1',

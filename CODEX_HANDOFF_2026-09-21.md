@@ -371,3 +371,10 @@ Validierung:
 ## Korrektur der bisherigen Diagnose: leerer Nachrichtenspeicher nach Login
 
 Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des gemeldeten leeren Verlaufs, war nicht belegt. Ein konkreter weiterer Fehler wurde gefunden: `loadUserData` ersetzte die lokale `messages`-Map, während `window.messages` auf der ursprünglichen Map blieb. Listener und Renderer verwendeten damit verschiedene Speicher. Der Reset verwendet jetzt `messages.clear()`, sodass beide Referenzen identisch bleiben. Der neue Regressionstest führt den tatsächlichen Reset-Code und den Leseabschnitt des Renderers aus und prüft Nachrichten nach dem Login. 28 Tests bestehen. Eine Prüfung im angemeldeten Benutzerbrowser ist damit nicht ersetzt.
+## Schiffe versenken, endgültige Einladungszustände und Quiz-Pool
+
+- Schiffe versenken scheiterte beim Erstellen, weil Firestore keine verschachtelten Arrays akzeptiert. Die beiden 100-Felder-Spielbretter liegen jetzt in einem Objekt (`boards.0`, `boards.1`).
+- Eine angenommene oder abgelehnte Spieleinladung aktualisiert jetzt dieselbe `game_invite`-Nachricht über `game_status`. Die Aktionsknöpfe verschwinden; danach steht lokalisiert „angenommen“ oder „abgelehnt“. Firestore erlaubt dieses Feld ausschließlich dem eingeladenen Empfänger und nur mit diesen beiden Werten.
+- Das Quiz besitzt jetzt einen Pool aus 70 Fragen in jeder der fünf Sprachen. Pro Duell werden zehn unterschiedliche Indizes zufällig ausgewählt; eine Partie umfasst weiterhin nur zehn Fragen.
+- Der Pool kombiniert 20 Wissensfragen mittleren Schwierigkeitsgrades mit 50 lokalisierten Rechen-, Prozent-, Folgen-, Durchschnitts-, Potenz-, Zeit- und Bruchaufgaben.
+- Teststand: 31/31 Tests bestanden. Eigene Regressionstests prüfen Firestore-kompatible Schiffe, 70 vollständige Fragen je Sprache, zehn eindeutige Fragen pro Duell sowie endgültige Einladungszustände ohne verbleibende Aktionsknöpfe.

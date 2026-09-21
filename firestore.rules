@@ -80,6 +80,9 @@ service cloud.firestore {
     (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']) && resource.data.isPublic == false &&
      resource.data.sender_username != name() && request.resource.data.read == true) ||
     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
+    (resource.data.get('mediaType', '') == 'game_invite' && resource.data.recipient_username.lower() == key() &&
+     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['game_status']) &&
+     request.resource.data.game_status in ['accepted', 'declined']) ||
     (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor']) &&
      request.resource.data.deletedFor.toSet().hasAll(resource.data.get('deletedFor', []).toSet()) &&
      request.resource.data.deletedFor.toSet().difference(resource.data.get('deletedFor', []).toSet()).hasOnly([name()])) ||

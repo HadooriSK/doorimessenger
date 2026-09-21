@@ -250,10 +250,12 @@ test('native two-player game center covers all games and five languages',()=>{
  assert.match(games,/runTransaction/);
  assert.doesNotMatch(games,/<iframe|https?:\/\//i,'game module remains native');
  assert.match(html,/id="games-btn"/);
- assert.match(html,/games\.js\?v=3/);
+ assert.match(html,/quiz-questions\.js\?v=1/);
+ assert.match(html,/games\.js\?v=4/);
  assert.match(rules,/match \/gameSessions\/\{gameId\}/);
  assert.match(rules,/participants\.size\(\) == 2/);
  assert.match(build,/'games\.js'/);
+ assert.match(build,/'quiz-questions\.js'/);
 });
 test('branded account action page covers all five languages and hides the default handler',()=>{
  const html=fs.readFileSync(path.join(root,'account-action.html'),'utf8');

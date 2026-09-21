@@ -1478,7 +1478,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             const isStarred = window.isMessageStarred ? window.isMessageStarred(msg.id) : false;
             const starHtml = isStarred ? '<span class="msg-star-badge" title="Markiert">⭐</span>' : '';
             
-            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
+            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + msg.game_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
             
             let expectedInner = '';
             let className = '';

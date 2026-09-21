@@ -32,7 +32,10 @@ function client(username = '@alice') {
   });
   w.db = {
     collection(name) {
-      if (name === 'messages') return { doc(id) { return { async set(data) { sentMessages.set(id, structuredClone(data)); } }; } };
+      if (name === 'messages') return { doc(id) { return {
+        async set(data) { sentMessages.set(id, structuredClone(data)); },
+        async update(changes) { sentMessages.set(id, { ...(sentMessages.get(id) || {}), ...structuredClone(changes) }); }
+      }; } };
       assert.equal(name, 'gameSessions');
       return {
         doc(id) { return makeRef(id || `game-${++idCounter}`); },
@@ -49,6 +52,7 @@ function client(username = '@alice') {
       });
     }
   };
+  w.eval(fs.readFileSync(path.join(root, 'quiz-questions.js'), 'utf8'));
   w.eval(fs.readFileSync(path.join(root, 'games.js'), 'utf8'));
   w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
   return { dom, w, sessions, sentMessages };
@@ -96,6 +100,31 @@ test('failed invitation message removes the orphaned game session', async () => 
   dom.window.close();
 });
 
+test('battleship state is Firestore-compatible and can be invited', async () => {
+  const { dom, w, sessions } = client('@alice');
+  w.sendMessage = async () => true;
+  const state = w.DooriGamesTest.initial('battleship');
+  assert.equal(Array.isArray(state.boards), false, 'Firestore does not allow arrays nested inside arrays');
+  assert.equal(state.boards[0].length, 100);
+  assert.equal(state.boards[1].length, 100);
+  await w.DooriGamesTest.create('battleship');
+  assert.equal([...sessions.values()][0].status, 'pending');
+  dom.window.close();
+});
+
+test('quiz offers 70 localized questions and selects 10 unique questions per duel', () => {
+  const { dom, w } = client();
+  for (const language of ['de', 'en', 'ar', 'fa', 'tr']) {
+    assert.equal(w.DOORI_QUIZ_QUESTIONS[language].length, 70, `70 questions for ${language}`);
+    assert.ok(w.DOORI_QUIZ_QUESTIONS[language].every(q => q[0] && q[1].length === 4 && q[2] >= 0 && q[2] < 4));
+  }
+  const state = w.DooriGamesTest.initial('quiz');
+  assert.equal(state.order.length, 10);
+  assert.equal(new Set(state.order).size, 10);
+  assert.ok(state.order.every(index => index >= 0 && index < 70));
+  dom.window.close();
+});
+
 test('only one unanswered request per game and opponent is allowed', async () => {
   const { dom, w, sessions } = client('@alice');
   const alerts = [];
@@ -108,21 +137,43 @@ test('only one unanswered request per game and opponent is allowed', async () =>
   dom.window.close();
 });
 
-test('declining and leaving create durable chat notifications', async () => {
+test('leaving creates a durable chat notification', async () => {
   const { dom, w, sessions, sentMessages } = client('@alice');
   w.sendMessage = async () => true;
   await w.DooriGamesTest.create('connect4');
   const id = [...sessions.keys()][0];
   w.currentUser = '@bob';
-  await w.DooriGamesTest.decide(id, 'declined');
+  await w.DooriGamesTest.decide(id, 'declined', 'invite-declined');
   assert.equal(sessions.get(id).status, 'declined');
-  assert.equal([...sentMessages.values()].at(-1).mediaType, 'game_status');
-  assert.equal(JSON.parse([...sentMessages.values()].at(-1).mediaUrl).event, 'declined');
+  assert.equal(sentMessages.get('invite-declined').game_status, 'declined');
 
   sessions.set(id, { ...sessions.get(id), status: 'active' });
   w.openDooriGame(id);
   await w.DooriGamesTest.close();
   assert.equal(sessions.get(id).status, 'left');
   assert.equal(JSON.parse([...sentMessages.values()].at(-1).mediaUrl).event, 'left');
+  dom.window.close();
+});
+
+test('accepting or declining replaces invitation actions with a final status', async () => {
+  const { dom, w, sessions, sentMessages } = client('@alice');
+  w.sendMessage = async () => true;
+  await w.DooriGamesTest.create('memory');
+  const id = [...sessions.keys()][0];
+  sentMessages.set('invite-1', { mediaType: 'game_invite' });
+  w.currentUser = '@bob';
+  await w.DooriGamesTest.decide(id, 'active', 'invite-1');
+  assert.equal(sentMessages.get('invite-1').game_status, 'accepted');
+  const accepted = w.renderDooriGameInvite({ id:'invite-1', sender_username:'@alice', mediaUrl:JSON.stringify({id,type:'memory'}), game_status:'accepted' });
+  assert.match(accepted, /Spielanfrage angenommen/);
+  assert.doesNotMatch(accepted, /acceptDooriGame|declineDooriGame/);
+
+  sessions.set('game-declined', { ...sessions.get(id), status:'pending' });
+  sentMessages.set('invite-2', { mediaType:'game_invite' });
+  await w.DooriGamesTest.decide('game-declined', 'declined', 'invite-2');
+  assert.equal(sentMessages.get('invite-2').game_status, 'declined');
+  const declined = w.renderDooriGameInvite({ id:'invite-2', sender_username:'@alice', mediaUrl:JSON.stringify({id:'game-declined',type:'memory'}), game_status:'declined' });
+  assert.match(declined, /Spielanfrage abgelehnt/);
+  assert.doesNotMatch(declined, /acceptDooriGame|declineDooriGame|openDooriGame/);
   dom.window.close();
 });
