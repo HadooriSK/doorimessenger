@@ -809,7 +809,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
     // --- Core Functions ---
     async function loadUserData() {
-        messages = new Map(); // Force fresh start for Firestore
+        messages.clear(); // Preserve the shared store used by listeners and window.messages.
         try {
             const docSnap = await window.db.collection('userData').doc(currentUser.toLowerCase()).get();
             if (docSnap.exists) {

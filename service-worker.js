@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v100-chat-key-normalization';
+const CACHE_NAME = 'web-messenger-v101-shared-message-store';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=324',
-  '/app.js?v=345',
+  '/app.js?v=346',
   '/games.js?v=3',
   '/security.js?v=1',
   '/auth-translations.js?v=9',

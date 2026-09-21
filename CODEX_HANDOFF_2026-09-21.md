@@ -368,3 +368,6 @@ Validierung:
 - Listener, historische Seiten und der gezielte Verlaufslader verwenden jetzt durchgehend `normalizeUsername`.
 - `renderMessages` führt alle Nachrichtenlisten zusammen, deren Schlüssel nach der Normalisierung zum geöffneten privaten Chat gehören, dedupliziert sie nach Nachrichten-ID und sortiert sie chronologisch.
 - Ein DOM-Regressionstest bestätigt ausdrücklich, dass ein als `username` geöffneter Chat Nachrichten aus dem Schlüssel `@username` anzeigt.
+## Korrektur der bisherigen Diagnose: leerer Nachrichtenspeicher nach Login
+
+Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des gemeldeten leeren Verlaufs, war nicht belegt. Ein konkreter weiterer Fehler wurde gefunden: `loadUserData` ersetzte die lokale `messages`-Map, während `window.messages` auf der ursprünglichen Map blieb. Listener und Renderer verwendeten damit verschiedene Speicher. Der Reset verwendet jetzt `messages.clear()`, sodass beide Referenzen identisch bleiben. Der neue Regressionstest führt den tatsächlichen Reset-Code und den Leseabschnitt des Renderers aus und prüft Nachrichten nach dem Login. 28 Tests bestehen. Eine Prüfung im angemeldeten Benutzerbrowser ist damit nicht ersetzt.

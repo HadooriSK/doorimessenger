@@ -180,6 +180,23 @@ test('sanitizer keeps stored audio data URLs playable',()=>{
  dom.window.close();
 });
 
+test('login reset preserves the message store read by the renderer',()=>{
+ const vm=require('node:vm');
+ const source=fs.readFileSync(path.join(root,'app.js'),'utf8');
+ const reset=source.slice(source.indexOf('async function loadUserData() {')+'async function loadUserData() {'.length,source.indexOf('        try {',source.indexOf('async function loadUserData() {')));
+ const renderStart=source.indexOf('    function renderMessages() {');
+ const read=source.slice(renderStart,source.indexOf('        const limitMap',renderStart))+'return allMsgs; }';
+ const store=new Map([['@old', [{id:'old'}]]]);
+ const context={messages:store,window:{messages:store},currentChat:{id:'@friend',type:'dm'},normalizeUsername:security.normalizeUsername};
+ vm.createContext(context);
+ vm.runInContext(reset,context);
+ assert.equal(context.messages.size,0);
+ context.messages.set('@friend',[{id:'history',text:'Existing history',timestamp:1}]);
+ vm.runInContext(read,context);
+ assert.equal(context.renderMessages()[0]?.text,'Existing history');
+ assert.equal(context.messages,context.window.messages);
+});
+
 test('opening a chat renders its existing history immediately',()=>{
  const source=fs.readFileSync(path.join(root,'app.js'),'utf8');
  const start=source.indexOf('function selectChat(id, type)');
