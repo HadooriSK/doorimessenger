@@ -303,3 +303,43 @@ Alle Änderungen sind auf Branch `main` committet und auf `origin/main` (`https:
    - Bei künftigen Änderungen an `renderMessages()` oder dem Chat-Listener stets berücksichtigen, dass `visibleMessageLimits` und `window.MessageCache` aktiv sind. Keine synchronen Schleifen über unbegrenzte Nachrichtenmengen einbauen, um den Firebase-Kosten- und Performance-Vorteil nicht zu verlieren.
 4. **Mehrsprachigkeit & RTL:**
    - Weiterhin streng die 5-Sprachen-Regel (`de`, `en`, `ar`, `fa`, `tr`) für alle neuen Strings, Buttons, Tooltips und Platzhalter einhalten.
+
+---
+
+## 8. Codex-Fortsetzung: Native Zwei-Spieler-Spiele
+
+**Commit:** `242f851` – *Add native two-player game center in five languages*  
+**Live veröffentlicht:** Hosting und Firestore-Regeln  
+**Frontend:** `app.js?v=342`, `games.js?v=1`, `style.css?v=323`  
+**Service Worker:** `web-messenger-v97-native-games`
+
+Die Spieleauswahl wurde endgültig festgelegt und umgesetzt:
+
+1. **Klassiker-Duell** mit zwei auswählbaren Varianten:
+   - Tic-Tac-Toe
+   - Vier gewinnt
+2. **Memory-Duell**
+3. **Quiz-Duell**
+4. **Schiffe versenken** mit automatisch platzierter Flotte
+
+Technische Umsetzung:
+
+- Neues produktives Modul `games.js`, in der Hosting-Allowlist enthalten.
+- Spielezentrum über `🎮 Spiele` im Plus-Menü eines privaten Chats.
+- Keine externen Webseiten oder Iframes.
+- Firestore-Sitzungen unter `gameSessions/{gameId}`.
+- Teilnehmerbasierte Firestore-Regeln; Spieltyp, Ersteller und Teilnehmer sind bei Updates unveränderlich.
+- Spielzüge verwenden Firestore-Transaktionen, damit parallele Klicks keinen Stand überschreiben.
+- Spieleinladungen erscheinen als eigene Karte im Chat und öffnen die gemeinsame Partie.
+- Laufende Spiele können aus dem Spielezentrum wieder geöffnet werden.
+- Revanche setzt die gewählte Variante sauber zurück.
+- Responsive Darstellung, heller/dunkler Modus und RTL-Unterstützung.
+- Sämtliche sichtbaren Texte in `de`, `en`, `ar`, `fa`, `tr`.
+
+Validierung:
+
+- `npm.cmd test`: **22/22 Tests bestanden**.
+- `npm.cmd run build`: **27 allowlistete Dateien** erfolgreich gebaut.
+- `firestore.rules` wurde beim Deployment erfolgreich von Firebase kompiliert.
+- Live-Domain liefert alle fünf internen Spieltypen: `tictactoe`, `connect4`, `memory`, `quiz`, `battleship`.
+- Lokaler Firestore-Emulatortest konnte nicht starten, weil Java auf dem Rechner nicht installiert bzw. nicht im PATH ist. Dies war kein Regeltestfehler; die produktive Firebase-Regelkompilierung war erfolgreich.
