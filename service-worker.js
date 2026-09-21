@@ -1,10 +1,10 @@
-const CACHE_NAME = 'web-messenger-v97-native-games';
+const CACHE_NAME = 'web-messenger-v98-game-invitations';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=323',
-  '/app.js?v=342',
-  '/games.js?v=1',
+  '/style.css?v=324',
+  '/app.js?v=343',
+  '/games.js?v=2',
   '/security.js?v=1',
   '/auth-translations.js?v=9',
   '/account-client.js?v=1',

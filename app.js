@@ -526,6 +526,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         if (currentChat) {
             currentChatName.textContent = getTranslatedChatName(currentChat);
         }
+        window.dispatchEvent(new CustomEvent('doori-language-change', { detail: { lang } }));
     }
 
     function renderCustomGifs() {
@@ -1040,6 +1041,9 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                             // Trigger popup for new pending invites
                             if (change.type === 'added' && msg.type === 'group_invite' && msg.invite_status === 'pending' && msg.sender_username !== currentUser) {
                                 if (window.showGlobalInvitePopup) window.showGlobalInvitePopup(msg);
+                            }
+                            if (!initialDMLoad && change.type === 'added' && msg.mediaType === 'game_invite' && msg.sender_username !== currentUser) {
+                                if (window.showDooriGameInvitePopup) window.showDooriGameInvitePopup(msg);
                             }
                         }
                         if (window.MessageCache && window.MessageCache.saveMessages) {
@@ -2174,18 +2178,18 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     // --- Message Sending ---
     window.sendMessage = sendMessage;
 async function sendMessage(text, mediaType = null, mediaUrl = null, silent = false, scheduleTime = null) {
-        if (!currentChat || scheduleTime) return;
+        if (!currentChat || scheduleTime) return false;
         const targetChat = { ...currentChat, members: [...(currentChat.members || [])] };
         const destination = messageDestination(targetChat, currentUser);
         const sender = currentUser;
-        if (targetChat.type === 'channel' && !targetChat.isAdmin) return;
-        if (blockedContacts.has(targetChat.id)) return;
+        if (targetChat.type === 'channel' && !targetChat.isAdmin) return false;
+        if (blockedContacts.has(targetChat.id)) return false;
         if (editingMessageId && !mediaType) { 
             try {
                 await window.db.collection('messages').doc(editingMessageId).update({ text: text, edited: true });
             } catch(e) { console.error("Edit failed", e); }
             editingMessageId = null; 
-            return; 
+            return true;
         }
 
         let ttl = parseInt(ttlSelect.value) || 0; let expiresAt = null; if (ttl > 0 && targetChat.type === 'dm') expiresAt = null; else if(ttl > 0) expiresAt = Date.now() + (ttl * 1000);
@@ -2223,21 +2227,23 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             });
         }
 
-        await executeSendMessage(msgObj);
+        return await executeSendMessage(msgObj);
     }
 
     async function executeSendMessage(msgObj) {
         if (new TextEncoder().encode(JSON.stringify(msgObj)).length > 700 * 1024) {
             alert(authText('security_media_limit'));
-            return;
+            return false;
         }
         const docData = { ...msgObj };
         try {
             await window.db.collection('messages').doc(msgObj.id).set(docData);
             if (!msgObj.silent) playSound();
+            return true;
         } catch (e) {
             console.error("Error saving to Firestore", e);
             alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_send_msg || 'Nachricht konnte nicht gesendet werden (Offline?).');
+            return false;
         }
     }
 

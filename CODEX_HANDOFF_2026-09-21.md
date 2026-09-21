@@ -343,3 +343,13 @@ Validierung:
 - `firestore.rules` wurde beim Deployment erfolgreich von Firebase kompiliert.
 - Live-Domain liefert alle fünf internen Spieltypen: `tictactoe`, `connect4`, `memory`, `quiz`, `battleship`.
 - Lokaler Firestore-Emulatortest konnte nicht starten, weil Java auf dem Rechner nicht installiert bzw. nicht im PATH ist. Dies war kein Regeltestfehler; die produktive Firebase-Regelkompilierung war erfolgreich.
+
+## Spiele-Einladungen und Mehrsprachigkeit (Codex-Fortsetzung)
+
+- Der Spiele-Menüeintrag und alle neuen Einladungszustände sind vollständig in `de`, `en`, `ar`, `fa` und `tr` vorhanden; Arabisch und Persisch behalten das bestehende RTL-Verhalten.
+- Eine neue Spielsitzung wird als `pending` gespeichert. Der Ersteller wartet, bis der eingeladene Kontakt ausdrücklich annimmt oder ablehnt. Erst nach Annahme wechselt die Sitzung auf `active` und beide Clients erhalten den gemeinsamen Zustand über den Firestore-Snapshot.
+- Eingehende Anfragen erscheinen als Chatkarte und, wenn der Empfänger online ist, zusätzlich als sichtbares Anfragefenster mit Annehmen/Ablehnen.
+- `sendMessage` liefert jetzt einen Erfolgswert. Scheitert das Speichern der Einladung, wird die unverbundene Spielsitzung wieder gelöscht.
+- Firestore-Regeln erzwingen `pending` beim Erstellen und erlauben die erste Aktivierung beziehungsweise Ablehnung nur dem eingeladenen Teilnehmer.
+- Der Service-Worker-Cache wurde auf `web-messenger-v98-game-invitations` erhöht.
+- Verifikation: `npm.cmd test` umfasst 25 Tests. Dazu gehören neue Zwei-Benutzer-Tests für pending -> active, fehlgeschlagene Einladungen sowie vollständige Einladungsübersetzungen in fünf Sprachen. `npm.cmd run build` bündelt 27 freigegebene Dateien.
