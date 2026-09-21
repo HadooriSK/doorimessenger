@@ -33,7 +33,26 @@ const verificationCopy={
  fa:{subject:'Doori Messenger: تأیید ایمیل',title:'تأیید ایمیل',button:'تأیید ایمیل',note:'اگر این حساب را ایجاد نکرده‌اید، می‌توانید این ایمیل را نادیده بگیرید.'},
  tr:{subject:'Doori Messenger: E-posta adresinizi doğrulayın',title:'E-posta adresinizi doğrulayın',button:'E-posta adresini doğrula',note:'Bu hesabı siz oluşturmadıysanız bu e-postayı yok sayabilirsiniz.'}
 };
+const deletionRequestCopy={
+ de:{subject:'Doori Messenger: Konto endgültig löschen',title:'Konto endgültig löschen',warning:'Achtung: Dies löscht dein Konto und alle persönlichen Daten unwiderruflich!',button:'Konto endgültig löschen',note:'Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren. Dein Konto bleibt sicher.'},
+ en:{subject:'Doori Messenger: Delete account permanently',title:'Delete account permanently',warning:'Warning: This will permanently and irreversibly delete your account and all data!',button:'Delete account permanently',note:'If you did not make this request, you can ignore this email. Your account remains safe.'},
+ ar:{subject:'Doori Messenger: حذف الحساب نهائياً',title:'حذف الحساب نهائياً',warning:'تحذير: هذا الإجراء سيحذف حسابك وجميع بياناتك بشكل نهائي ولا يمكن التراجع عنه!',button:'حذف الحساب نهائياً',note:'إذا لم تطلب حذف حسابك، يمكنك تجاهل هذه الرسالة بأمان وسيظل حسابك محمياً.'},
+ fa:{subject:'Doori Messenger: حذف دائمی حساب کاربری',title:'حذف دائمی حساب کاربری',warning:'هشدار: این اقدام حساب شما و تمام داده‌هایتان را به‌طور برگشت‌ناپذیر و برای همیشه حذف خواهد کرد!',button:'حذف دائمی حساب کاربری',note:'اگر شما این درخواست را نداده‌اید، می‌توانید این ایمیل را نادیده بگیرید. حساب شما امن باقی می‌ماند.'},
+ tr:{subject:'Doori Messenger: Hesabı kalıcı olarak sil',title:'Hesabı kalıcı olarak sil',warning:'Uyarı: Bu işlem hesabınızı ve tüm verilerinizi geri alınamaz şekilde kalıcı olarak silecektir!',button:'Hesabı kalıcı olarak sil',note:'Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz. Hesabınız güvende kalacaktır.'}
+};
+const deletionCompletedCopy={
+ de:{subject:'Doori Messenger: Dein Account wurde gelöscht',title:'Account gelöscht',message:'Dein Konto bei Doori Messenger wurde erfolgreich und endgültig gelöscht. Alle deine persönlichen Daten und Chats wurden entfernt. Wir danken dir für deine Zeit bei uns.'},
+ en:{subject:'Doori Messenger: Your account has been deleted',title:'Account deleted',message:'Your Doori Messenger account has been successfully and permanently deleted. All your personal data and chats have been removed. Thank you for using Doori Messenger.'},
+ ar:{subject:'Doori Messenger: تم حذف حسابك',title:'تم حذف الحساب',message:'تم حذف حسابك في Doori Messenger بنجاح وبشكل نهائي. تمت إزالة جميع بياناتك ومحادثاتك. شكراً لاستخدامك Doori Messenger.'},
+ fa:{subject:'Doori Messenger: حساب کاربری شما حذف شد',title:'حساب کاربری حذف شد',message:'حساب کاربری Doori Messenger شما با موفقیت و برای همیشه حذف شد. تمامی اطلاعات شخصی و گفتگوهای شما پاک گردید. با سپاس از شما.'},
+ tr:{subject:'Doori Messenger: Hesabınız silindi',title:'Hesap silindi',message:'Doori Messenger hesabınız başarıyla ve kalıcı olarak silindi. Tüm kişisel verileriniz ve sohbetleriniz kaldırıldı. Doori Messenger’ı kullandığınız için teşekkür ederiz.'}
+};
 function languageOf(value){return recoveryCopy[value]?value:'en';}
+function customDeletionLink(token,language){
+ const target=new URL('https://doori-messenger.de/account/action');
+ target.searchParams.set('mode','deleteAccount');target.searchParams.set('token',token);target.searchParams.set('lang',language);
+ return target.toString();
+}
 function customActionLink(firebaseLink,language){
  const source=new URL(firebaseLink),target=new URL('https://doori-messenger.de/account/action');
  for(const name of ['mode','oobCode','continueUrl'])if(source.searchParams.has(name))target.searchParams.set(name,source.searchParams.get(name));
@@ -103,4 +122,43 @@ exports.sendVerificationEmail=onCall({...options,secrets:[BREVO_API_KEY]},async 
  const textContent=`${copy.title}\n\n${copy.button}: ${link}\n\n${copy.note}`;
  const htmlContent=`<div dir="${direction}"><h2>${safe(copy.title)}</h2><p><a href="${safe(link)}">${safe(copy.button)}</a></p><p>${safe(copy.note)}</p></div>`;
  await sendBrevo(record.email,copy,textContent,htmlContent);return {sent:true};
+});
+exports.requestAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async request=>{
+ const uid=signedIn(request,false),language=languageOf(request.data?.language);await limit(request,'deletion:'+uid,3);
+ const record=await auth.getUser(uid);if(!record.email)throw new HttpsError('failed-precondition','Email account required.');
+ const token=createHash('sha256').update(uid+':'+Date.now()+':'+randomInt(100000,999999)).digest('hex');
+ await db.collection('accountDeletionRequests').doc(token).set({uid,email:record.email,createdAt:Timestamp.now(),expiresAt:Timestamp.fromMillis(Date.now()+60*60*1000)});
+ const copy=deletionRequestCopy[language],link=customDeletionLink(token,language),direction=language==='ar'||language==='fa'?'rtl':'ltr';
+ const textContent=`${copy.title}\n\n${copy.warning}\n\n${copy.button}: ${link}\n\n${copy.note}`;
+ const htmlContent=`<div dir="${direction}"><h2>${safe(copy.title)}</h2><p style="color:#d63031;font-weight:bold;font-size:15px;">${safe(copy.warning)}</p><p style="margin:24px 0;"><a href="${safe(link)}" style="display:inline-block;padding:14px 24px;background-color:#d63031;color:#ffffff;text-decoration:none;font-weight:bold;border-radius:8px;font-size:16px;">${safe(copy.button)}</a></p><p style="color:#777;font-size:13px;">${safe(copy.note)}</p></div>`;
+ await sendBrevo(record.email,copy,textContent,htmlContent);return {sent:true};
+});
+exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async request=>{
+ const token=String(request.data?.token||'').trim(),language=languageOf(request.data?.language);
+ if(!/^[a-f0-9]{64}$/.test(token))throw new HttpsError('invalid-argument','Invalid token.');
+ await limit(request,'confirm-deletion',10);
+ const tokenRef=db.collection('accountDeletionRequests').doc(token);
+ const tokenDoc=await tokenRef.get();
+ if(!tokenDoc.exists)throw new HttpsError('not-found','Invalid or expired deletion token.');
+ const tokenData=tokenDoc.data();
+ if(tokenData.expiresAt.toMillis()<Date.now()){await tokenRef.delete();throw new HttpsError('deadline-exceeded','Deletion token expired.');}
+ const {uid,email}=tokenData;
+ const accountSnap=await db.collection('accounts').doc(uid).get();
+ const key=accountSnap.exists?accountSnap.data().key:null;
+ const batch=db.batch();
+ batch.delete(tokenRef);
+ if(accountSnap.exists)batch.delete(accountSnap.ref);
+ if(key){
+  batch.delete(db.collection('users').doc(key));
+  batch.delete(db.collection('profiles').doc(key));
+  batch.delete(db.collection('presence').doc(key));
+  batch.delete(db.collection('userData').doc(key));
+ }
+ await batch.commit();
+ try{await auth.deleteUser(uid);}catch(err){if(err.code!=='auth/user-not-found')console.error('Delete user auth error',err);}
+ const copy=deletionCompletedCopy[language],direction=language==='ar'||language==='fa'?'rtl':'ltr';
+ const textContent=`${copy.title}\n\n${copy.message}`;
+ const htmlContent=`<div dir="${direction}"><h2>${safe(copy.title)}</h2><p style="font-size:15px;line-height:1.6;">${safe(copy.message)}</p></div>`;
+ try{await sendBrevo(email,copy,textContent,htmlContent);}catch(mailErr){console.error('Final deletion email error',mailErr);}
+ return {success:true};
 });

@@ -228,10 +228,15 @@ test('branded account action page covers all five languages and hides the defaul
  assert.match(script,/doori-messenger\.firebaseapp\.com/); // Internal SDK configuration only.
  const dom=new JSDOM(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''),{runScripts:'outside-only',url:'https://doori-messenger.de/account/action?lang=de'});
  assert.doesNotMatch(dom.window.document.body.textContent,/Firebase/i);
- dom.window.firebase={initializeApp(){},auth(){return {}}};
+ dom.window.firebase={initializeApp(){},auth(){return {}},app(){return {functions(){return {httpsCallable(){}}}}}};
  dom.window.eval(script+';window.__ACTION_TEXT=ACTION_TEXT');
  const texts=dom.window.__ACTION_TEXT;
- for(const lang of ['de','en','ar','fa','tr']) assert.deepEqual(Object.keys(texts[lang]).sort(),Object.keys(texts.en).sort());
+ for(const lang of ['de','en','ar','fa','tr']) {
+  assert.deepEqual(Object.keys(texts[lang]).sort(),Object.keys(texts.en).sort());
+  for(const k of ['deleteTitle','deleteSubtitle','deleteWarning','deleteButton','deleting','deleteSuccess']) {
+   assert.ok(texts[lang][k] && texts[lang][k].trim().length > 0, `Missing ${lang}.${k}`);
+  }
+ }
  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'firebase.json'),'utf8')).hosting.rewrites[0].source,'/account/action');
  dom.window.close();
 });
@@ -259,7 +264,7 @@ test('modern settings additions cover all five languages and preserve RTL for ar
   'lbl_set_pin', 'btn_enable_pin', 'btn_disable_pin', 'msg_pin_enabled', 'msg_pin_disabled',
   'err_pin_invalid', 'pin_enter_title', 'pin_enter_prompt', 'pin_unlock_btn', 'err_pin_wrong',
   'lbl_danger_zone', 'btn_delete_account', 'msg_confirm_delete_account', 'prompt_delete_password',
-  'msg_account_deleted', 'lbl_notification_sound', 'opt_sound_chime', 'opt_sound_soft',
+  'msg_account_deleted', 'msg_deletion_email_sent', 'lbl_notification_sound', 'opt_sound_chime', 'opt_sound_soft',
   'opt_sound_bell', 'opt_sound_classic', 'btn_test_sound', 'lbl_hide_preview',
   'lbl_hide_preview_desc', 'lbl_vibrate', 'lbl_vibrate_desc', 'lbl_auto_media',
   'opt_media_always', 'opt_media_wifi', 'opt_media_manual', 'btn_export_chat',
@@ -275,4 +280,21 @@ test('modern settings additions cover all five languages and preserve RTL for ar
  assert.ok(html.includes('id="setting-sound-type"'));
  assert.ok(html.includes('id="btn-export-chat"'));
  dom.window.close();
+});
+
+test('two-step account deletion sends red confirmation email and second deleted email in 5 languages', ()=>{
+ const funcCode=fs.readFileSync(path.join(root,'functions','index.js'),'utf8');
+ assert.match(funcCode,/exports\.requestAccountDeletion/);
+ assert.match(funcCode,/exports\.confirmAccountDeletion/);
+ assert.match(funcCode,/customDeletionLink/);
+ assert.match(funcCode,/background-color:#d63031/);
+ assert.match(funcCode,/color:#ffffff/);
+ assert.match(funcCode,/accountDeletionRequests/);
+ const actionHtml=fs.readFileSync(path.join(root,'account-action.html'),'utf8');
+ assert.ok(actionHtml.includes('id="delete-box"'));
+ assert.ok(actionHtml.includes('id="delete-confirm-button"'));
+ assert.ok(actionHtml.includes('firebase-functions-compat.js'));
+ assert.ok(actionHtml.includes('europe-west3-doori-messenger.cloudfunctions.net'));
+ const appCode=fs.readFileSync(path.join(root,'app.js'),'utf8');
+ assert.match(appCode,/requestAccountDeletion/);
 });

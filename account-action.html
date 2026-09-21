@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://europe-west3-doori-messenger.cloudfunctions.net">
   <title>Doori Messenger</title>
   <link rel="icon" href="/logo.png">
   <style>
@@ -24,10 +24,15 @@
       <input id="confirm-password" type="password" minlength="6" maxlength="4096" autocomplete="new-password" required>
       <button id="submit-button" type="submit"></button>
     </form>
+    <div id="delete-box" class="hidden">
+      <p id="delete-warning" style="color:var(--error);font-weight:600;margin-bottom:18px;line-height:1.6;"></p>
+      <button id="delete-confirm-button" type="button" style="background:#d63031;color:#ffffff;"></button>
+    </div>
     <a id="back-link" class="button hidden" href="/"></a>
   </main>
   <script src="/vendor/firebase-app-compat.js"></script>
   <script src="/vendor/firebase-auth-compat.js"></script>
-  <script src="/account-action.js?v=1"></script>
+  <script src="/vendor/firebase-functions-compat.js"></script>
+  <script src="/account-action.js?v=2"></script>
 </body>
 </html>
