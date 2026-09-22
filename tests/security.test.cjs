@@ -496,6 +496,9 @@ test('Aurora UI keeps primary calls visible, moves secondary actions into the me
  assert.match(appCode,/syncMessengerLayout\(false\);/);
  assert.match(css,/\.chat-container\.awaiting-chat #chat-page \.main-chat \{ display:none!important; \}/);
  assert.match(css,/\.composer-tools-row,.chat-input-area,.plus-menu-container \{ overflow:visible!important; \}/);
+ assert.match(css,/Mobile web: the existing menu becomes a slim vertical dock/);
+ assert.match(css,/#start-page\.active \{ position:relative;padding-inline-start:70px; \}/);
+ assert.match(css,/#start-page\.active \.top-nav \{/);
  assert.match(css,/@media \(max-width: 899px\)/);
  assert.match(css,/body\.light-mode \.settings-content/);
  assert.match(css,/\.rtl-mode \.settings-tabs \.tab-btn\.active/);

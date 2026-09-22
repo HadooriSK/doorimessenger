@@ -1,8 +1,8 @@
-const CACHE_NAME = 'web-messenger-v108-concept-layout';
+const CACHE_NAME = 'web-messenger-v109-mobile-left-dock';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=329',
+  '/style.css?v=330',
   '/app.js?v=349',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',

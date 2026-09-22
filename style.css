@@ -2041,4 +2041,35 @@ body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important
   .composer-tools-row,.chat-input-area,.plus-menu-container { overflow:visible!important; }
   .composer-tools-row { flex-wrap:wrap!important; }
   #plus-menu-dropdown { z-index:10050!important;bottom:calc(100% + 10px)!important; }
+
+  /* Mobile web: the existing menu becomes a slim vertical dock on the list screen. */
+  #start-page.active { position:relative;padding-inline-start:70px; }
+  #start-page.active .top-nav {
+    position:absolute;z-index:8;inset-block:0;inset-inline-start:0;width:70px!important;height:100%;
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:0!important;
+    border-inline-end:1px solid rgba(113,201,244,.16)!important;border-bottom:0!important;
+    background:linear-gradient(180deg,rgba(23,59,76,.99),rgba(15,43,58,.99))!important;
+    box-shadow:10px 0 28px rgba(0,12,23,.16);
+  }
+  #start-page.active .top-nav>div:first-child { min-height:74px;height:74px;padding:10px 6px!important;border-bottom:1px solid rgba(113,201,244,.12)!important; }
+  #start-page.active .app-logo { width:54px!important;height:auto!important;max-height:54px; }
+  #start-page.active .scrollable-nav { flex:1;min-height:0;padding:9px 8px 12px!important;overflow:hidden!important; }
+  #start-page.active .nav-tabs { display:flex!important;flex-direction:column;align-items:stretch!important;justify-content:flex-start!important;width:100%!important;height:100%;padding:0!important;gap:8px!important;overflow:visible!important; }
+  #start-page.active .nav-tab,#start-page.active #add-contact-btn { flex:0 0 48px!important;width:100%;min-width:0!important;min-height:48px!important;display:flex!important;align-items:center;justify-content:center;padding:0!important;border:1px solid transparent!important;border-radius:15px!important; }
+  #start-page.active .nav-tab.active { background:linear-gradient(145deg,rgba(63,149,223,.55),rgba(72,202,188,.18))!important;border-color:rgba(113,201,244,.3)!important;box-shadow:0 8px 20px rgba(24,107,194,.2); }
+  #start-page.active .nav-icon { margin:0!important; }
+  #start-page.active .nav-icon svg { width:22px;height:22px; }
+  #start-page.active .nav-label,#start-page.active #calls-badge-container { display:none!important; }
+  #start-page.active #settings-tab-btn { margin-top:auto; }
+  #start-page.active #add-contact-btn { color:#071521!important;background:linear-gradient(145deg,#82d8ff,#4aa8e8)!important;box-shadow:0 8px 20px rgba(47,140,255,.25); }
+  body.light-mode #start-page.active .top-nav { background:linear-gradient(180deg,#d1e4ed,#c5dce7)!important;box-shadow:10px 0 24px rgba(33,83,112,.1); }
+}
+
+@media (max-width:400px) {
+  #start-page.active { padding-inline-start:60px; }
+  #start-page.active .top-nav { width:60px!important; }
+  #start-page.active .top-nav>div:first-child { min-height:66px;height:66px;padding:8px 4px!important; }
+  #start-page.active .app-logo { width:47px!important;max-height:47px; }
+  #start-page.active .scrollable-nav { padding-inline:6px!important; }
+  #start-page.active .nav-tab,#start-page.active #add-contact-btn { flex-basis:45px!important;min-height:45px!important;border-radius:13px!important; }
 }
