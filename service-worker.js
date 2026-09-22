@@ -1,8 +1,8 @@
-const CACHE_NAME = 'web-messenger-v106-aurora-rail';
+const CACHE_NAME = 'web-messenger-v107-doori-palette';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=327',
+  '/style.css?v=328',
   '/app.js?v=348',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',

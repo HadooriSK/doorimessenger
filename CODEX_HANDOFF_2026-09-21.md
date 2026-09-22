@@ -409,3 +409,9 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Kontakte, Chats, Anrufe, Gruppen und Einstellungen besitzen einheitliche, selbst gezeichnete Linien-Symbole. Einstellungen liegen am unteren Ende der Leiste; der auffällige Plus-Button bleibt direkt erreichbar.
 - Unter 900 CSS-Pixeln wechselt die Navigation responsiv nach oben, damit Tablet und Smartphone keinen zu schmalen Nachrichtenbereich erhalten.
 - Alle vorhandenen `data-tab`-Werte, IDs und Ereignisbehandler bleiben erhalten. Die sichtbaren Bezeichnungen werden weiterhin über die fünf bestehenden Übersetzungen gesteuert.
+
+### Nutzerfreundliche Doori-Farbwelt
+
+- Der Dunkelmodus verwendet ein freundlicheres mittleres Nachtblau-Petrol anstelle fast schwarzer Flächen. Doori-Hellblau ist die Hauptfarbe; Türkis und gedämpftes Violett setzen sparsame moderne Akzente.
+- Der Hellmodus verwendet getöntes Nebelblau und Blaugrau statt großer reinweißer Flächen. Eingaben, Karten, Dialoge und Einstellungen besitzen abgestufte blau-graue Hintergründe und klare Kontraste.
+- Beide Paletten wurden vom vorhandenen hellblauen Doori-Logo abgeleitet und einheitlich auf Navigation, Chatliste, Nachrichten, Composer, Einstellungen und Modalfenster übertragen.

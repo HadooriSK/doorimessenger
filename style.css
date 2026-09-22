@@ -1923,3 +1923,78 @@ body.light-mode .group-info-sidebar { background: rgba(247,251,254,.98) !importa
   .nav-tab { flex-direction:column;gap:3px!important;min-width:72px!important; }
   .nav-label { font-size:10px; }
 }
+
+/* Doori signature palette: logo blue, calm teal and restrained violet */
+:root {
+  --bg-color:#0d2635;
+  --panel-bg:rgba(20,51,68,.9);
+  --panel-solid:#153648;
+  --panel-raised:#1e465a;
+  --panel-border:rgba(111,203,239,.18);
+  --text-primary:#edf8fc;
+  --text-secondary:#91aebe;
+  --accent:#71c9f4;
+  --accent-hover:#91daf8;
+  --accent-soft:rgba(113,201,244,.14);
+  --accent-strong:#3f95df;
+  --doori-teal:#48cabc;
+  --doori-violet:#8178d9;
+}
+body {
+  background:
+    radial-gradient(circle at 9% 8%,rgba(60,149,218,.24),transparent 30%),
+    radial-gradient(circle at 88% 14%,rgba(72,202,188,.1),transparent 27%),
+    radial-gradient(circle at 82% 92%,rgba(129,120,217,.14),transparent 34%),
+    linear-gradient(145deg,#0b2231 0%,#15384b 52%,#102b3a 100%);
+}
+.chat-container { background:linear-gradient(145deg,rgba(14,40,54,.94),rgba(17,46,61,.9))!important;border-color:rgba(113,201,244,.2)!important; }
+.chat-container.split-view #start-page { background:linear-gradient(180deg,rgba(21,53,70,.97),rgba(16,43,58,.96))!important; }
+.chat-container.split-view .top-nav { background:linear-gradient(180deg,rgba(23,59,76,.99),rgba(15,43,58,.99))!important; }
+.chat-header { background:linear-gradient(90deg,rgba(16,44,59,.96),rgba(22,54,71,.94))!important; }
+.chat-input-area { background:linear-gradient(90deg,rgba(15,42,56,.97),rgba(20,51,67,.96))!important; }
+.sidebar-search { background:linear-gradient(180deg,rgba(30,67,84,.72),rgba(18,48,64,.58))!important; }
+.chat-item.active { background:linear-gradient(110deg,rgba(63,149,223,.3),rgba(72,202,188,.09))!important;border-color:rgba(113,201,244,.3)!important; }
+.message.sent .message-bubble { background:linear-gradient(135deg,#287fc3,#536fc5)!important;border-color:rgba(132,213,250,.34)!important; }
+.message.received .message-bubble { background:linear-gradient(145deg,rgba(31,70,89,.98),rgba(24,58,77,.98))!important;border-color:rgba(113,201,244,.14)!important; }
+#send-btn,.submit-btn,#message-search-btn { background:linear-gradient(135deg,var(--accent),#4aa8e8 58%,#7779db)!important; }
+.modal-content:not(.call-content) { background:linear-gradient(150deg,rgba(27,65,82,.99),rgba(16,44,59,.99))!important;border-color:rgba(113,201,244,.22)!important; }
+.settings-tabs { background:linear-gradient(180deg,rgba(22,58,75,.97),rgba(15,44,59,.97))!important; }
+.settings-tab-content .setting-item,.settings-tab-content .setting-group { background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(113,201,244,.025))!important; }
+
+body.light-mode {
+  --bg-color:#d6e5ed;
+  --panel-bg:rgba(226,238,245,.93);
+  --panel-solid:#e3eef4;
+  --panel-raised:#d2e4ec;
+  --panel-border:rgba(35,106,143,.17);
+  --text-primary:#183244;
+  --text-secondary:#587588;
+  --accent:#2e95cf;
+  --accent-hover:#207fb8;
+  --accent-soft:rgba(46,149,207,.13);
+  --accent-strong:#277fbe;
+  background:
+    radial-gradient(circle at 8% 4%,rgba(66,164,218,.2),transparent 30%),
+    radial-gradient(circle at 90% 12%,rgba(72,202,188,.11),transparent 28%),
+    radial-gradient(circle at 82% 94%,rgba(129,120,217,.1),transparent 32%),
+    linear-gradient(145deg,#cfdee7,#dce9ef 48%,#cbdde7)!important;
+}
+body.light-mode .chat-container { background:linear-gradient(145deg,rgba(222,236,244,.96),rgba(211,229,238,.94))!important;border-color:rgba(35,106,143,.18)!important; }
+body.light-mode .chat-container.split-view #start-page { background:linear-gradient(180deg,#dceaf1,#d3e4ec)!important; }
+body.light-mode .chat-container.split-view .top-nav { background:linear-gradient(180deg,#d1e4ed,#c5dce7)!important;box-shadow:12px 0 30px rgba(33,83,112,.1); }
+body.light-mode .top-nav,body.light-mode .chat-header,body.light-mode .chat-input-area { background:rgba(218,233,241,.94)!important; }
+body.light-mode .sidebar-search { background:linear-gradient(180deg,rgba(199,222,234,.88),rgba(211,229,238,.72))!important; }
+body.light-mode .main-chat::before { background:linear-gradient(180deg,rgba(215,231,239,.5),rgba(202,222,232,.64)); }
+body.light-mode .chat-item:hover { background:rgba(31,109,150,.07)!important; }
+body.light-mode .chat-item.active { background:linear-gradient(110deg,rgba(46,149,207,.2),rgba(72,202,188,.09))!important;border-color:rgba(35,126,176,.25)!important; }
+body.light-mode .message.received .message-bubble { background:linear-gradient(145deg,#e8f1f5,#dfeaf0)!important;border-color:rgba(35,106,143,.14)!important; }
+body.light-mode .message.sent .message-bubble { background:linear-gradient(135deg,#2f91ca,#5879c9)!important;color:#fff!important; }
+body.light-mode .composer-main-row { background:rgba(226,238,244,.9)!important;border-color:rgba(35,106,143,.18)!important; }
+body.light-mode .popup-menu,body.light-mode .picker,body.light-mode #chat-header-dropdown { background:rgba(224,237,244,.98)!important; }
+body.light-mode .modal-content:not(.call-content),body.light-mode #settings-modal .settings-content { background:linear-gradient(150deg,#dceaf1,#cfE1ea)!important;border-color:rgba(35,106,143,.2)!important; }
+body.light-mode .settings-tabs { background:linear-gradient(180deg,#c9dee8,#bfd6e2)!important; }
+body.light-mode .settings-body { background:linear-gradient(145deg,#dce9ef,#d2e3eb)!important; }
+body.light-mode .settings-tab-content .setting-item,body.light-mode .settings-tab-content .setting-group { background:linear-gradient(145deg,rgba(238,246,249,.85),rgba(211,229,237,.82))!important;border-color:rgba(35,106,143,.14)!important; }
+body.light-mode .modal-content input:not([type="checkbox"]):not([type="color"]):not([type="range"]),body.light-mode .modal-content select,body.light-mode .modal-content textarea { background:#d4e5ed!important;color:var(--text-primary)!important;border-color:rgba(35,106,143,.18)!important; }
+body.light-mode .preview-box,body.light-mode #blocked-contacts-list { background:rgba(196,220,232,.58)!important; }
+body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important; }
