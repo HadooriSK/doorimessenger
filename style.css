@@ -1998,3 +1998,47 @@ body.light-mode .settings-tab-content .setting-item,body.light-mode .settings-ta
 body.light-mode .modal-content input:not([type="checkbox"]):not([type="color"]):not([type="range"]),body.light-mode .modal-content select,body.light-mode .modal-content textarea { background:#d4e5ed!important;color:var(--text-primary)!important;border-color:rgba(35,106,143,.18)!important; }
 body.light-mode .preview-box,body.light-mode #blocked-contacts-list { background:rgba(196,220,232,.58)!important; }
 body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important; }
+
+/* Exact concept structure: persistent rail, list, conversation and details */
+.chat-empty-state { display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--text-secondary);text-align:center;background:radial-gradient(circle at 50% 42%,rgba(113,201,244,.1),transparent 30%); }
+.chat-empty-state img { width:120px;filter:drop-shadow(0 12px 30px rgba(113,201,244,.25));opacity:.9; }
+.chat-empty-state p { margin:0;padding:10px 18px;border:1px solid rgba(113,201,244,.12);border-radius:999px;background:rgba(255,255,255,.035); }
+.conversation-details-panel { display:none; }
+
+@media (min-width:900px) {
+  .chat-container.awaiting-chat #chat-page { display:flex!important; }
+  .chat-container.awaiting-chat #chat-page .main-chat { display:none!important; }
+  .chat-container.awaiting-chat .chat-empty-state { display:flex; }
+  .chat-container.split-view #chat-page { flex-direction:row;min-width:0; }
+  .chat-container.split-view #chat-page .main-chat { min-width:0; }
+  .composer-tools-row,.chat-input-area,.plus-menu-container { overflow:visible!important; }
+  #plus-menu-dropdown { z-index:10050!important;bottom:calc(100% + 12px)!important; }
+  #sidebar-create-group-btn { width:44px!important;height:44px;min-height:44px;align-self:flex-end;margin:4px 0 0!important;padding:0!important;border-radius:14px!important;font-size:0!important; }
+  #sidebar-create-group-btn::after { content:'+';font-size:25px;font-weight:400;line-height:1; }
+}
+
+@media (min-width:1400px) {
+  .chat-container.split-view #start-page { width:420px;min-width:420px;flex-basis:420px; }
+  .conversation-details-panel {
+    display:flex;width:270px;flex:0 0 270px;flex-direction:column;padding:26px 18px;
+    border-inline-start:1px solid rgba(113,201,244,.13);
+    background:linear-gradient(180deg,rgba(21,53,70,.9),rgba(14,40,55,.94));
+  }
+  .details-profile { display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 10px 26px;border-bottom:1px solid rgba(113,201,244,.11); }
+  .details-avatar { width:82px!important;height:82px!important;font-size:30px!important;margin-bottom:14px;border:3px solid rgba(113,201,244,.2)!important;box-shadow:0 15px 36px rgba(0,13,25,.3)!important; }
+  .details-profile h3 { margin:0 0 6px;font-size:18px;color:var(--text-primary); }
+  .details-actions { display:flex;flex-direction:column;gap:9px;padding-top:20px; }
+  .details-actions button { display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 12px;border:1px solid transparent;border-radius:14px;background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:650;text-align:start;cursor:pointer;transition:.2s; }
+  .details-actions button>span:first-child { display:grid;place-items:center;width:29px;height:29px;border-radius:10px;background:rgba(113,201,244,.09);color:var(--accent);font-size:20px; }
+  .details-actions button:hover { color:var(--text-primary);background:rgba(113,201,244,.08);border-color:rgba(113,201,244,.14);transform:translateX(2px); }
+  .rtl-mode .details-actions button:hover { transform:translateX(-2px); }
+  body.light-mode .conversation-details-panel { background:linear-gradient(180deg,#d0e2ea,#c5dae4);border-color:rgba(35,106,143,.15); }
+  body.light-mode .details-actions button:hover { background:rgba(46,149,207,.09); }
+}
+
+@media (max-width:899px) {
+  .chat-empty-state,.conversation-details-panel { display:none!important; }
+  .composer-tools-row,.chat-input-area,.plus-menu-container { overflow:visible!important; }
+  .composer-tools-row { flex-wrap:wrap!important; }
+  #plus-menu-dropdown { z-index:10050!important;bottom:calc(100% + 10px)!important; }
+}

@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=328">
+    <link rel="stylesheet" href="style.css?v=329">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -198,6 +198,11 @@
                 </div>
                 <!-- Chat Page (Main Chat Area) -->
                 <div id="chat-page" class="view-page">
+
+                <div id="chat-empty-state" class="chat-empty-state">
+                    <img src="logo.png?v=6" alt="Doori Logo">
+                    <p data-i18n="err_select_chat">Bitte wähle zuerst einen Chat aus.</p>
+                </div>
 
                 <div class="main-chat" id="main-chat" style="flex:1; display:flex; flex-direction:column; height: 100%;">
                     <div class="chat-header" style="display: flex; align-items: center; padding: 10px 15px; flex-wrap: nowrap; overflow: visible; z-index: 10;">
@@ -400,6 +405,19 @@
                         </div>
                     </div>
                 </div>
+
+                <aside id="conversation-details-panel" class="conversation-details-panel" aria-hidden="true">
+                    <div class="details-profile">
+                        <div id="details-chat-avatar" class="avatar details-avatar">D</div>
+                        <h3 id="details-chat-name">Doori</h3>
+                        <span id="details-chat-status" class="status-text" data-i18n="status_online">Online</span>
+                    </div>
+                    <div class="details-actions">
+                        <button id="details-shared-media" type="button"><span>▧</span><span data-i18n="btn_shared_media">Geteilte Medien</span></button>
+                        <button id="details-starred-messages" type="button"><span>☆</span><span data-i18n="btn_starred_messages">Markierte Nachrichten</span></button>
+                        <button id="details-games" type="button"><span>◇</span><span data-i18n="games_menu">Spiele</span></button>
+                    </div>
+                </aside>
 
                 <!-- Group Info Sidebar -->
                 <div class="group-info-sidebar hidden" id="group-info-sidebar">
@@ -971,7 +989,7 @@
     <script src="message-cache.js?v=1"></script>
     <script src="quiz-questions.js?v=1"></script>
     <script src="games.js?v=4"></script>
-    <script src="app.js?v=348"></script>
+    <script src="app.js?v=349"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="agora-calls.js?v=1"></script>
     <script src="doodle.js?v=276"></script>

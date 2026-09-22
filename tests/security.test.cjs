@@ -291,6 +291,15 @@ test('modern settings additions cover all five languages and preserve RTL for ar
  w.firebase={auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
  for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
  await new Promise(resolve=>setTimeout(resolve,100));
+
+ // Composer plus menu must open visibly and close only after an outside click.
+ const plusMenuButton = w.document.getElementById('plus-menu-btn');
+ const plusMenu = w.document.getElementById('plus-menu-dropdown');
+ assert.ok(plusMenuButton && plusMenu, 'plus menu controls exist');
+ plusMenuButton.click();
+ assert.equal(plusMenu.classList.contains('hidden'), false, 'plus menu opens after clicking plus');
+ w.document.body.click();
+ assert.equal(plusMenu.classList.contains('hidden'), true, 'plus menu closes after outside click');
  const texts=w.TRANSLATIONS;
   const requiredKeys=[
    'tab_account', 'lbl_account_email', 'lbl_change_password', 'lbl_current_password',
@@ -481,6 +490,12 @@ test('Aurora UI keeps primary calls visible, moves secondary actions into the me
  assert.match(css,/\.chat-container\.split-view \.top-nav/);
  assert.match(css,/flex-direction:column/);
  assert.ok((html.match(/class="nav-icon"/g) || []).length >= 6, 'desktop icon rail has navigation icons');
+ assert.match(html,/id="conversation-details-panel"/);
+ assert.match(html,/id="chat-empty-state"/);
+ assert.match(appCode,/const split = prefersSplitMessenger\(\);/);
+ assert.match(appCode,/syncMessengerLayout\(false\);/);
+ assert.match(css,/\.chat-container\.awaiting-chat #chat-page \.main-chat \{ display:none!important; \}/);
+ assert.match(css,/\.composer-tools-row,.chat-input-area,.plus-menu-container \{ overflow:visible!important; \}/);
  assert.match(css,/@media \(max-width: 899px\)/);
  assert.match(css,/body\.light-mode \.settings-content/);
  assert.match(css,/\.rtl-mode \.settings-tabs \.tab-btn\.active/);

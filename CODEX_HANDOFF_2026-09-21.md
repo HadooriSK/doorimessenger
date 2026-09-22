@@ -415,3 +415,11 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Der Dunkelmodus verwendet ein freundlicheres mittleres Nachtblau-Petrol anstelle fast schwarzer Flächen. Doori-Hellblau ist die Hauptfarbe; Türkis und gedämpftes Violett setzen sparsame moderne Akzente.
 - Der Hellmodus verwendet getöntes Nebelblau und Blaugrau statt großer reinweißer Flächen. Eingaben, Karten, Dialoge und Einstellungen besitzen abgestufte blau-graue Hintergründe und klare Kontraste.
 - Beide Paletten wurden vom vorhandenen hellblauen Doori-Logo abgeleitet und einheitlich auf Navigation, Chatliste, Nachrichten, Composer, Einstellungen und Modalfenster übertragen.
+
+### Konzeptlayout und gemeldete UI-Regressionen
+
+- Die Desktop-Shell aktiviert die linke Symbolleiste jetzt bereits beim Öffnen des Messengers und nicht erst nach Auswahl eines Chats. Ohne Auswahl zeigt der mittlere Bereich einen gebrandeten Leerzustand.
+- Ab 1400 CSS-Pixeln besteht die vollständige Konzeptstruktur aus vier Zonen: bestehende Menüleiste links, Kontakt-/Chatliste, großer Gesprächsbereich und Kontakt-/Chatdetails rechts. Die Menüinhalte und ihre Funktionen wurden nicht ersetzt.
+- Das breite Element „Neue Gruppe erstellen“ in der Gruppenliste wird als kompakte Plus-Aktion dargestellt, damit es nicht wie ein zweiter Gruppen-Navigationspunkt wirkt.
+- Das Composer-Plus-Menü wurde gegen Abschneiden durch `overflow` abgesichert. Ein DOM-Test klickt den Plus-Button, prüft das sichtbare Menü und anschließend das Schließen durch einen Außenklick.
+- Der rechte Detailbereich bietet vorhandene Funktionen für geteilte Medien, markierte Nachrichten und Spiele; er löst intern dieselben bestehenden Aktionen aus.

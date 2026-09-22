@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v107-doori-palette';
+const CACHE_NAME = 'web-messenger-v108-concept-layout';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=328',
-  '/app.js?v=348',
+  '/style.css?v=329',
+  '/app.js?v=349',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',

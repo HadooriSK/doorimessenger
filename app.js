@@ -31,8 +31,9 @@ const prefersSplitMessenger = () => window.matchMedia('(min-width: 900px)').matc
 function syncMessengerLayout(showChat = !!currentChat) {
     const start = document.getElementById('start-page');
     const chat = document.getElementById('chat-page');
-    const split = prefersSplitMessenger() && showChat;
+    const split = prefersSplitMessenger();
     chatLayout?.classList.toggle('split-view', split);
+    chatLayout?.classList.toggle('awaiting-chat', split && !showChat);
     if (split) {
         start.classList.add('active');
         chat.classList.add('active');
@@ -42,12 +43,14 @@ function syncMessengerLayout(showChat = !!currentChat) {
     }
 }
 window.addEventListener('resize', () => syncMessengerLayout(!!currentChat));
+syncMessengerLayout(false);
 
 document.getElementById('back-to-list-btn').addEventListener('click', () => {
     document.getElementById('chat-page').classList.remove('active');
     document.getElementById('start-page').classList.add('active');
     chatLayout?.classList.remove('split-view');
     currentChat = null;
+    syncMessengerLayout(false);
     // Fullscreen behavior removed per user request
 });
 
@@ -160,6 +163,11 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     const dropdownMuteUser = document.getElementById('dropdown-mute-user');
     const dropdownClearChat = document.getElementById('dropdown-clear-chat');
     const dropdownBlockUser = document.getElementById('dropdown-block-user');
+    const detailsStatusMirror = document.getElementById('details-chat-status');
+    if (currentChatStatus && detailsStatusMirror && typeof MutationObserver !== 'undefined') {
+        new MutationObserver(() => { detailsStatusMirror.textContent = currentChatStatus.textContent; })
+            .observe(currentChatStatus, { childList: true, characterData: true, subtree: true });
+    }
     const blockedNotice = document.getElementById('blocked-notice'); const channelNotice = document.getElementById('channel-notice');
     const messagesContainer = document.getElementById('messages-container'); const messageForm = document.getElementById('message-form'); const messageInput = document.getElementById('message-input');
 const doodleBtnGlobal = document.getElementById('doodle-btn');
@@ -2589,6 +2597,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         else document.getElementById('start-page').classList.remove('active');
         document.getElementById('chat-page').classList.add('active');
         chatLayout?.classList.toggle('split-view', prefersSplitMessenger());
+        chatLayout?.classList.remove('awaiting-chat');
         // Fullscreen behavior removed per user request
 
         let chat = chatData.personal.find(c=>c.id===id) || chatData.rooms.find(c=>c.id===id) || chatData.contacts.find(c=>c.id===id) || chatData.active_chats.find(c=>c.id===id);
@@ -2598,6 +2607,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         window.currentChat = chat;
         
         currentChatName.textContent = getTranslatedChatName(chat);
+        const detailsName = document.getElementById('details-chat-name');
+        const detailsStatus = document.getElementById('details-chat-status');
+        const detailsAvatar = document.getElementById('details-chat-avatar');
+        if (detailsName) detailsName.textContent = getTranslatedChatName(chat);
+        if (detailsStatus) detailsStatus.textContent = currentChatStatus.textContent || '';
         if (type === 'saved') currentChatAvatar.textContent = '💾';
         else if (type === 'room' || type === 'channel') {
             currentChatAvatar.textContent = '#';
@@ -2608,6 +2622,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (aUrl) { currentChatAvatar.innerHTML = safeHTML(`<img src="${aUrl}" class="avatar-img">`); }
             else { currentChatAvatar.textContent = chat.name.replace('@','').charAt(0).toUpperCase(); }
         }
+        if (detailsAvatar) detailsAvatar.innerHTML = currentChatAvatar.innerHTML;
 
         const statusBadge = document.getElementById('current-chat-status-badge');
         if (statusBadge) {
@@ -5364,6 +5379,13 @@ if (plusMenuBtn && plusMenuDropdown) {
         });
     });
 }
+
+const detailsSharedMedia = document.getElementById('details-shared-media');
+const detailsStarredMessages = document.getElementById('details-starred-messages');
+const detailsGames = document.getElementById('details-games');
+if (detailsSharedMedia) detailsSharedMedia.addEventListener('click', () => document.getElementById('chat-media-btn')?.click());
+if (detailsStarredMessages) detailsStarredMessages.addEventListener('click', () => document.getElementById('chat-starred-btn')?.click());
+if (detailsGames) detailsGames.addEventListener('click', () => document.getElementById('games-btn')?.click());
 
 // Location Sharing Logic
 const menuLocationBtn = document.getElementById('menu-location-btn');
