@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=324">
+    <link rel="stylesheet" href="style.css?v=325">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -226,10 +226,10 @@
 
                         <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0;">
                             <div id="call-buttons-container" style="display: none; align-items: center; gap: 24px; flex-shrink: 0; background: #ffffff; border-radius: 24px; padding: 8px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-                                <button id="video-call-btn" class="icon-btn" title="Videoanruf" style="display:none; width: 26px; height: 26px; padding: 0; align-items: center; justify-content: center;">
+                                <button id="video-call-btn" class="icon-btn" title="Videoanruf" data-call-i18n-title="videoCall" aria-label="Videoanruf" style="display:none; width: 26px; height: 26px; padding: 0; align-items: center; justify-content: center;">
                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3" ry="3"></rect><path d="M16 10l5-3v10l-5-3"></path></svg>
                                 </button>
-                                <button id="call-btn" class="icon-btn" title="Anrufen" style="display:none; width: 24px; height: 24px; padding: 0; align-items: center; justify-content: center;">
+                                <button id="call-btn" class="icon-btn" title="Sprachanruf" data-call-i18n-title="voiceCall" aria-label="Sprachanruf" style="display:none; width: 24px; height: 24px; padding: 0; align-items: center; justify-content: center;">
                                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                                 </button>
                             </div>
@@ -282,7 +282,7 @@
                             <span style="font-size: 20px; color: #2ed573;">📞</span>
                             <div>
                                 <strong style="display: block; font-size: 14px;" data-i18n="lbl_group_call_active">Gruppenanruf läuft</strong>
-                                <span id="group-call-participants" style="font-size: 12px; color: #ccc;">0 Teilnehmer</span>
+                                <span id="group-call-participants-count" style="font-size: 12px; color: #ccc;">0 Teilnehmer</span>
                             </div>
                         </div>
                         <button id="join-group-call-btn" class="submit-btn" style="background: #2ed573; color: #000; padding: 6px 15px; border-radius: 20px; font-weight: bold;" data-i18n="btn_join_call">Beitreten</button>
@@ -792,57 +792,58 @@
         </div>
 
 
-        <div id="call-modal" class="modal hidden">
-            <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 350px;">
-                <h3 id="call-status" style="margin-bottom: 20px; color: var(--text-secondary);">Eingehender Anruf...</h3>
-                <div class="avatar-large" id="call-avatar" style="margin: 0 auto 15px;">#</div>
-                <h2 id="call-name" style="margin-bottom: 30px;">Benutzer</h2>
-                <div class="modal-actions" id="call-controls" style="justify-content: center; gap: 15px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
-                    <button id="speaker-toggle-btn" class="icon-btn" style="background: rgba(255,255,255,0.15); color: #fff; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; display: none;" title="Lautsprecher">🔊</button>
-                    <button id="mute-call-btn" class="icon-btn" style="background: rgba(255,255,255,0.15); color: #fff; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; display: none;" title="Stummschalten">🎙️</button>
-                    <button id="accept-call-btn" class="icon-btn" style="background: rgba(46, 213, 115, 0.3); color: #2ed573; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none;" title="Annehmen">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-                    </button>
-                    <button id="reject-call-btn" class="icon-btn danger" style="background: #ff4757; color: #fff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none;" title="Auflegen">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" transform="rotate(135)"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-                    </button>
+        <div id="call-modal" class="modal hidden call-modal-shell" role="dialog" aria-modal="true" aria-labelledby="call-name">
+            <div class="modal-content call-content voice-call-card">
+                <div class="call-brand">DOORI</div>
+                <div class="call-status-row">
+                    <span class="call-live-dot"></span>
+                    <span id="call-status">Eingehender Sprachanruf …</span>
+                </div>
+                <div class="call-avatar-wrap">
+                    <div class="call-avatar-rings" aria-hidden="true"></div>
+                    <div class="avatar-large call-avatar-modern" id="call-avatar">#</div>
+                </div>
+                <h2 id="call-name" class="call-peer-name">Benutzer</h2>
+                <div id="call-duration" class="call-duration" aria-live="polite">00:00</div>
+                <div class="call-security-note"><span aria-hidden="true">🔒</span><span data-call-i18n="encrypted">WebRTC-verschlüsselt</span></div>
+                <div class="call-controls" id="call-controls">
+                    <button id="speaker-toggle-btn" class="call-control hidden-control" type="button" data-call-i18n-title="speaker" aria-pressed="false"><span class="call-control-icon">🔊</span><span data-call-i18n="speaker">Ton</span></button>
+                    <button id="mute-call-btn" class="call-control hidden-control" type="button" data-call-i18n-title="mute" aria-pressed="false"><span class="call-control-icon">🎙️</span><span data-call-i18n="mute">Stumm</span></button>
+                    <button id="accept-call-btn" class="call-control call-control-accept" type="button" data-call-i18n-title="accept"><span class="call-control-icon">☎</span><span data-call-i18n="accept">Annehmen</span></button>
+                    <button id="reject-call-btn" class="call-control call-control-end" type="button" data-call-i18n-title="end"><span class="call-control-icon">☎</span><span data-call-i18n="end">Auflegen</span></button>
                 </div>
             </div>
         </div>
 
-        <div id="video-call-modal" class="modal hidden">
-            <div class="modal-content glass-panel call-content" style="text-align: center; max-width: 800px; padding: 20px; position: relative;">
-                <h3 id="video-call-status" style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 10px; color: #fff;">Eingehender Videoanruf...</h3>
-                
-                <div style="position: relative; width: 100%; height: 60vh; background: #000; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;">
-                    <!-- Video Grid -->
-                    <div id="video-grid" style="display: grid; width: 100%; height: 100%; grid-template-columns: 1fr; gap: 5px; padding: 5px; box-sizing: border-box; flex: 1;">
-                        <div class="video-wrapper" style="position: relative; width: 100%; height: 100%;">
-                            <video id="video-remote" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></video>
+        <div id="video-call-modal" class="modal hidden call-modal-shell" role="dialog" aria-modal="true" aria-labelledby="video-call-name">
+            <div class="modal-content call-content video-call-card">
+                <div class="video-stage" id="video-stage">
+                    <div id="video-grid" class="video-grid">
+                        <video id="video-remote" autoplay playsinline></video>
+                    </div>
+                    <div class="video-topbar">
+                        <div class="video-call-identity">
+                            <div class="call-mini-avatar" id="video-call-avatar">#</div>
+                            <div><h2 id="video-call-name">Benutzer</h2><div class="video-call-state"><span class="call-live-dot"></span><span id="video-call-status">Eingehender Videoanruf …</span><span id="video-call-duration">00:00</span></div></div>
                         </div>
+                        <button id="video-fullscreen-btn" class="video-top-action" type="button" data-call-i18n-title="fullscreen" aria-label="Vollbild">⛶</button>
                     </div>
-                    
-                    <!-- Local Video (Picture-in-Picture style) -->
-                    <video id="video-local" autoplay playsinline muted style="position: absolute; bottom: 20px; right: 20px; width: 150px; height: 100px; background: #333; border: 2px solid #fff; border-radius: 8px; object-fit: cover; z-index: 20;"></video>
-                    
-                    <!-- Calling Screen / Ringing -->
-                    <div id="video-call-ringing-ui" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; z-index: 5;">
-                        <div class="avatar-large" id="video-call-avatar" style="margin-bottom: 15px;">#</div>
-                        <h2 id="video-call-name" style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Benutzer</h2>
+                    <video id="video-local" autoplay playsinline muted></video>
+                    <div id="video-call-ringing-ui" class="video-ringing-ui">
+                        <div class="call-avatar-rings" aria-hidden="true"></div>
+                        <div class="avatar-large call-avatar-modern" id="video-ringing-avatar">#</div>
+                        <div class="video-ringing-label" data-call-i18n="connecting">Verbindung wird hergestellt …</div>
                     </div>
+                    <div class="call-security-note video-security"><span aria-hidden="true">🔒</span><span data-call-i18n="encrypted">WebRTC-verschlüsselt</span></div>
                 </div>
-
-                <div class="modal-actions" id="video-call-controls" style="justify-content: center; gap: 15px; margin-top: 20px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 40px; display: inline-flex;">
-                    <button id="video-speaker-toggle-btn" class="icon-btn" style="background: rgba(255,255,255,0.15); color: #fff; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; display: none;" title="Lautsprecher">🔊</button>
-                    <button id="video-toggle-cam-btn" class="icon-btn" style="background: rgba(255,255,255,0.15); color: #fff; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; display: none;" title="Kamera ein/aus">📹</button>
-                    <button id="video-toggle-mic-btn" class="icon-btn" style="background: rgba(255,255,255,0.15); color: #fff; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; display: none;" title="Stummschalten">🎙️</button>
-                    
-                    <button id="video-accept-btn" class="icon-btn" style="background: rgba(46, 213, 115, 0.3); color: #2ed573; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none;" title="Annehmen">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-                    </button>
-                    <button id="video-reject-btn" class="icon-btn danger" style="background: #ff4757; color: #fff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none;" title="Auflegen">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" transform="rotate(135)"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-                    </button>
+                <div class="call-controls video-call-controls" id="video-call-controls">
+                    <button id="video-speaker-toggle-btn" class="call-control hidden-control" type="button" data-call-i18n-title="speaker" aria-pressed="false"><span class="call-control-icon">🔊</span><span data-call-i18n="speaker">Ton</span></button>
+                    <button id="video-toggle-cam-btn" class="call-control hidden-control" type="button" data-call-i18n-title="camera" aria-pressed="false"><span class="call-control-icon">📹</span><span data-call-i18n="camera">Kamera</span></button>
+                    <button id="video-switch-camera-btn" class="call-control hidden-control" type="button" data-call-i18n-title="switchCamera"><span class="call-control-icon">🔄</span><span data-call-i18n="switchCamera">Wechseln</span></button>
+                    <button id="video-toggle-mic-btn" class="call-control hidden-control" type="button" data-call-i18n-title="mute" aria-pressed="false"><span class="call-control-icon">🎙️</span><span data-call-i18n="mute">Stumm</span></button>
+                    <button id="video-share-screen-btn" class="call-control hidden-control desktop-call-control" type="button" data-call-i18n-title="shareScreen" aria-pressed="false"><span class="call-control-icon">🖥️</span><span data-call-i18n="shareScreen">Bildschirm</span></button>
+                    <button id="video-accept-btn" class="call-control call-control-accept" type="button" data-call-i18n-title="accept"><span class="call-control-icon">☎</span><span data-call-i18n="accept">Annehmen</span></button>
+                    <button id="video-reject-btn" class="call-control call-control-end" type="button" data-call-i18n-title="end"><span class="call-control-icon">☎</span><span data-call-i18n="end">Auflegen</span></button>
                 </div>
             </div>
         </div>
@@ -972,7 +973,7 @@
     <script src="quiz-questions.js?v=1"></script>
     <script src="games.js?v=4"></script>
     <script src="app.js?v=347"></script>
-    <script src="webrtc.js?v=59"></script>
+    <script src="webrtc.js?v=60"></script>
     <script src="doodle.js?v=276"></script>
 
         <!-- Add Contact Modal -->

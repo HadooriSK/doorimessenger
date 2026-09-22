@@ -21,9 +21,15 @@ const videoAcceptBtn = document.getElementById('video-accept-btn');
 const videoRejectBtn = document.getElementById('video-reject-btn');
 const videoToggleCamBtn = document.getElementById('video-toggle-cam-btn');
 const videoToggleMicBtn = document.getElementById('video-toggle-mic-btn');
+const videoSwitchCameraBtn = document.getElementById('video-switch-camera-btn');
+const videoShareScreenBtn = document.getElementById('video-share-screen-btn');
+const videoFullscreenBtn = document.getElementById('video-fullscreen-btn');
 const videoRemote = document.getElementById('video-remote');
 const videoLocal = document.getElementById('video-local');
 const videoCallRingingUi = document.getElementById('video-call-ringing-ui');
+const videoRingingAvatar = document.getElementById('video-ringing-avatar');
+const callDuration = document.getElementById('call-duration');
+const videoCallDuration = document.getElementById('video-call-duration');
 let currentCallType = 'audio';
 let isCamMuted = false;
 
@@ -39,6 +45,68 @@ let isSpeaker = false;
 let callStartTime = null;
 let currentCallPeer = null; // The other person's username
 let currentCallStatus = null; // 'missed', 'incoming', 'outgoing'
+let incomingCallsUnsubscribe = null;
+let callerCandidatesUnsubscribe = null;
+let receiverCandidatesUnsubscribe = null;
+let callDurationInterval = null;
+let unansweredCallTimeout = null;
+let cameraFacingMode = 'user';
+let isScreenSharing = false;
+let cameraTrackBeforeShare = null;
+let audioStatusKey = 'incomingAudio';
+let videoStatusKey = 'incomingVideo';
+
+const CALL_TRANSLATIONS = {
+    de: { incomingAudio:'Eingehender Sprachanruf …', incomingVideo:'Eingehender Videoanruf …', groupVideo:'Gruppen-Videoanruf', calling:'Wird angerufen …', connecting:'Verbindung wird hergestellt …', connected:'Verbunden', reconnecting:'Verbindung wird wiederhergestellt …', failed:'Verbindung fehlgeschlagen', encrypted:'WebRTC-verschlüsselt', accept:'Annehmen', end:'Auflegen', mute:'Stumm', unmute:'Mikrofon an', speaker:'Ton', soundOff:'Ton aus', camera:'Kamera', cameraOn:'Kamera an', switchCamera:'Wechseln', shareScreen:'Bildschirm', stopShare:'Freigabe stoppen', fullscreen:'Vollbild', voiceCall:'Sprachanruf', videoCall:'Videoanruf', participants:'Teilnehmer', permissionDenied:'Bitte erlaube den Zugriff auf Mikrofon und Kamera in den Browser-Einstellungen.', deviceMissing:'Kein passendes Mikrofon oder keine Kamera gefunden.', callFailed:'Der Anruf konnte nicht aufgebaut werden.', alreadyCalling:'Es läuft bereits ein Anruf.', turnFallback:'Relay-Server nicht erreichbar; direkter Verbindungsversuch läuft.' },
+    en: { incomingAudio:'Incoming voice call …', incomingVideo:'Incoming video call …', groupVideo:'Group video call', calling:'Calling …', connecting:'Establishing connection …', connected:'Connected', reconnecting:'Restoring connection …', failed:'Connection failed', encrypted:'WebRTC encrypted', accept:'Accept', end:'End call', mute:'Mute', unmute:'Unmute', speaker:'Sound', soundOff:'Sound off', camera:'Camera', cameraOn:'Camera on', switchCamera:'Switch', shareScreen:'Screen', stopShare:'Stop sharing', fullscreen:'Full screen', voiceCall:'Voice call', videoCall:'Video call', participants:'Participants', permissionDenied:'Please allow microphone and camera access in your browser settings.', deviceMissing:'No suitable microphone or camera was found.', callFailed:'The call could not be established.', alreadyCalling:'A call is already in progress.', turnFallback:'Relay server unavailable; trying a direct connection.' },
+    ar: { incomingAudio:'مكالمة صوتية واردة …', incomingVideo:'مكالمة فيديو واردة …', groupVideo:'مكالمة فيديو جماعية', calling:'جارٍ الاتصال …', connecting:'جارٍ إنشاء الاتصال …', connected:'متصل', reconnecting:'جارٍ استعادة الاتصال …', failed:'فشل الاتصال', encrypted:'مشفّر عبر WebRTC', accept:'قبول', end:'إنهاء', mute:'كتم', unmute:'تشغيل الميكروفون', speaker:'الصوت', soundOff:'إيقاف الصوت', camera:'الكاميرا', cameraOn:'تشغيل الكاميرا', switchCamera:'تبديل', shareScreen:'الشاشة', stopShare:'إيقاف المشاركة', fullscreen:'ملء الشاشة', voiceCall:'مكالمة صوتية', videoCall:'مكالمة فيديو', participants:'المشاركون', permissionDenied:'يرجى السماح بالوصول إلى الميكروفون والكاميرا من إعدادات المتصفح.', deviceMissing:'لم يتم العثور على ميكروفون أو كاميرا مناسبة.', callFailed:'تعذر إنشاء المكالمة.', alreadyCalling:'توجد مكالمة جارية بالفعل.', turnFallback:'خادم الترحيل غير متاح؛ تتم محاولة اتصال مباشر.' },
+    fa: { incomingAudio:'تماس صوتی ورودی …', incomingVideo:'تماس تصویری ورودی …', groupVideo:'تماس تصویری گروهی', calling:'در حال تماس …', connecting:'در حال برقراری ارتباط …', connected:'متصل', reconnecting:'در حال بازیابی ارتباط …', failed:'ارتباط ناموفق بود', encrypted:'رمزگذاری‌شده با WebRTC', accept:'پذیرفتن', end:'پایان تماس', mute:'بی‌صدا', unmute:'روشن کردن میکروفون', speaker:'صدا', soundOff:'قطع صدا', camera:'دوربین', cameraOn:'روشن کردن دوربین', switchCamera:'تغییر', shareScreen:'صفحه‌نمایش', stopShare:'پایان اشتراک‌گذاری', fullscreen:'تمام‌صفحه', voiceCall:'تماس صوتی', videoCall:'تماس تصویری', participants:'شرکت‌کنندگان', permissionDenied:'لطفاً دسترسی به میکروفون و دوربین را در تنظیمات مرورگر مجاز کنید.', deviceMissing:'میکروفون یا دوربین مناسبی پیدا نشد.', callFailed:'برقراری تماس ممکن نشد.', alreadyCalling:'یک تماس هم‌اکنون در حال اجرا است.', turnFallback:'سرور واسط در دسترس نیست؛ اتصال مستقیم امتحان می‌شود.' },
+    tr: { incomingAudio:'Gelen sesli arama …', incomingVideo:'Gelen görüntülü arama …', groupVideo:'Grup görüntülü araması', calling:'Aranıyor …', connecting:'Bağlantı kuruluyor …', connected:'Bağlandı', reconnecting:'Bağlantı yeniden kuruluyor …', failed:'Bağlantı başarısız', encrypted:'WebRTC ile şifreli', accept:'Kabul et', end:'Kapat', mute:'Sessize al', unmute:'Mikrofonu aç', speaker:'Ses', soundOff:'Sesi kapat', camera:'Kamera', cameraOn:'Kamerayı aç', switchCamera:'Değiştir', shareScreen:'Ekran', stopShare:'Paylaşımı durdur', fullscreen:'Tam ekran', voiceCall:'Sesli arama', videoCall:'Görüntülü arama', participants:'Katılımcı', permissionDenied:'Lütfen tarayıcı ayarlarından mikrofon ve kamera erişimine izin verin.', deviceMissing:'Uygun mikrofon veya kamera bulunamadı.', callFailed:'Arama kurulamadı.', alreadyCalling:'Zaten devam eden bir arama var.', turnFallback:'Aktarma sunucusuna ulaşılamıyor; doğrudan bağlantı deneniyor.' }
+};
+
+function callLanguage() { return ['de','en','ar','fa','tr'].includes(window.currentLang) ? window.currentLang : 'de'; }
+function callText(key) { return (CALL_TRANSLATIONS[callLanguage()] || CALL_TRANSLATIONS.en)[key] || CALL_TRANSLATIONS.en[key] || key; }
+function applyCallLanguage() {
+    document.querySelectorAll('[data-call-i18n]').forEach(el => { el.textContent = callText(el.dataset.callI18n); });
+    document.querySelectorAll('[data-call-i18n-title]').forEach(el => { const value = callText(el.dataset.callI18nTitle); el.title = value; el.setAttribute('aria-label', value); });
+    if (callStatus) callStatus.textContent = callText(audioStatusKey);
+    if (videoCallStatus) videoCallStatus.textContent = callText(videoStatusKey);
+    const participantCount = document.getElementById('group-call-participants-count');
+    if (participantCount) participantCount.textContent = `${participantCount.dataset.count || '0'} ${callText('participants')}`;
+}
+function setCallStatus(key, type = currentCallType) {
+    if (type === 'video') { videoStatusKey = key; if (videoCallStatus) videoCallStatus.textContent = callText(key); }
+    else { audioStatusKey = key; if (callStatus) callStatus.textContent = callText(key); }
+}
+function showCallControl(button, visible) {
+    if (!button) return;
+    button.classList.toggle('hidden-control', !visible);
+    button.style.display = visible ? '' : 'none';
+}
+function ensureDirectVideoGrid() {
+    const grid = document.getElementById('video-grid');
+    if (!grid || !videoRemote) return;
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = '1fr';
+    grid.appendChild(videoRemote);
+}
+function getActiveLocalStream() {
+    return (typeof activeGroupCallId !== 'undefined' && activeGroupCallId && typeof groupLocalStream !== 'undefined') ? groupLocalStream : localStream;
+}
+function setControlState(button, disabled, activeKey, normalKey) {
+    if (!button) return;
+    button.classList.toggle('disabled', !!disabled);
+    button.classList.toggle('active', !disabled && activeKey === 'speaker');
+    button.setAttribute('aria-pressed', disabled ? 'true' : 'false');
+    const label = button.querySelector('[data-call-i18n]');
+    const key = disabled ? activeKey : normalKey;
+    if (label) { label.dataset.callI18n = key; label.textContent = callText(key); }
+    button.dataset.callI18nTitle = key;
+    button.title = callText(key);
+    button.setAttribute('aria-label', callText(key));
+}
+window.addEventListener('doori-language-change', applyCallLanguage);
+applyCallLanguage();
 
 // Ringback Tone Synthesis
 let ringbackAudioContext = null;
@@ -156,7 +224,7 @@ const servers = {
     ]
 };
 
-(async () => {
+const iceServersReady = (async () => {
   try {
     // Ruft die TURN-Server-Anmeldedaten mit dem korrekten API-Key ab
     const response = await fetch("https://doorimessenger.metered.live/api/v1/turn/credentials?apiKey=5d690342ab7fc7900677335bddc370bf89ea");
@@ -165,22 +233,67 @@ const servers = {
     // Prüfen, ob die API ein gültiges Array zurückgibt
     if (Array.isArray(iceServers)) {
         servers.iceServers = iceServers;
-        console.log("Metered.ca TURN-Server erfolgreich geladen:", iceServers);
+        console.info("TURN relay configuration loaded.");
     } else {
-        console.error("Metered API hat kein Array zurückgegeben:", iceServers);
+        console.error("TURN API returned an invalid configuration.");
     }
   } catch (error) {
-    console.error("Fehler beim Laden der TURN-Server-Anmeldedaten:", error);
+    console.warn(callText('turnFallback'), error);
   }
 })();
+
+async function createCallPeerConnection() {
+    await Promise.race([iceServersReady, new Promise(resolve => setTimeout(resolve, 5000))]);
+    const connection = new RTCPeerConnection(servers);
+    connection.addEventListener('connectionstatechange', () => {
+        if (connection !== peerConnection) return;
+        if (connection.connectionState === 'connected') {
+            setCallStatus('connected');
+            startCallDuration();
+            stopRingbackTone();
+        } else if (connection.connectionState === 'disconnected' || connection.connectionState === 'connecting') {
+            setCallStatus('reconnecting');
+        } else if (connection.connectionState === 'failed') {
+            setCallStatus('failed');
+        }
+    });
+    return connection;
+}
+
+function formatCallDuration(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return hours ? `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(secs).padStart(2,'0')}` : `${String(minutes).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+}
+function updateCallDuration() {
+    const value = formatCallDuration(callStartTime ? Math.max(0, Math.floor((Date.now() - callStartTime) / 1000)) : 0);
+    if (callDuration) callDuration.textContent = value;
+    if (videoCallDuration) videoCallDuration.textContent = value;
+}
+function startCallDuration() {
+    if (!callStartTime) callStartTime = Date.now();
+    if (unansweredCallTimeout) { clearTimeout(unansweredCallTimeout); unansweredCallTimeout = null; }
+    if (callDurationInterval) clearInterval(callDurationInterval);
+    updateCallDuration();
+    callDurationInterval = setInterval(updateCallDuration, 1000);
+}
+function startUnansweredTimeout() {
+    if (unansweredCallTimeout) clearTimeout(unansweredCallTimeout);
+    unansweredCallTimeout = setTimeout(() => {
+        if (currentCallDocRef && isCaller && !callStartTime) currentCallDocRef.update({ status: 'ended', endedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+        endCall();
+    }, 60000);
+}
 
 // Initialize WebRTC after login
 window.initWebRTC = function(username) {
     if (rtcCurrentUser === username) return; // Already initialized
+    if (incomingCallsUnsubscribe) incomingCallsUnsubscribe();
     rtcCurrentUser = username;
     
     // Listen for incoming calls
-    window.db.collection('calls')
+    incomingCallsUnsubscribe = window.db.collection('calls')
         .where('receiver', '==', rtcCurrentUser)
         .onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
@@ -208,6 +321,10 @@ window.initWebRTC = function(username) {
 };
 
 function showIncomingCall(callId, data) {
+    if (activeCallId && activeCallId !== callId) {
+        window.db.collection('calls').doc(callId).update({ status: 'rejected', endedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+        return;
+    }
     activeCallId = callId;
     isCaller = false;
     currentCallDocRef = window.db.collection('calls').doc(callId);
@@ -217,24 +334,29 @@ function showIncomingCall(callId, data) {
     startReceiverRingtone();
     
     if (currentCallType === 'video') {
+        ensureDirectVideoGrid();
         videoCallName.textContent = data.caller;
         videoCallAvatar.textContent = data.caller.charAt(0).toUpperCase();
-        videoCallStatus.textContent = "Eingehender Videoanruf...";
+        if (videoRingingAvatar) videoRingingAvatar.textContent = data.caller.charAt(0).toUpperCase();
+        setCallStatus('incomingVideo', 'video');
         
-        videoAcceptBtn.style.display = 'inline-block';
-        videoRejectBtn.style.display = 'inline-block';
-        if(videoToggleMicBtn) videoToggleMicBtn.style.display = 'none';
-        if(videoToggleCamBtn) videoToggleCamBtn.style.display = 'none';
+        showCallControl(videoAcceptBtn, true);
+        showCallControl(videoRejectBtn, true);
+        showCallControl(videoToggleMicBtn, false);
+        showCallControl(videoToggleCamBtn, false);
+        showCallControl(videoSwitchCameraBtn, false);
+        showCallControl(videoShareScreenBtn, false);
+        showCallControl(videoSpeakerToggleBtn, false);
         videoCallModal.classList.remove('hidden');
     } else {
         callName.textContent = data.caller;
         callAvatar.textContent = data.caller.charAt(0).toUpperCase();
-        callStatus.textContent = "Eingehender Anruf...";
+        setCallStatus('incomingAudio', 'audio');
         
-        acceptCallBtn.style.display = 'inline-block';
-        rejectCallBtn.style.display = 'inline-block';
-        if(muteCallBtn) muteCallBtn.style.display = 'none';
-        if(speakerToggleBtn) { speakerToggleBtn.style.display = 'none'; speakerToggleBtn.style.background = 'rgba(255,255,255,0.15)'; isSpeakerOn = false; }
+        showCallControl(acceptCallBtn, true);
+        showCallControl(rejectCallBtn, true);
+        showCallControl(muteCallBtn, false);
+        if(speakerToggleBtn) { showCallControl(speakerToggleBtn, false); isSpeakerOn = false; }
         if(speakerCallBtn) speakerCallBtn.style.display = 'none';
         callModal.classList.remove('hidden');
     }
@@ -251,6 +373,7 @@ function showIncomingCall(callId, data) {
 
 async function initiateCall(type) {
     if (!window.currentChat || !rtcCurrentUser) return;
+    if (activeCallId) { alert(callText('alreadyCalling')); return; }
     
     if (window.currentChat.type === 'room') {
         window.startGroupCall(window.currentChat, type);
@@ -266,14 +389,14 @@ async function initiateCall(type) {
         if (receiverProfileSnap.exists) {
             const receiverProfile = receiverProfileSnap.data();
             const callPrivacy = receiverProfile.callPrivacy || 'all';
-            if (callPrivacy === 'none') { alert("Dieser Benutzer hat Anrufe blockiert."); return; }
+            if (callPrivacy === 'none') { alert((window.TRANSLATIONS?.[callLanguage()] || {}).err_calls_blocked || callText('callFailed')); return; }
             if (callPrivacy === 'contacts') {
                 const isContact = window.chatData && window.chatData.contacts && window.chatData.contacts.some(c => c.id.toLowerCase() === receiver.toLowerCase());
-                if (!isContact) { alert("Dieser Benutzer erlaubt Anrufe nur von Kontakten."); return; }
+                if (!isContact) { alert((window.TRANSLATIONS?.[callLanguage()] || {}).err_calls_contacts || callText('callFailed')); return; }
             }
         }
 
-        const constraints = type === 'video' ? { video: true, audio: true } : { audio: true };
+        const constraints = type === 'video' ? { video: { facingMode: { ideal: cameraFacingMode } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } } : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         isCaller = true;
@@ -283,28 +406,37 @@ async function initiateCall(type) {
         isCamMuted = false;
         
         if (type === 'video') {
+            ensureDirectVideoGrid();
             if (videoCallRingingUi) videoCallRingingUi.style.display = 'flex';
             videoCallModal.classList.remove('hidden');
             videoCallName.textContent = receiver;
             videoCallAvatar.textContent = receiver.charAt(0).toUpperCase();
-            videoCallStatus.textContent = "Wird angerufen...";
-            videoAcceptBtn.style.display = 'none';
-            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
-            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
+            if (videoRingingAvatar) videoRingingAvatar.textContent = receiver.charAt(0).toUpperCase();
+            setCallStatus('calling', 'video');
+            showCallControl(videoAcceptBtn, false);
+            showCallControl(videoRejectBtn, true);
+            showCallControl(videoToggleMicBtn, true);
+            showCallControl(videoToggleCamBtn, true);
+            showCallControl(videoSwitchCameraBtn, true);
+            showCallControl(videoShareScreenBtn, !!navigator.mediaDevices.getDisplayMedia);
+            showCallControl(videoSpeakerToggleBtn, true);
+            setControlState(videoToggleMicBtn, false, 'unmute', 'mute');
+            setControlState(videoToggleCamBtn, false, 'cameraOn', 'camera');
             videoLocal.srcObject = localStream;
         } else {
             callModal.classList.remove('hidden');
             callName.textContent = receiver;
             callAvatar.textContent = receiver.charAt(0).toUpperCase();
-            callStatus.textContent = "Wird angerufen...";
-            acceptCallBtn.style.display = 'none';
-            if(muteCallBtn) { muteCallBtn.style.display = 'inline-block';
-                if(speakerToggleBtn) speakerToggleBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = safeHTML('🎙️'); }
+            setCallStatus('calling', 'audio');
+            showCallControl(acceptCallBtn, false);
+            showCallControl(rejectCallBtn, true);
+            if(muteCallBtn) { showCallControl(muteCallBtn, true);
+                if(speakerToggleBtn) showCallControl(speakerToggleBtn, true); setControlState(muteCallBtn, false, 'unmute', 'mute'); }
             if(speakerCallBtn) { speakerCallBtn.style.display = 'inline-block'; speakerCallBtn.style.background = 'rgba(255,255,255,0.15)'; }
             isSpeaker = false;
         }
         
-        peerConnection = new RTCPeerConnection(servers);
+        peerConnection = await createCallPeerConnection();
         localStream.getTracks().forEach(track => {
             peerConnection.addTrack(track, localStream);
         });
@@ -345,6 +477,7 @@ async function initiateCall(type) {
         };
         
         await currentCallDocRef.set(callData);
+        startUnansweredTimeout();
         callCreated = true;
         await Promise.all(pendingCallerCandidates.map(candidate => currentCallDocRef.collection('callerCandidates').add(candidate)));
         
@@ -361,11 +494,11 @@ async function initiateCall(type) {
                     iceCandidateQueue = [];
                 });
                 if (type === 'video') {
-                    videoCallStatus.textContent = "Verbunden";
+                    setCallStatus('connected', 'video');
                     if (videoCallRingingUi) videoCallRingingUi.style.display = 'none';
                 }
-                else callStatus.textContent = "Verbunden";
-                callStartTime = Date.now();
+                else setCallStatus('connected', 'audio');
+                startCallDuration();
                 currentCallStatus = 'outgoing';
                 stopRingbackTone();
             }
@@ -374,7 +507,7 @@ async function initiateCall(type) {
             }
         });
         
-        currentCallDocRef.collection('receiverCandidates').onSnapshot(snapshot => {
+        receiverCandidatesUnsubscribe = currentCallDocRef.collection('receiverCandidates').onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
                 if (change.type === 'added') {
                     const candidate = new RTCIceCandidate(change.doc.data());
@@ -389,7 +522,7 @@ async function initiateCall(type) {
         
     } catch (error) {
         console.error('Call failed', error);
-        alert("Kamera/Mikrofon-Fehler: " + (error.name || "Unknown") + " - " + (error.message || "Timeout/Blocked"));
+        alert(error && (error.name === 'NotAllowedError' || error.name === 'SecurityError') ? callText('permissionDenied') : error && error.name === 'NotFoundError' ? callText('deviceMissing') : callText('callFailed'));
         if(callModal) callModal.classList.add('hidden');
         if(videoCallModal) videoCallModal.classList.add('hidden');
         endCall();
@@ -407,33 +540,38 @@ if (videoCallBtn) {
 async function acceptIncomingCall() {
     try {
         stopReceiverRingtone();
-        const constraints = currentCallType === 'video' ? { video: true, audio: true } : { audio: true };
+        const constraints = currentCallType === 'video' ? { video: { facingMode: { ideal: cameraFacingMode } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } } : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
         localStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         isMuted = false;
         isCamMuted = false;
         
         if (currentCallType === 'video') {
-            videoAcceptBtn.style.display = 'none';
-            if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
-            if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
-            if(videoSpeakerToggleBtn) { videoSpeakerToggleBtn.style.display = 'inline-block'; videoSpeakerToggleBtn.style.background = 'rgba(255,255,255,0.15)'; }
-            videoCallStatus.textContent = "Verbunden";
+            showCallControl(videoAcceptBtn, false);
+            showCallControl(videoRejectBtn, true);
+            showCallControl(videoToggleMicBtn, true);
+            showCallControl(videoToggleCamBtn, true);
+            showCallControl(videoSwitchCameraBtn, true);
+            showCallControl(videoShareScreenBtn, !!navigator.mediaDevices.getDisplayMedia);
+            showCallControl(videoSpeakerToggleBtn, true);
+            setControlState(videoToggleMicBtn, false, 'unmute', 'mute');
+            setControlState(videoToggleCamBtn, false, 'cameraOn', 'camera');
+            setCallStatus('connecting', 'video');
             if (videoCallRingingUi) videoCallRingingUi.style.display = 'none';
             videoLocal.srcObject = localStream;
         } else {
-            acceptCallBtn.style.display = 'none';
-            if(muteCallBtn) { muteCallBtn.style.display = 'inline-block'; muteCallBtn.style.background = 'rgba(255,255,255,0.15)'; muteCallBtn.innerHTML = safeHTML('🎙️'); }
+            showCallControl(acceptCallBtn, false);
+            showCallControl(rejectCallBtn, true);
+            if(muteCallBtn) { showCallControl(muteCallBtn, true); setControlState(muteCallBtn, false, 'unmute', 'mute'); }
             if(speakerCallBtn) { speakerCallBtn.style.display = 'inline-block'; speakerCallBtn.style.background = 'rgba(255,255,255,0.15)'; }
-            if(speakerToggleBtn) { speakerToggleBtn.style.display = 'inline-block'; speakerToggleBtn.style.background = 'rgba(255,255,255,0.15)'; }
+            if(speakerToggleBtn) { showCallControl(speakerToggleBtn, true); }
             isSpeaker = false;
-            callStatus.textContent = "Verbunden";
+            setCallStatus('connecting', 'audio');
         }
         
-        callStartTime = Date.now();
         currentCallStatus = 'incoming';
         
-        peerConnection = new RTCPeerConnection(servers);
+        peerConnection = await createCallPeerConnection();
         localStream.getTracks().forEach(track => {
             peerConnection.addTrack(track, localStream);
         });
@@ -465,7 +603,7 @@ async function acceptIncomingCall() {
         
         await currentCallDocRef.update({ answer: { type: answerDescription.type, sdp: answerDescription.sdp }, status: 'connected' });
         
-        currentCallDocRef.collection('callerCandidates').onSnapshot(snapshot => {
+        callerCandidatesUnsubscribe = currentCallDocRef.collection('callerCandidates').onSnapshot(snapshot => {
             snapshot.docChanges().forEach(change => {
                 if (change.type === 'added') {
                     peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
@@ -475,7 +613,7 @@ async function acceptIncomingCall() {
         
     } catch (error) {
         console.error("Accept call error", error);
-        alert("Kamera/Mikrofon-Fehler (Annahme): " + (error.name || "Unknown") + " - " + (error.message || "Timeout/Blocked"));
+        alert(error && (error.name === 'NotAllowedError' || error.name === 'SecurityError') ? callText('permissionDenied') : error && error.name === 'NotFoundError' ? callText('deviceMissing') : callText('callFailed'));
         if (activeCallId && currentCallDocRef) {
             currentCallDocRef.update({ status: 'rejected' }).catch(() => {});
         }
@@ -489,8 +627,12 @@ if (videoAcceptBtn) videoAcceptBtn.addEventListener('click', acceptIncomingCall)
 
 // Reject or End Call
 function handleRejectCall() {
+    if (typeof activeGroupCallId !== 'undefined' && activeGroupCallId) {
+        leaveGroupCall();
+        return;
+    }
     if (activeCallId && currentCallDocRef) {
-        currentCallDocRef.update({ status: isCaller ? 'ended' : 'rejected' }).catch(() => {});
+        currentCallDocRef.update({ status: isCaller ? 'ended' : 'rejected', endedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
     }
     endCall();
 }
@@ -500,58 +642,143 @@ if (videoRejectBtn) videoRejectBtn.addEventListener('click', handleRejectCall);
 // Mute Toggle
 if(muteCallBtn) {
     muteCallBtn.addEventListener('click', () => {
-        if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
+        const activeStream = getActiveLocalStream();
+        if (activeStream) {
+            const audioTrack = activeStream.getAudioTracks()[0];
             if (audioTrack) {
                 isMuted = !isMuted;
                 audioTrack.enabled = !isMuted;
-                if (isMuted) {
-                    muteCallBtn.style.background = '#ff4757';
-                    muteCallBtn.innerHTML = safeHTML('<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
-                } else {
-                    muteCallBtn.style.background = 'rgba(255,255,255,0.15)';
-                    muteCallBtn.innerHTML = safeHTML('🎙️');
-                }
+                setControlState(muteCallBtn, isMuted, 'unmute', 'mute');
             }
         }
     });
 }
 
-// REVERTED: Speaker toggle removed
 if(videoToggleMicBtn) {
     videoToggleMicBtn.addEventListener('click', () => {
-        if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
+        const activeStream = getActiveLocalStream();
+        if (activeStream) {
+            const audioTrack = activeStream.getAudioTracks()[0];
             if (audioTrack) {
                 isMuted = !isMuted;
                 audioTrack.enabled = !isMuted;
-                if (isMuted) {
-                    videoToggleMicBtn.style.background = '#ff4757';
-                    videoToggleMicBtn.innerHTML = safeHTML('<span style="position:relative;">🎙️<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
-                } else {
-                    videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)';
-                    videoToggleMicBtn.innerHTML = safeHTML('🎙️');
-                }
+                setControlState(videoToggleMicBtn, isMuted, 'unmute', 'mute');
             }
         }
     });
 }
 if(videoToggleCamBtn) {
     videoToggleCamBtn.addEventListener('click', () => {
-        if (localStream) {
-            const videoTrack = localStream.getVideoTracks()[0];
+        const activeStream = getActiveLocalStream();
+        if (activeStream) {
+            const videoTrack = activeStream.getVideoTracks()[0];
             if (videoTrack) {
                 isCamMuted = !isCamMuted;
                 videoTrack.enabled = !isCamMuted;
-                if (isCamMuted) {
-                    videoToggleCamBtn.style.background = '#ff4757';
-                    videoToggleCamBtn.innerHTML = safeHTML('<span style="position:relative;">📹<span style="position:absolute;left:50%;top:50%;width:2px;height:24px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);"></span></span>');
-                } else {
-                    videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)';
-                    videoToggleCamBtn.innerHTML = safeHTML('📹');
-                }
+                setControlState(videoToggleCamBtn, isCamMuted, 'cameraOn', 'camera');
             }
         }
+    });
+}
+
+function toggleRemoteSound(mediaElement, button) {
+    if (!button) return;
+    if (typeof activeGroupCallId !== 'undefined' && activeGroupCallId && currentCallType === 'video') {
+        const remoteVideos = [...document.querySelectorAll('#video-grid video')];
+        const shouldMute = remoteVideos.some(video => !video.muted);
+        remoteVideos.forEach(video => { video.muted = shouldMute; });
+        isSpeakerOn = !shouldMute;
+        setControlState(button, shouldMute, 'soundOff', 'speaker');
+        return;
+    }
+    if (!mediaElement) return;
+    mediaElement.muted = !mediaElement.muted;
+    isSpeakerOn = !mediaElement.muted;
+    setControlState(button, mediaElement.muted, 'soundOff', 'speaker');
+}
+if (speakerToggleBtn) speakerToggleBtn.addEventListener('click', () => toggleRemoteSound(remoteAudio, speakerToggleBtn));
+if (videoSpeakerToggleBtn) videoSpeakerToggleBtn.addEventListener('click', () => toggleRemoteSound(videoRemote, videoSpeakerToggleBtn));
+
+async function replaceOutgoingVideoTrack(nextTrack) {
+    if (!nextTrack) return;
+    if (typeof activeGroupCallId !== 'undefined' && activeGroupCallId && typeof groupPeerConnections !== 'undefined') {
+        await Promise.all(Object.values(groupPeerConnections).map(async connection => {
+            const sender = connection.getSenders().find(item => item.track && item.track.kind === 'video');
+            if (sender) await sender.replaceTrack(nextTrack);
+        }));
+        return;
+    }
+    if (!peerConnection) return;
+    const sender = peerConnection.getSenders().find(item => item.track && item.track.kind === 'video');
+    if (sender) await sender.replaceTrack(nextTrack);
+}
+
+if (videoSwitchCameraBtn) {
+    videoSwitchCameraBtn.addEventListener('click', async () => {
+        const activeStream = getActiveLocalStream();
+        if (!activeStream || isScreenSharing) return;
+        try {
+            const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+            const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: nextFacingMode } }, audio: false });
+            const nextTrack = cameraStream.getVideoTracks()[0];
+            await replaceOutgoingVideoTrack(nextTrack);
+            const oldTrack = activeStream.getVideoTracks()[0];
+            if (oldTrack) { activeStream.removeTrack(oldTrack); oldTrack.stop(); }
+            activeStream.addTrack(nextTrack);
+            cameraFacingMode = nextFacingMode;
+            videoLocal.srcObject = activeStream;
+        } catch (error) {
+            console.warn('Camera switch failed', error);
+            alert(callText('deviceMissing'));
+        }
+    });
+}
+
+async function stopScreenShare() {
+    if (!isScreenSharing) return;
+    isScreenSharing = false;
+    const activeStream = getActiveLocalStream();
+    if (cameraTrackBeforeShare && cameraTrackBeforeShare.readyState === 'live') {
+        await replaceOutgoingVideoTrack(cameraTrackBeforeShare).catch(() => {});
+        videoLocal.srcObject = activeStream;
+    }
+    cameraTrackBeforeShare = null;
+    if (videoShareScreenBtn) {
+        videoShareScreenBtn.classList.remove('active');
+        videoShareScreenBtn.setAttribute('aria-pressed', 'false');
+        const label = videoShareScreenBtn.querySelector('[data-call-i18n]');
+        if (label) { label.dataset.callI18n = 'shareScreen'; label.textContent = callText('shareScreen'); }
+    }
+}
+if (videoShareScreenBtn) {
+    videoShareScreenBtn.addEventListener('click', async () => {
+        if (isScreenSharing) { await stopScreenShare(); return; }
+        const activeStream = getActiveLocalStream();
+        if (!navigator.mediaDevices.getDisplayMedia || !activeStream) return;
+        try {
+            const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+            const displayTrack = displayStream.getVideoTracks()[0];
+            cameraTrackBeforeShare = activeStream.getVideoTracks()[0] || null;
+            await replaceOutgoingVideoTrack(displayTrack);
+            isScreenSharing = true;
+            videoLocal.srcObject = displayStream;
+            displayTrack.addEventListener('ended', () => stopScreenShare());
+            videoShareScreenBtn.classList.add('active');
+            videoShareScreenBtn.setAttribute('aria-pressed', 'true');
+            const label = videoShareScreenBtn.querySelector('[data-call-i18n]');
+            if (label) { label.dataset.callI18n = 'stopShare'; label.textContent = callText('stopShare'); }
+        } catch (error) {
+            if (error && error.name !== 'NotAllowedError') console.warn('Screen share failed', error);
+        }
+    });
+}
+if (videoFullscreenBtn) {
+    videoFullscreenBtn.addEventListener('click', async () => {
+        const card = videoCallModal && videoCallModal.querySelector('.video-call-card');
+        try {
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else if (card?.requestFullscreen) await card.requestFullscreen();
+        } catch (error) { console.warn('Fullscreen failed', error); }
     });
 }
 
@@ -559,6 +786,8 @@ if(videoToggleCamBtn) {
 function endCall() {
     stopRingbackTone();
     stopReceiverRingtone();
+    if (unansweredCallTimeout) { clearTimeout(unansweredCallTimeout); unansweredCallTimeout = null; }
+    if (callDurationInterval) { clearInterval(callDurationInterval); callDurationInterval = null; }
     if (callModal) callModal.classList.add('hidden');
     if (videoCallModal) videoCallModal.classList.add('hidden');
     
@@ -607,11 +836,27 @@ function endCall() {
         callUnsubscribe();
         callUnsubscribe = null;
     }
+    if (callerCandidatesUnsubscribe) { callerCandidatesUnsubscribe(); callerCandidatesUnsubscribe = null; }
+    if (receiverCandidatesUnsubscribe) { receiverCandidatesUnsubscribe(); receiverCandidatesUnsubscribe = null; }
     if (remoteAudio && remoteAudio.srcObject) remoteAudio.srcObject = null;
+    if (remoteAudio) remoteAudio.muted = false;
     if (videoRemote && videoRemote.srcObject) { videoRemote.srcObject = null; }
+    if (videoRemote) videoRemote.muted = false;
     if (videoCallRingingUi) videoCallRingingUi.style.display = 'flex';
     currentCallType = 'audio';
     if (videoLocal && videoLocal.srcObject) videoLocal.srcObject = null;
+    isMuted = false;
+    isCamMuted = false;
+    isSpeakerOn = false;
+    isScreenSharing = false;
+    cameraTrackBeforeShare = null;
+    updateCallDuration();
+    setControlState(muteCallBtn, false, 'unmute', 'mute');
+    setControlState(videoToggleMicBtn, false, 'unmute', 'mute');
+    setControlState(videoToggleCamBtn, false, 'cameraOn', 'camera');
+    setControlState(speakerToggleBtn, false, 'soundOff', 'speaker');
+    setControlState(videoSpeakerToggleBtn, false, 'soundOff', 'speaker');
+    if (videoShareScreenBtn) videoShareScreenBtn.classList.remove('active');
     activeCallId = null;
     currentCallDocRef = null;
 }
@@ -647,8 +892,9 @@ window.startGroupCall = async function(group, type = 'audio') {
     if (!rtcCurrentUser || activeGroupCallId) return;
     
     try {
-        const constraints = type === 'video' ? { video: true, audio: true } : { audio: true };
+        const constraints = type === 'video' ? { video: { facingMode: { ideal: cameraFacingMode } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } } : { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
         groupLocalStream = await navigator.mediaDevices.getUserMedia(constraints);
+        await Promise.race([iceServersReady, new Promise(resolve => setTimeout(resolve, 5000))]);
         
         activeGroupCallId = group.id;
         currentCallType = type;
@@ -670,7 +916,7 @@ window.startGroupCall = async function(group, type = 'audio') {
         
     } catch (e) {
         console.error("Fehler beim Starten des Gruppenanrufs:", e);
-        alert("Medienzugriff verweigert oder Gerät nicht gefunden.");
+        alert(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError') ? callText('permissionDenied') : e && e.name === 'NotFoundError' ? callText('deviceMissing') : callText('callFailed'));
     }
 };
 
@@ -695,15 +941,22 @@ window.handleGroupCallEnded = function(groupId) {
 function showActiveGroupCallUI(type) {
     if (type === 'video') {
         videoCallModal.classList.remove('hidden');
-        if(videoToggleMicBtn) { videoToggleMicBtn.style.display = 'inline-block'; videoToggleMicBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleMicBtn.innerHTML = safeHTML('🎙️'); }
-        if(videoToggleCamBtn) { videoToggleCamBtn.style.display = 'inline-block'; videoToggleCamBtn.style.background = 'rgba(255,255,255,0.15)'; videoToggleCamBtn.innerHTML = safeHTML('📹'); }
-        videoCallStatus.textContent = "Gruppen-Videoanruf";
-        videoAcceptBtn.style.display = 'none';
+        showCallControl(videoToggleMicBtn, true);
+        showCallControl(videoToggleCamBtn, true);
+        showCallControl(videoSwitchCameraBtn, true);
+        showCallControl(videoShareScreenBtn, !!navigator.mediaDevices.getDisplayMedia);
+        showCallControl(videoSpeakerToggleBtn, true);
+        showCallControl(videoAcceptBtn, false);
+        showCallControl(videoRejectBtn, true);
+        setControlState(videoToggleMicBtn, false, 'unmute', 'mute');
+        setControlState(videoToggleCamBtn, false, 'cameraOn', 'camera');
+        setCallStatus('groupVideo', 'video');
+        if (videoCallRingingUi) videoCallRingingUi.style.display = 'none';
         videoLocal.srcObject = groupLocalStream;
         
         // Setup grid columns dynamically based on participants
         const grid = document.getElementById('video-grid');
-        if (grid) grid.innerHTML = safeHTML(''); // Clear previous videos
+        if (grid) { grid.innerHTML = safeHTML(''); grid.style.gridTemplateColumns = '1fr'; } // Clear previous videos
         
         isMuted = false;
         isCamMuted = false;
@@ -765,6 +1018,11 @@ async function joinGroupCallMesh(groupId) {
             badge.innerHTML = safeHTML(`<span>${username}</span><span>${p.isMuted ? '🔇' : '🎙️'}</span>`);
             groupCallParticipantsContainer.appendChild(badge);
         });
+        const participantCount = document.getElementById('group-call-participants-count');
+        if (participantCount) {
+            participantCount.dataset.count = String(count);
+            participantCount.textContent = `${count} ${callText('participants')}`;
+        }
         if (count === 1 && snapshot.docs[0] && snapshot.docs[0].id === rtcCurrentUser) {
             // we are the only one left, maybe end call?
         }
@@ -994,6 +1252,12 @@ async function leaveGroupCall() {
     }
     
     groupCallModal.classList.add('hidden');
+    videoCallModal.classList.add('hidden');
+    if (videoLocal) videoLocal.srcObject = null;
+    ensureDirectVideoGrid();
+    if (videoCallRingingUi) videoCallRingingUi.style.display = 'flex';
+    isScreenSharing = false;
+    cameraTrackBeforeShare = null;
     groupRemoteAudios.innerHTML = safeHTML('');
 }
 

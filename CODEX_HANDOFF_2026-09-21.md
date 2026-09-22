@@ -378,3 +378,15 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Das Quiz besitzt jetzt einen Pool aus 70 Fragen in jeder der fünf Sprachen. Pro Duell werden zehn unterschiedliche Indizes zufällig ausgewählt; eine Partie umfasst weiterhin nur zehn Fragen.
 - Der Pool kombiniert 20 Wissensfragen mittleren Schwierigkeitsgrades mit 50 lokalisierten Rechen-, Prozent-, Folgen-, Durchschnitts-, Potenz-, Zeit- und Bruchaufgaben.
 - Teststand: 31/31 Tests bestanden. Eigene Regressionstests prüfen Firestore-kompatible Schiffe, 70 vollständige Fragen je Sprache, zehn eindeutige Fragen pro Duell sowie endgültige Einladungszustände ohne verbleibende Aktionsknöpfe.
+## Moderne Audio- und Videotelefonie (2026-09-22)
+
+- Die Einzelanruf-Oberflächen wurden vollständig modernisiert und für Desktop sowie Mobilgeräte responsiv umgesetzt.
+- Der Sprachanruf zeigt Kontakt, Verbindungsstatus, Gesprächsdauer, WebRTC-Hinweis sowie Ton-, Mikrofon-, Annahme- und Auflegen-Steuerung.
+- Der Videoanruf besitzt eine große Gegenstellenansicht, lokales Bild-in-Bild, Gesprächsdauer, Ton, Kamera an/aus, Front-/Rückkamerawechsel, Mikrofon, Bildschirmfreigabe, Vollbild und Auflegen.
+- Sämtliche neuen Beschriftungen, Statusmeldungen und Gerätefehler sind synchron in `de`, `en`, `ar`, `fa` und `tr` vorhanden; Arabisch und Persisch behalten RTL.
+- Die App wartet vor dem Aufbau bis zu fünf Sekunden auf die Metered.ca-STUN/TURN-Konfiguration und fällt danach kontrolliert auf die vorhandenen STUN-Server zurück.
+- WebRTC verwendet Echo-Unterdrückung, Rauschunterdrückung und automatische Pegelregelung. Verbindungszustände und ein 60-Sekunden-Zeitlimit für unbeantwortete Anrufe wurden ergänzt.
+- Firestore bleibt ausschließlich der Signalisierungskanal. Audio und Video laufen direkt zwischen den Geräten oder bei Bedarf über Metered.ca TURN.
+- Candidate-Listener, Timer, Medien-Tracks und Bildschirmfreigaben werden beim Beenden zuverlässig bereinigt.
+- Gruppen-Videoanrufe verwenden ebenfalls die neue Oberfläche. Eine ältere doppelte DOM-ID für Teilnehmerzähler und Teilnehmerliste wurde getrennt, damit die richtige Anzeige aktualisiert wird.
+- Neue Tests in `tests/calls.test.cjs` prüfen Struktur, eindeutige Anruf-IDs, fünf vollständige Sprachen, TURN-Wartepfad, Medienoptionen und Teilnehmerbegrenzung der Firestore-Regeln.

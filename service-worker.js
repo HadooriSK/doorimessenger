@@ -1,8 +1,8 @@
-const CACHE_NAME = 'web-messenger-v102-games-quiz';
+const CACHE_NAME = 'web-messenger-v103-modern-calls';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=324',
+  '/style.css?v=325',
   '/app.js?v=347',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
@@ -15,7 +15,7 @@ const urlsToCache = [
   '/vendor/firebase-firestore-compat.js',
   '/vendor/firebase-functions-compat.js',
   '/firebase-config.js?v=28',
-  '/webrtc.js?v=59',
+  '/webrtc.js?v=60',
   '/doodle.js?v=276',
   '/manifest.json'
 ];
