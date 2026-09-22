@@ -464,3 +464,26 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
 
  dom.window.close();
 });
+
+test('Aurora UI keeps primary calls visible, moves secondary actions into the menu and supports responsive light/RTL layouts', () => {
+ const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const css = fs.readFileSync(path.join(root,'style.css'),'utf8');
+ const appCode = fs.readFileSync(path.join(root,'app.js'),'utf8');
+ assert.match(html,/id="call-buttons-container"/);
+ assert.match(html,/id="video-call-btn"/);
+ assert.match(html,/id="call-btn"/);
+ assert.match(html,/id="chat-more-btn"[^>]+data-i18n-title="title_more_options"/);
+ assert.match(html,/id="dropdown-starred-messages"/);
+ assert.match(html,/id="dropdown-shared-media"/);
+ assert.match(css,/\.chat-actions #chat-starred-btn,[\s\S]*#chat-media-btn \{ display: none !important; \}/);
+ assert.match(css,/\.chat-container\.split-view/);
+ assert.match(css,/@media \(max-width: 899px\)/);
+ assert.match(css,/body\.light-mode \.settings-content/);
+ assert.match(css,/\.rtl-mode \.settings-tabs \.tab-btn\.active/);
+ assert.match(appCode,/if \(videoBtn\) videoBtn\.style\.display = 'flex'/);
+ assert.match(appCode,/if \(callContainer\) callContainer\.style\.display = 'flex'/);
+ for (const lang of ['de','en','fa','ar','tr']) {
+  const marker = new RegExp(`${lang}: \\{[^}]*title_more_options:`);
+  assert.match(appCode, marker, `missing title_more_options for ${lang}`);
+ }
+});

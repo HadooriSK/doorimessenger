@@ -26,9 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } catch(e) { window.currentChat = currentChat; }
 
+const chatLayout = document.querySelector('.chat-container');
+const prefersSplitMessenger = () => window.matchMedia('(min-width: 900px)').matches;
+function syncMessengerLayout(showChat = !!currentChat) {
+    const start = document.getElementById('start-page');
+    const chat = document.getElementById('chat-page');
+    const split = prefersSplitMessenger() && showChat;
+    chatLayout?.classList.toggle('split-view', split);
+    if (split) {
+        start.classList.add('active');
+        chat.classList.add('active');
+    } else if (!showChat) {
+        start.classList.add('active');
+        chat.classList.remove('active');
+    }
+}
+window.addEventListener('resize', () => syncMessengerLayout(!!currentChat));
+
 document.getElementById('back-to-list-btn').addEventListener('click', () => {
     document.getElementById('chat-page').classList.remove('active');
     document.getElementById('start-page').classList.add('active');
+    chatLayout?.classList.remove('split-view');
     currentChat = null;
     // Fullscreen behavior removed per user request
 });
@@ -137,6 +155,7 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     const chatActions = document.getElementById('chat-actions'); const callBtn = document.getElementById('call-btn'); 
     const chatHeaderProfileBtn = document.getElementById('chat-header-profile-btn');
     const chatHeaderDropdown = document.getElementById('chat-header-dropdown');
+    const chatMoreBtn = document.getElementById('chat-more-btn');
     const dropdownAddContact = document.getElementById('dropdown-add-contact');
     const dropdownMuteUser = document.getElementById('dropdown-mute-user');
     const dropdownClearChat = document.getElementById('dropdown-clear-chat');
@@ -2566,8 +2585,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     function selectChat(id, type) {
         // Switch to chat view
-        document.getElementById('start-page').classList.remove('active');
+        if (prefersSplitMessenger()) document.getElementById('start-page').classList.add('active');
+        else document.getElementById('start-page').classList.remove('active');
         document.getElementById('chat-page').classList.add('active');
+        chatLayout?.classList.toggle('split-view', prefersSplitMessenger());
         // Fullscreen behavior removed per user request
 
         let chat = chatData.personal.find(c=>c.id===id) || chatData.rooms.find(c=>c.id===id) || chatData.contacts.find(c=>c.id===id) || chatData.active_chats.find(c=>c.id===id);
@@ -2635,10 +2656,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if(banner) banner.classList.add('hidden');
         }
 
+        const videoBtn = document.getElementById('video-call-btn');
+        const callContainer = document.getElementById('call-buttons-container');
         if (type === 'dm') {
             const sidebar = document.getElementById('group-info-sidebar');
             if (sidebar) sidebar.classList.add('hidden');
             currentChatStatus.style.display = 'inline-block'; if (callBtn) callBtn.style.display = 'flex';
+            if (videoBtn) videoBtn.style.display = 'flex';
+            if (callContainer) callContainer.style.display = 'flex';
             currentChatStatus.textContent = '...';
             
             // Realtime listener for online status
@@ -2713,6 +2738,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 console.error("Status Listener Error:", err);
                 currentChatStatus.textContent = '';
             });
+        } else {
+            if (callBtn) callBtn.style.display = 'none';
+            if (videoBtn) videoBtn.style.display = 'none';
+            if (callContainer) callContainer.style.display = 'none';
         }
         if (!visibleMessageLimits.has(id)) {
             visibleMessageLimits.set(id, PAGE_SIZE);
@@ -2746,6 +2775,28 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         chatListCtxOverlay.classList.add('hidden');
     });
     // --- Actions & Settings ---
+    const toggleChatHeaderMenu = () => {
+        if (!currentChat || !chatHeaderDropdown) return;
+        const isBlocked = blockedContacts.has(currentChat.id);
+        const isMuted = mutedChats.has(currentChat.id);
+        const isContact = chatData.contacts.some(c => c.id === currentChat.id);
+        const t = typeof TRANSLATIONS !== 'undefined' ? (TRANSLATIONS[currentLang] || TRANSLATIONS.en) : {};
+        dropdownAddContact.innerHTML = safeHTML('👤 ' + (t.ctx_add_contact || 'Zu Kontakten hinzufügen'));
+        dropdownClearChat.innerHTML = safeHTML('🗑️ ' + (t.ctx_clear_chat || 'Chat leeren'));
+        dropdownMuteUser.innerHTML = safeHTML(isMuted ? '🔔 ' + (t.ctx_unmute_user || 'Stummschaltung aufheben') : '🔕 ' + (t.ctx_mute_user || 'Stummschalten'));
+        dropdownBlockUser.innerHTML = safeHTML(isBlocked ? '✅ ' + (t.ctx_unblock_user || 'Entblocken') : '🚫 ' + (t.ctx_block_user || 'Blockieren'));
+        dropdownAddContact.style.display = currentChat.type === 'dm' && !isContact ? 'flex' : 'none';
+        dropdownBlockUser.style.display = currentChat.type === 'dm' ? 'flex' : 'none';
+        chatHeaderDropdown.classList.toggle('hidden');
+    };
+
+    if (chatMoreBtn) {
+        chatMoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleChatHeaderMenu();
+        });
+    }
+
     if (chatHeaderProfileBtn) {
         chatHeaderProfileBtn.addEventListener('click', (e) => {
             e.stopPropagation();

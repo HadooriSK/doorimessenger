@@ -390,3 +390,15 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Agora-Client, Timer, lokale und entfernte Medien-Tracks sowie Bildschirmfreigaben werden beim Beenden zuverlässig bereinigt. Gruppenanrufe können weiterhin über das Banner betreten werden; Teilnehmer werden vor der Token-Ausgabe serverseitig geprüft.
 - Die bei Agora angezeigte App-ID ist öffentlich und im Backend hinterlegt. Das im Chat offengelegte App Certificate muss vor dem Live-Deployment in Agora erneuert und anschließend interaktiv in Firebase Secret Manager gesetzt werden.
 - Teststand: 36/36 Tests bestanden. `tests/calls.test.cjs` prüft Struktur, eindeutige Anruf-IDs, alle fünf Sprachen, Agora-Medienoptionen, serverseitige Token-Erstellung, Teilnehmerautorisierung und das Fehlen des Zertifikats im Client. Der Produktions-Build enthält 29 explizit freigegebene Dateien.
+
+## Doori Aurora: vollständige responsive Designüberarbeitung (2026-09-23)
+
+- Die Oberfläche nutzt jetzt ein eigenständiges „Doori Aurora“-Design mit tiefem Mitternachtsblau, hellblauen Doori-Akzenten, weichen Verläufen, Glasflächen, konsistenten Abständen und modernen Karten. Das bestehende Doori-Logo bleibt unverändert erhalten.
+- Auf Laptop und Desktop werden Chatliste und geöffneter Chat als produktive Zweispaltenansicht gezeigt. Tablet und Smartphone wechseln weiterhin in eine klare Einzelansicht mit Zurück-Navigation, Safe-Area-Abständen und kompakter Aktionsleiste.
+- Navigation, Suche, Filter, Kontaktkarten, Nachrichtenblasen, Eingabebereich, Popups und sämtliche allgemeinen Dialoge erhielten ein einheitliches visuelles System.
+- Die Einstellungen wurden als moderne zweispaltige Oberfläche mit vertikaler Navigation, klaren Einstellungsgruppen, Schaltern, Status-Pills, Vorschaukarten und responsiver mobiler Bottom-Sheet-Darstellung gestaltet.
+- Der Hellmodus besitzt eine eigenständige koordinierte Blau-Weiß-Palette und passende Kontraste. Dunkelmodus bleibt der Startmodus. Arabisch und Persisch behalten RTL, einschließlich Spiegelung aktiver Navigation und Formelemente.
+- Im Chatkopf sind Sprach- und Videoanruf die sichtbaren Hauptaktionen direkt neben dem Kontakt. Markierte Nachrichten und geteilte Medien bleiben funktional und befinden sich zusammen mit den übrigen sekundären Aktionen im Drei-Punkte-Menü.
+- Der Desktop-Seitenbereich ordnet die fünf Hauptbereiche in einem kompakten Raster an, damit Einstellungen und Kontakte auch auf kleineren Laptopbreiten sichtbar bleiben. Auf Smartphones bleibt die Navigation horizontal scrollbar.
+- Es wurden keine bestehenden Messenger-Funktionen oder IDs entfernt. Die Versionsparameter von `style.css` und `app.js` sowie der Service-Worker-Cache wurden angehoben, damit Clients das neue Design sofort erhalten.
+- Teststand: **37/37 Tests bestanden**. Ein zusätzlicher Regressionstest prüft Split-Layout, Smartphone-Breakpoint, Hellmodus, RTL, die sichtbaren Anrufaktionen, das neue Mehr-Menü und die fünfsprachige Beschriftung. Der Produktions-Build enthält weiterhin ausschließlich 29 freigegebene Dateien.

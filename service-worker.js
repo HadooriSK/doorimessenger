@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v104-agora-calls';
+const CACHE_NAME = 'web-messenger-v105-aurora-ui';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=325',
-  '/app.js?v=347',
+  '/style.css?v=326',
+  '/app.js?v=348',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',
