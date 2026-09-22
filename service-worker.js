@@ -1,8 +1,8 @@
-const CACHE_NAME = 'web-messenger-v105-aurora-ui';
+const CACHE_NAME = 'web-messenger-v106-aurora-rail';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=326',
+  '/style.css?v=327',
   '/app.js?v=348',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',

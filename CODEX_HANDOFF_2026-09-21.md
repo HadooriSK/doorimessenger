@@ -402,3 +402,10 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Der Desktop-Seitenbereich ordnet die fünf Hauptbereiche in einem kompakten Raster an, damit Einstellungen und Kontakte auch auf kleineren Laptopbreiten sichtbar bleiben. Auf Smartphones bleibt die Navigation horizontal scrollbar.
 - Es wurden keine bestehenden Messenger-Funktionen oder IDs entfernt. Die Versionsparameter von `style.css` und `app.js` sowie der Service-Worker-Cache wurden angehoben, damit Clients das neue Design sofort erhalten.
 - Teststand: **37/37 Tests bestanden**. Ein zusätzlicher Regressionstest prüft Split-Layout, Smartphone-Breakpoint, Hellmodus, RTL, die sichtbaren Anrufaktionen, das neue Mehr-Menü und die fünfsprachige Beschriftung. Der Produktions-Build enthält weiterhin ausschließlich 29 freigegebene Dateien.
+
+### Nachschärfung nach Vergleich mit dem freigegebenen Entwurfsbild
+
+- Die Desktopstruktur wurde anschließend tatsächlich auf das charakteristische Drei-Spalten-Prinzip des Entwurfs umgestellt: schmale vertikale Symbolleiste links, eigenständige Kontakt-/Chatliste in der Mitte und großer Gesprächsbereich rechts.
+- Kontakte, Chats, Anrufe, Gruppen und Einstellungen besitzen einheitliche, selbst gezeichnete Linien-Symbole. Einstellungen liegen am unteren Ende der Leiste; der auffällige Plus-Button bleibt direkt erreichbar.
+- Unter 900 CSS-Pixeln wechselt die Navigation responsiv nach oben, damit Tablet und Smartphone keinen zu schmalen Nachrichtenbereich erhalten.
+- Alle vorhandenen `data-tab`-Werte, IDs und Ereignisbehandler bleiben erhalten. Die sichtbaren Bezeichnungen werden weiterhin über die fünf bestehenden Übersetzungen gesteuert.

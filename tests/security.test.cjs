@@ -477,6 +477,10 @@ test('Aurora UI keeps primary calls visible, moves secondary actions into the me
  assert.match(html,/id="dropdown-shared-media"/);
  assert.match(css,/\.chat-actions #chat-starred-btn,[\s\S]*#chat-media-btn \{ display: none !important; \}/);
  assert.match(css,/\.chat-container\.split-view/);
+ assert.match(css,/Aurora three-column shell: icon rail \+ conversations \+ chat/);
+ assert.match(css,/\.chat-container\.split-view \.top-nav/);
+ assert.match(css,/flex-direction:column/);
+ assert.ok((html.match(/class="nav-icon"/g) || []).length >= 6, 'desktop icon rail has navigation icons');
  assert.match(css,/@media \(max-width: 899px\)/);
  assert.match(css,/body\.light-mode \.settings-content/);
  assert.match(css,/\.rtl-mode \.settings-tabs \.tab-btn\.active/);
