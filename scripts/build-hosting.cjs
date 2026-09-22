@@ -2,11 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'dist');
-const files = ['index.html', 'account-action.html', 'account-action.js', 'app.js', 'message-cache.js', 'quiz-questions.js', 'games.js', 'webrtc.js', 'doodle.js', 'firebase-config.js', 'security.js',
+const files = ['index.html', 'account-action.html', 'account-action.js', 'app.js', 'message-cache.js', 'quiz-questions.js', 'games.js', 'agora-calls.js', 'doodle.js', 'firebase-config.js', 'security.js',
     'auth-translations.js', 'account-client.js', 'style.css', 'manifest.json', 'service-worker.js', 'logo.png', 'bg.png',
     'wallpaper_1.png', 'wallpaper_2.png', 'wallpaper_3.png', 'vendor/purify.min.js', 'vendor/DOMPurify-LICENSE',
     'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js',
-    'vendor/firebase-functions-compat.js', 'vendor/FIREBASE-LICENSE'];
+    'vendor/firebase-functions-compat.js', 'vendor/agora-rtc-sdk-ng.js', 'vendor/FIREBASE-LICENSE'];
 // Refuse extra files rather than accidentally publish previous build leftovers.
 function checkDirectory(dir) {
     if (!fs.existsSync(dir)) return;

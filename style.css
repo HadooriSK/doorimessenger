@@ -564,10 +564,11 @@ select option {
 .video-call-card { width: min(1120px, calc(100vw - 36px)); max-width: none; height: min(760px, calc(100dvh - 36px)); padding: 0; border-radius: 30px; display: flex; flex-direction: column; box-sizing: border-box; }
 .video-stage { position: relative; flex: 1; min-height: 0; background: radial-gradient(circle at center, #172938, #03080c 72%); overflow: hidden; }
 .video-grid { width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; gap: 5px; }
-.video-grid video, #video-remote { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
+.video-grid video, #video-remote, .agora-video-surface, .agora-video-surface video { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
 .video-grid:has(video:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .video-grid:has(video:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#video-local { position: absolute; inset: auto 22px 22px auto; width: clamp(112px, 19vw, 210px); aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; background: #14232d; border: 2px solid rgba(255,255,255,.78); box-shadow: 0 15px 35px rgba(0,0,0,.48); z-index: 8; cursor: move; }
+#video-local { position: absolute; inset: auto 22px 22px auto; width: clamp(112px, 19vw, 210px); aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; background: #14232d; border: 2px solid rgba(255,255,255,.78); box-shadow: 0 15px 35px rgba(0,0,0,.48); z-index: 8; cursor: move; overflow: hidden; }
+.call-participant-chip { padding: 8px 12px; border-radius: 999px; background: rgba(46,213,115,.16); border: 1px solid rgba(46,213,115,.28); }
 .video-topbar { position: absolute; inset: 0 0 auto; padding: 20px 22px 60px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 9; background: linear-gradient(rgba(0,0,0,.68), transparent); pointer-events: none; }
 .video-call-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .call-mini-avatar { width: 44px; height: 44px; border-radius: 15px; display: grid; place-items: center; background: linear-gradient(145deg, #38bdf8, #2563eb); font-weight: 800; border: 1px solid rgba(255,255,255,.55); }

@@ -5,10 +5,13 @@ const {initializeApp}=require('firebase-admin/app');
 const {getAuth}=require('firebase-admin/auth');
 const {getFirestore,Timestamp}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
+const {RtcTokenBuilder,RtcRole}=require('agora-token');
 initializeApp();
 const db=getFirestore(),auth=getAuth();
 const BREVO_API_KEY=defineSecret('BREVO_API_KEY');
+const AGORA_APP_CERTIFICATE=defineSecret('AGORA_APP_CERTIFICATE');
 const options={region:'europe-west3',maxInstances:10,timeoutSeconds:30,memory:'256MiB'};
+const AGORA_APP_ID='275401ea48a74f4b9f9cac0107362c6c'; // Public Agora project identifier.
 const WEB_API_KEY='AIzaSyAIV8HtZGe8RBzqcDLwc8RT2iY3TSWrnIk'; // Public Firebase Web identifier.
 const keyOf=name=>'@'+String(name||'').replace(/^@/,'').toLowerCase();
 const profileFields=['avatarUrl','profilePics','searchable','avatarVisibility','callPrivacy','lastSeenPrivacy','bio'];
@@ -86,6 +89,28 @@ exports.registerAccount=onCall(options,async request=>{
  return {username,id:data.id_number};
 });
 exports.ensureAccount=onCall(options,request=>ensureAccount(signedIn(request)));
+exports.getAgoraToken=onCall({...options,secrets:[AGORA_APP_CERTIFICATE]},async request=>{
+ const uid=signedIn(request),scope=String(request.data?.scope||''),id=String(request.data?.id||'');
+ if(!['direct','group'].includes(scope)||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new HttpsError('invalid-argument','Invalid call scope.');
+ await limit(request,'agora-token:'+uid,30);
+ const account=await ensureAccount(uid);
+ if(scope==='direct'){
+  const call=await db.collection('calls').doc(id).get();
+  if(!call.exists)throw new HttpsError('not-found','Call not found.');
+  const data=call.data();
+  if(![data.caller,data.receiver].map(keyOf).includes(account.key)||!['calling','connected'].includes(data.status))throw new HttpsError('permission-denied','Not a call participant.');
+ }else{
+  const group=await db.collection('groups').doc(id).get();
+  if(!group.exists)throw new HttpsError('not-found','Group not found.');
+  const data=group.data(),members=data.members||{};
+  const isMember=Array.isArray(members)?members.map(keyOf).includes(account.key):Object.prototype.hasOwnProperty.call(members,account.key);
+  if(!isMember||!data.activeCall)throw new HttpsError('permission-denied','No active group call.');
+ }
+ const channel='doori_'+(scope==='direct'?'d':'g')+'_'+createHash('sha256').update(id).digest('hex').slice(0,32);
+ const expiresIn=60*60;
+ const token=RtcTokenBuilder.buildTokenWithUserAccount(AGORA_APP_ID,AGORA_APP_CERTIFICATE.value(),channel,account.key,RtcRole.PUBLISHER,expiresIn,expiresIn);
+ return {appId:AGORA_APP_ID,token,channel,uid:account.key,expiresIn};
+});
 exports.loginWithUsername=onCall(options,async request=>{
  const {username,id,password}=request.data||{},key=keyOf(username);
  if(typeof username!=='string'||username.length>128||username.includes('/')||typeof password!=='string'||password.length>4096||!/^\d{6}$/.test(String(id||'')))throw new HttpsError('unauthenticated','Invalid credentials.');

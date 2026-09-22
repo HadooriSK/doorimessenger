@@ -100,7 +100,7 @@ test('application always starts dark and still supports switching to light mode'
   w.db={clearPersistence:()=>Promise.resolve()};
   w.accountFunctions={httpsCallable:()=>async()=>({data:{}})};
   w.firebase={auth:Object.assign(()=>w.auth,{Auth:{Persistence:{LOCAL:'local',SESSION:'session'}}}),firestore:{FieldValue:{}}};
-  for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js','webrtc.js','doodle.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+  for(const file of ['security.js','auth-translations.js','account-client.js','message-cache.js','app.js','agora-calls.js','doodle.js']) w.eval(fs.readFileSync(path.join(root,file),'utf8'));
   await new Promise(resolve=>setTimeout(resolve,100));
   const schedule=w.document.getElementById('send-schedule-btn');
   assert.equal(w.document.getElementById('email-input').classList.contains('hidden'),true);
@@ -219,7 +219,7 @@ test('voice recording emits non-empty periodic chunks in a supported format',()=
 test('Blaze deployment keeps mail secrets server-side and limits message listeners',()=>{
  const config=JSON.parse(fs.readFileSync(path.join(root,'firebase.json'),'utf8'));
  assert.equal(config.functions.source,'functions');assert.equal(config.emulators.functions.port,5001);
- for(const file of ['index.html','firebase-config.js','account-client.js','app.js','webrtc.js']){
+ for(const file of ['index.html','firebase-config.js','account-client.js','app.js','agora-calls.js']){
   const code=fs.readFileSync(path.join(root,file),'utf8');
   assert.doesNotMatch(code,/xkeysib-[A-Za-z0-9_-]+|firebase-storage|\.storage\(\)/,file);
  }

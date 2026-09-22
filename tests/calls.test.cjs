@@ -6,11 +6,11 @@ const vm = require('node:vm');
 const {JSDOM} = require('jsdom');
 
 const root = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(root, 'webrtc.js'), 'utf8');
+const source = fs.readFileSync(path.join(root, 'agora-calls.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
 
 function readCallTranslations() {
-  const marker = 'const CALL_TRANSLATIONS = ';
+  const marker = 'const TEXT = ';
   const start = source.indexOf(marker) + marker.length;
   const end = source.indexOf('\n};', start) + 2;
   const context = {};
@@ -53,19 +53,18 @@ test('call UI and runtime messages cover all five languages', () => {
   dom.window.close();
 });
 
-test('calls wait for TURN configuration and support resilient media controls', () => {
-  assert.match(source, /const iceServersReady = \(async \(\) =>/);
-  assert.match(source, /await Promise\.race\(\[iceServersReady/);
-  assert.match(source, /await createCallPeerConnection\(\)/);
-  assert.match(source, /echoCancellation: true, noiseSuppression: true, autoGainControl: true/);
-  assert.match(source, /connectionstatechange/);
-  assert.match(source, /startUnansweredTimeout\(\)/);
-  assert.match(source, /replaceTrack\(nextTrack\)/);
-  assert.match(source, /getDisplayMedia/);
+test('calls use Agora tokens and support resilient media controls', () => {
+  assert.match(source, /httpsCallable\('getAgoraToken'\)/);
+  assert.match(source, /window\.AgoraRTC\.createClient/);
+  assert.match(source, /createMicrophoneAudioTrack\(\{AEC:true,ANS:true,AGC:true\}\)/);
+  assert.match(source, /createCameraVideoTrack/);
+  assert.match(source, /connection-state-change/);
+  assert.match(source, /unansweredTimer\(\)/);
+  assert.match(source, /createScreenVideoTrack/);
   assert.match(source, /requestFullscreen/);
-  assert.match(source, /cameraFacingMode === 'user' \? 'environment' : 'user'/);
-  assert.match(source, /callerCandidatesUnsubscribe/);
-  assert.match(source, /receiverCandidatesUnsubscribe/);
+  assert.match(source, /localVideo\.setDevice/);
+  assert.match(source, /client\.unpublish/);
+  assert.match(source, /old\.leave\(\)/);
 });
 
 test('Firestore call signaling remains limited to participants', () => {
@@ -74,4 +73,14 @@ test('Firestore call signaling remains limited to participants', () => {
   assert.match(rules, /resource\.data\.caller == name\(\) \|\| resource\.data\.receiver == name\(\)/);
   assert.match(rules, /affectedKeys\(\)\.hasOnly\(\['answer', 'status', 'endedAt'\]\)/);
   assert.match(rules, /candidateCollection in \['callerCandidates', 'receiverCandidates'\]/);
+});
+
+test('Agora token generation is server-side and participant-authorized', () => {
+  const functions = fs.readFileSync(path.join(root, 'functions', 'index.js'), 'utf8');
+  assert.match(functions, /defineSecret\('AGORA_APP_CERTIFICATE'\)/);
+  assert.match(functions, /exports\.getAgoraToken=onCall/);
+  assert.match(functions, /RtcTokenBuilder\.buildTokenWithUserAccount/);
+  assert.match(functions, /Not a call participant/);
+  assert.match(functions, /No active group call/);
+  assert.doesNotMatch(source, /AGORA_APP_CERTIFICATE|appCertificate/i);
 });

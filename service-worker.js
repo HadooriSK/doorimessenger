@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-messenger-v103-modern-calls';
+const CACHE_NAME = 'web-messenger-v104-agora-calls';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -15,7 +15,8 @@ const urlsToCache = [
   '/vendor/firebase-firestore-compat.js',
   '/vendor/firebase-functions-compat.js',
   '/firebase-config.js?v=28',
-  '/webrtc.js?v=60',
+  '/vendor/agora-rtc-sdk-ng.js?v=1',
+  '/agora-calls.js?v=1',
   '/doodle.js?v=276',
   '/manifest.json'
 ];

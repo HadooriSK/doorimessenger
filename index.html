@@ -818,9 +818,7 @@
         <div id="video-call-modal" class="modal hidden call-modal-shell" role="dialog" aria-modal="true" aria-labelledby="video-call-name">
             <div class="modal-content call-content video-call-card">
                 <div class="video-stage" id="video-stage">
-                    <div id="video-grid" class="video-grid">
-                        <video id="video-remote" autoplay playsinline></video>
-                    </div>
+                    <div id="video-grid" class="video-grid"><div id="video-remote" class="agora-video-surface"></div></div>
                     <div class="video-topbar">
                         <div class="video-call-identity">
                             <div class="call-mini-avatar" id="video-call-avatar">#</div>
@@ -828,7 +826,7 @@
                         </div>
                         <button id="video-fullscreen-btn" class="video-top-action" type="button" data-call-i18n-title="fullscreen" aria-label="Vollbild">⛶</button>
                     </div>
-                    <video id="video-local" autoplay playsinline muted></video>
+                    <div id="video-local" class="agora-video-surface" aria-label="Lokale Videoansicht"></div>
                     <div id="video-call-ringing-ui" class="video-ringing-ui">
                         <div class="call-avatar-rings" aria-hidden="true"></div>
                         <div class="avatar-large call-avatar-modern" id="video-ringing-avatar">#</div>
@@ -973,7 +971,8 @@
     <script src="quiz-questions.js?v=1"></script>
     <script src="games.js?v=4"></script>
     <script src="app.js?v=347"></script>
-    <script src="webrtc.js?v=60"></script>
+    <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
+    <script src="agora-calls.js?v=1"></script>
     <script src="doodle.js?v=276"></script>
 
         <!-- Add Contact Modal -->
