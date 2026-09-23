@@ -80,13 +80,23 @@ async function reserveDailyAssistantBudget(provider,max){
  const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),count=Number(snapshot.data()?.count||0);if(count>=max)return false;tx.set(ref,{count:count+1,day,updatedAt:Timestamp.now()});return true;});
 }
-const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,speechRecognitionSecondsPerDay:28000,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
+const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,speechRecognitionSecondsPerDay:28000,geminiSpeechDailyRequests:100,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
 function assistantDay(date=new Date()){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
  const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${values.year}-${values.month}-${values.day}`;
 }
 async function assistantConfig(){const data=(await db.collection('_assistantConfig').doc('global').get()).data()||{};return {...assistantDefaults,...data};}
 async function reserveDailySpeechSeconds(seconds,max){const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`speech-${day}`),amount=Math.max(10,Math.min(30,Math.ceil(Number(seconds)||10)));return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),used=Number(snapshot.data()?.seconds||0);if(used+amount>max)return false;tx.set(ref,{seconds:used+amount,day,updatedAt:Timestamp.now()});return true;});}
+function speechLanguage(value,text,fallback){const names={german:'de',deutsch:'de',english:'en',turkish:'tr',arabic:'ar',persian:'fa',farsi:'fa',de:'de',en:'en',tr:'tr',ar:'ar',fa:'fa'};return names[String(value||'').toLowerCase()]||detectAssistantLanguage(text,fallback).language;}
+async function transcribeWithGroq(audio,mime,filename){
+ const form=new FormData();form.append('file',new Blob([audio],{type:mime}),filename);form.append('model','whisper-large-v3-turbo');form.append('response_format','verbose_json');form.append('temperature','0');
+ const response=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:`Bearer ${GROQ_API_KEY.value()}`},body:form,signal:AbortSignal.timeout(30000)});
+ if(!response.ok)throw Object.assign(new Error('Groq speech recognition failed'),{status:response.status});return response.json();
+}
+async function transcribeWithGemini(encoded,mime,languageHint){
+ const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+encodeURIComponent(GEMINI_API_KEY.value()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Transcribe this recording exactly. Detect the spoken language. Return only JSON with text and language, where language is one of de, en, tr, ar, fa. The interface hint is ${languageHint}, but use it only when the recording is ambiguous.`},{inlineData:{mimeType:mime==='audio/mp4'?'audio/m4a':mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
+ if(!response.ok)throw Object.assign(new Error('Gemini speech recognition failed'),{status:response.status});const payload=await response.json(),raw=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'';return JSON.parse(raw);
+}
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
  const day=assistantDay(),ref=db.collection('_assistantUsage').doc(`${day}_${uid}`),isVoice=source==='voice',seconds=Math.max(1,Math.min(120,Math.ceil(Number(voiceSeconds)||1)));
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),old=snapshot.data()||{},textRequests=Number(old.textRequests||0),usedVoice=Number(old.voiceSeconds||0);
@@ -254,7 +264,7 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
  }
 });
 
-exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{
+exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{
  const uid=signedIn(request);await limit(request,'assistant-speech:'+uid,60);
  const encoded=String(request.data?.audioBase64||''),mime=String(request.data?.mimeType||'').split(';')[0].toLowerCase();
  const allowed={
@@ -264,13 +274,10 @@ exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY],timeoutS
  if(!allowed[mime]||!encoded||encoded.length>8_000_000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new HttpsError('invalid-argument','Invalid speech recording.');
  const audio=Buffer.from(encoded,'base64');if(audio.length<128||audio.length>6_000_000)throw new HttpsError('invalid-argument','Invalid speech recording size.');
  const config=await assistantConfig();if(!await reserveDailySpeechSeconds(request.data?.voiceSeconds,config.speechRecognitionSecondsPerDay))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');
- const form=new FormData();form.append('file',new Blob([audio],{type:mime}),allowed[mime]);form.append('model','whisper-large-v3-turbo');form.append('response_format','verbose_json');form.append('temperature','0');
- let response;try{response=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:`Bearer ${GROQ_API_KEY.value()}`},body:form,signal:AbortSignal.timeout(30000)});}catch{throw new HttpsError('unavailable','Speech recognition unavailable.');}
- if(!response.ok){console.error('Speech recognition provider failed',response.status);throw new HttpsError('unavailable','Speech recognition unavailable.');}
- const result=await response.json(),text=String(result?.text||'').trim().slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');
- const languageNames={german:'de',english:'en',turkish:'tr',arabic:'ar',persian:'fa',farsi:'fa',de:'de',en:'en',tr:'tr',ar:'ar',fa:'fa'};
- const providerLanguage=languageNames[String(result?.language||'').toLowerCase()],fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';
- const language=providerLanguage||detectAssistantLanguage(text,fallback).language;return {text,language};
+ const fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';let result,provider='groq';
+ try{result=await transcribeWithGroq(audio,mime,allowed[mime]);}
+ catch(error){console.warn('Groq speech recognition unavailable; trying Gemini',error?.status||error?.name||'error');if(!await reserveDailyAssistantBudget('gemini-speech',config.geminiSpeechDailyRequests))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');try{result=await transcribeWithGemini(encoded,mime,fallback);provider='gemini';}catch(secondError){console.error('All cloud speech recognition providers failed',secondError?.status||secondError?.name||'error');throw new HttpsError('unavailable','Speech recognition unavailable.');}}
+ const text=String(result?.text||'').trim().slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');const language=speechLanguage(result?.language,text,fallback);return {text,language,providerSwitched:provider==='gemini'};
 });
 
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
@@ -283,6 +290,6 @@ exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
 
 exports.updateAssistantAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const data=request.data||{},next={};
- for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
+ for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['geminiSpeechDailyRequests',1,2000],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
  await db.collection('_assistantConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});return {config:{...assistantDefaults,...next}};
 });
