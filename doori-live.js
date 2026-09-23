@@ -8,97 +8,94 @@
   /* ── Übersetzungen (de / en / ar / fa / tr) ───────────────────────── */
   const TEXT = {
     de: {
-      btnLabel:   'Live',
-      btnTitle:   'Echtzeitgespräch mit Doori starten',
-      btnStop:    'Live-Gespräch beenden',
-      connecting: 'Verbindung wird aufgebaut …',
-      listening:  'Ich höre zu – sprich jetzt!',
-      speaking:   'Doori spricht …',
-      ended:      'Live-Gespräch beendet.',
-      quota:      'Live momentan nicht verfügbar – kostenloses Kontingent erreicht. Bitte später erneut versuchen.',
-      error:      'Live-Verbindung fehlgeschlagen. Bitte versuche es erneut.',
-      retrying:   'Verbindung wird wiederhergestellt …',
-      unsupported:'Live-Modus ist in diesem Browser nicht verfügbar.',
+      btnLabel:    'Live',
+      btnTitle:    'Echtzeitgespräch mit Doori starten',
+      btnStop:     'Live-Gespräch beenden',
+      connecting:  'Verbindung wird aufgebaut …',
+      listening:   '🔴 Live: Ich höre zu …',
+      speaking:    '🔴 Live: Doori spricht …',
+      ended:       'Live-Gespräch beendet.',
+      quota:       'Live momentan nicht verfügbar – kostenloses Kontingent erreicht. Bitte später erneut versuchen.',
+      error:       'Live-Verbindung fehlgeschlagen. Bitte versuche es erneut.',
+      retrying:    'Verbindung wird wiederhergestellt …',
+      unsupported: 'Live-Modus ist in diesem Browser nicht verfügbar.',
     },
     en: {
-      btnLabel:   'Live',
-      btnTitle:   'Start live conversation with Doori',
-      btnStop:    'End live conversation',
-      connecting: 'Connecting …',
-      listening:  'I am listening – speak now!',
-      speaking:   'Doori is speaking …',
-      ended:      'Live session ended.',
-      quota:      'Live is temporarily unavailable – free quota reached. Please try again later.',
-      error:      'Live connection failed. Please try again.',
-      retrying:   'Reconnecting …',
-      unsupported:'Live mode is not supported in this browser.',
+      btnLabel:    'Live',
+      btnTitle:    'Start live conversation with Doori',
+      btnStop:     'End live conversation',
+      connecting:  'Connecting …',
+      listening:   '🔴 Live: Listening …',
+      speaking:    '🔴 Live: Doori speaking …',
+      ended:       'Live session ended.',
+      quota:       'Live is temporarily unavailable – free quota reached. Please try again later.',
+      error:       'Live connection failed. Please try again.',
+      retrying:    'Reconnecting …',
+      unsupported: 'Live mode is not supported in this browser.',
     },
     ar: {
-      btnLabel:   'مباشر',
-      btnTitle:   'بدء محادثة مباشرة مع Doori',
-      btnStop:    'إنهاء المحادثة المباشرة',
-      connecting: 'جارٍ الاتصال …',
-      listening:  'أنا أستمع – تحدث الآن!',
-      speaking:   'Doori يتحدث …',
-      ended:      'انتهت الجلسة المباشرة.',
-      quota:      'الوضع المباشر غير متاح مؤقتاً – تم الوصول إلى الحصة المجانية. يرجى المحاولة لاحقاً.',
-      error:      'فشل الاتصال المباشر. يرجى المحاولة مرة أخرى.',
-      retrying:   'جارٍ إعادة الاتصال …',
-      unsupported:'الوضع المباشر غير مدعوم في هذا المتصفح.',
+      btnLabel:    'مباشر',
+      btnTitle:    'بدء محادثة مباشرة مع Doori',
+      btnStop:     'إنهاء المحادثة المباشرة',
+      connecting:  'جارٍ الاتصال …',
+      listening:   '🔴 مباشر: أستمع إليك …',
+      speaking:    '🔴 مباشر: Doori يتحدث …',
+      ended:       'انتهت الجلسة المباشرة.',
+      quota:       'الوضع المباشر غير متاح مؤقتاً – تم الوصول إلى الحصة المجانية. يرجى المحاولة لاحقاً.',
+      error:       'فشل الاتصال المباشر. يرجى المحاولة مرة أخرى.',
+      retrying:    'جارٍ إعادة الاتصال …',
+      unsupported: 'الوضع المباشر غير مدعوم في هذا المتصفح.',
     },
     fa: {
-      btnLabel:   'زنده',
-      btnTitle:   'شروع گفتگوی زنده با Doori',
-      btnStop:    'پایان گفتگوی زنده',
-      connecting: 'در حال اتصال …',
-      listening:  'گوش می‌دهم – الان صحبت کنید!',
-      speaking:   'Doori در حال صحبت است …',
-      ended:      'جلسه زنده پایان یافت.',
-      quota:      'حالت زنده موقتاً در دسترس نیست – سهمیه رایگان به پایان رسیده. لطفاً بعداً دوباره تلاش کنید.',
-      error:      'اتصال زنده ناموفق بود. لطفاً دوباره تلاش کنید.',
-      retrying:   'در حال اتصال مجدد …',
-      unsupported:'حالت زنده در این مرورگر پشتیبانی نمی‌شود.',
+      btnLabel:    'زنده',
+      btnTitle:    'شروع گفتگوی زنده با Doori',
+      btnStop:     'پایان گفتگوی زنده',
+      connecting:  'در حال اتصال …',
+      listening:   '🔴 زنده: در حال گوش دادن …',
+      speaking:    '🔴 زنده: Doori در حال صحبت …',
+      ended:       'جلسه زنده پایان یافت.',
+      quota:       'حالت زنده موقتاً در دسترس نیست – سهمیه رایگان به پایان رسیده. لطفاً بعداً دوباره تلاش کنید.',
+      error:       'اتصال زنده ناموفق بود. لطفاً دوباره تلاش کنید.',
+      retrying:    'در حال اتصال مجدد …',
+      unsupported: 'حالت زنده در این مرورگر پشتیبانی نمی‌شود.',
     },
     tr: {
-      btnLabel:   'Canlı',
-      btnTitle:   'Doori ile canlı konuşma başlat',
-      btnStop:    'Canlı konuşmayı bitir',
-      connecting: 'Bağlanıyor …',
-      listening:  'Dinliyorum – şimdi konuş!',
-      speaking:   'Doori konuşuyor …',
-      ended:      'Canlı oturum sona erdi.',
-      quota:      'Canlı şu an kullanılamıyor – ücretsiz kota doldu. Lütfen daha sonra tekrar dene.',
-      error:      'Canlı bağlantı başarısız. Lütfen tekrar dene.',
-      retrying:   'Yeniden bağlanıyor …',
-      unsupported:'Canlı mod bu tarayıcıda desteklenmiyor.',
+      btnLabel:    'Canlı',
+      btnTitle:    'Doori ile canlı konuşma başlat',
+      btnStop:     'Canlı konuşmayı bitir',
+      connecting:  'Bağlanıyor …',
+      listening:   '🔴 Canlı: Dinliyorum …',
+      speaking:    '🔴 Canlı: Doori konuşuyor …',
+      ended:       'Canlı oturum sona erdi.',
+      quota:       'Canlı şu an kullanılamıyor – ücretsiz kota doldu. Lütfen daha sonra tekrar dene.',
+      error:       'Canlı bağlantı başarısız. Lütfen tekrar dene.',
+      retrying:    'Yeniden bağlanıyor …',
+      unsupported: 'Canlı mod bu tarayıcıda desteklenmiyor.',
     },
   };
 
   const LIVE_WS = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained';
-  const AUDIO_IN_MIME  = 'audio/pcm;rate=16000';   // raw PCM expected by Live API
-  const SAMPLE_RATE_IN  = 16000;
-  const SAMPLE_RATE_OUT = 24000;
-  const CHUNK_INTERVAL  = 100; // ms between audio sends
-  const RECONNECT_INIT  = 1500;
-  const RECONNECT_MAX   = 60000;
+  const RECONNECT_INIT = 1500;
+  const RECONNECT_MAX  = 60000;
 
   /* ── State ────────────────────────────────────────────────────────── */
   const state = {
-    active:      false,   // user wants Live to be running
-    ws:          null,
-    audioCtx:    null,
-    sourceNode:  null,    // ScriptProcessorNode / AudioWorklet for input
-    micStream:   null,
-    playQueue:   [],      // ArrayBuffers of PCM from server
-    playing:     false,   // server audio is being played
+    active:       false,
+    ws:           null,
+    audioCtx:     null,
+    sourceNode:   null,
+    processorNode:null,
+    muteGain:     null,
+    micStream:    null,
+    playing:      false,
+    nextPlayTime: 0,
     quotaBlocked: false,
-    retryTimer:  null,
-    retryDelay:  RECONNECT_INIT,
-    token:       null,
-    tokenExpiry: 0,
+    retryTimer:   null,
+    retryDelay:   RECONNECT_INIT,
+    token:        null,
+    tokenExpiry:  0,
   };
 
-  /* ── Helpers ──────────────────────────────────────────────────────── */
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
   const t    = () => TEXT[lang()] || TEXT.en;
 
@@ -107,13 +104,20 @@
 
   function setStatus(msg) {
     const el = status();
-    if (el) { el.textContent = msg; el.classList.toggle('hidden', !msg); }
+    if (el) {
+      el.textContent = msg;
+      el.classList.toggle('hidden', !msg);
+    }
+    const chatStatus = document.getElementById('current-chat-status');
+    if (chatStatus && root.currentChat?.type === 'assistant') {
+      chatStatus.textContent = msg || root.DooriAssistant?.getStatus?.() || '';
+    }
   }
 
   function updateBtn() {
     const b = btn();
     if (!b) return;
-    const isRTL = ['ar','fa'].includes(lang());
+    const isRTL = ['ar', 'fa'].includes(lang());
     b.dir = isRTL ? 'rtl' : 'ltr';
 
     if (state.quotaBlocked) {
@@ -132,142 +136,219 @@
     b.setAttribute('aria-pressed', state.active ? 'true' : 'false');
   }
 
-  /* ── Audio Context ────────────────────────────────────────────────── */
+  /* ── Web Audio Context ────────────────────────────────────────────── */
   function getAudioCtx() {
     if (!state.audioCtx || state.audioCtx.state === 'closed') {
       const AC = root.AudioContext || root.webkitAudioContext;
       if (!AC) return null;
-      state.audioCtx = new AC({ sampleRate: SAMPLE_RATE_OUT });
+      // Do NOT pass sampleRate — iOS WebKit throws NotSupportedError on custom sample rates!
+      state.audioCtx = new AC();
     }
-    if (state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+    if (state.audioCtx.state === 'suspended') {
+      state.audioCtx.resume().catch(() => {});
+    }
     return state.audioCtx;
   }
 
-  /* ── PCM helpers ──────────────────────────────────────────────────── */
-  function float32ToPcm16(float32Array) {
-    const pcm = new Int16Array(float32Array.length);
-    for (let i = 0; i < float32Array.length; i++) {
-      const s = Math.max(-1, Math.min(1, float32Array[i]));
+  function unlockAudio() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    // Play a 1-sample silent buffer to unlock iOS audio hardware
+    try {
+      const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (_) {}
+  }
+
+  /* ── Linear downsampling from hardware rate to 16 kHz ─────────────── */
+  function downsampleTo16k(samples, inRate) {
+    if (!samples || !samples.length) return new Float32Array(0);
+    if (inRate === 16000) return samples;
+    const ratio = inRate / 16000;
+    const newLen = Math.round(samples.length / ratio);
+    const result = new Float32Array(newLen);
+    let offsetResult = 0;
+    let offsetInput = 0;
+    while (offsetResult < result.length) {
+      const nextOffsetInput = Math.round((offsetResult + 1) * ratio);
+      let sum = 0, count = 0;
+      for (let i = offsetInput; i < nextOffsetInput && i < samples.length; i++) {
+        sum += samples[i];
+        count++;
+      }
+      result[offsetResult] = count > 0 ? sum / count : (samples[offsetInput] || 0);
+      offsetResult++;
+      offsetInput = nextOffsetInput;
+    }
+    return result;
+  }
+
+  /* ── Convert 16 kHz Float32 to Base64 PCM16 Little-Endian ─────────── */
+  function float32ToB64Pcm16(f32) {
+    const pcm = new Int16Array(f32.length);
+    for (let i = 0; i < f32.length; i++) {
+      const s = Math.max(-1, Math.min(1, f32[i]));
       pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
-    return pcm;
-  }
-
-  function pcm16ToFloat32(int16Array) {
-    const f = new Float32Array(int16Array.length);
-    for (let i = 0; i < int16Array.length; i++) f[i] = int16Array[i] / 32768;
-    return f;
-  }
-
-  function b64ToBuffer(b64) {
-    const bin = atob(b64);
-    const buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    return buf.buffer;
-  }
-
-  function bufToB64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let bin = '';
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin);
-  }
-
-  /* ── Playback queue ───────────────────────────────────────────────── */
-  function schedulePlay(buffer) {
-    state.playQueue.push(buffer);
-    drainPlayQueue();
-  }
-
-  let nextPlayTime = 0;
-  function drainPlayQueue() {
-    const ctx = getAudioCtx();
-    if (!ctx || !state.playQueue.length) return;
-    state.playing = true;
-    if (ctx.currentTime > nextPlayTime) nextPlayTime = ctx.currentTime;
-    while (state.playQueue.length) {
-      const raw  = state.playQueue.shift();
-      const i16  = new Int16Array(raw);
-      const f32  = pcm16ToFloat32(i16);
-      const audioBuffer = ctx.createBuffer(1, f32.length, SAMPLE_RATE_OUT);
-      audioBuffer.copyToChannel(f32, 0);
-      const src = ctx.createBufferSource();
-      src.buffer = audioBuffer;
-      src.connect(ctx.destination);
-      src.start(nextPlayTime);
-      nextPlayTime += audioBuffer.duration;
-      src.onended = () => { if (!state.playQueue.length) state.playing = false; };
+    const bytes = new Uint8Array(pcm.buffer);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
     }
+    return btoa(binary);
+  }
+
+  /* ── Play 24 kHz PCM Little-Endian Audio from Gemini ──────────────── */
+  function playPcm24k(bytes) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    const numSamples = Math.floor(bytes.byteLength / 2);
+    if (!numSamples) return;
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const f32 = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      f32[i] = view.getInt16(i * 2, true) / 32768.0;
+    }
+
+    const audioBuf = ctx.createBuffer(1, f32.length, 24000);
+    audioBuf.getChannelData(0).set(f32);
+
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+
+    const startTime = Math.max(ctx.currentTime, state.nextPlayTime);
+    src.start(startTime);
+    state.nextPlayTime = startTime + audioBuf.duration;
+    state.playing = true;
+    setStatus(t().speaking);
+
+    src.onended = () => {
+      if (ctx.currentTime >= state.nextPlayTime - 0.05) {
+        state.playing = false;
+        if (state.active) setStatus(t().listening);
+      }
+    };
   }
 
   function stopPlayback() {
-    state.playQueue = [];
     state.playing = false;
-    nextPlayTime = 0;
+    const ctx = getAudioCtx();
+    if (ctx) state.nextPlayTime = ctx.currentTime;
   }
 
-  /* ── Mic capture ──────────────────────────────────────────────────── */
+  /* ── Microphone Capture with Downsampler ──────────────────────────── */
   async function startMic() {
     if (!navigator.mediaDevices?.getUserMedia) return false;
     try {
-      state.micStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: SAMPLE_RATE_IN },
+      // Do NOT set sampleRate: 16000 here! Let browser pick native hardware rate to avoid OverconstrainedError!
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
         video: false,
       });
+      state.micStream = stream;
+
       const ctx = getAudioCtx();
       if (!ctx) return false;
+      if (ctx.state === 'suspended') await ctx.resume();
 
-      // Resample to 16 kHz for the API (some browsers may be at 48 kHz)
-      const sourceNode = ctx.createMediaStreamSource(state.micStream);
-      // ScriptProcessor is deprecated but universally supported; use AudioWorklet when available
-      const bufSize = 4096;
+      const sourceNode = ctx.createMediaStreamSource(stream);
+      const bufSize = 2048;
       const processor = ctx.createScriptProcessor(bufSize, 1, 1);
+
+      // Prevent iOS Safari garbage-collecting the ScriptProcessorNode
+      root._dooriLiveProcessor = processor;
+      state.sourceNode    = sourceNode;
+      state.processorNode = processor;
+
+      // Mute gain to prevent microphone from screaming into device speakers
+      const muteGain = ctx.createGain();
+      muteGain.gain.value = 0;
+      state.muteGain = muteGain;
+
       processor.onaudioprocess = (e) => {
-        if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return;
-        const f32 = e.inputBuffer.getChannelData(0);
+        if (!state.ws || state.ws.readyState !== WebSocket.OPEN || !state.ready) return;
+        const inputF32 = e.inputBuffer.getChannelData(0);
+        const inRate   = e.inputBuffer.sampleRate || ctx.sampleRate || 48000;
+
+        // Downsample to 16 kHz
+        const samples16k = downsampleTo16k(inputF32, inRate);
+
+        // RMS volume calculation for barge-in detection
         let sum = 0;
-        for (let i = 0; i < f32.length; i++) sum += f32[i] * f32[i];
-        const rms = Math.sqrt(sum / f32.length);
-        if (state.playing && rms > 0.04) {
+        for (let i = 0; i < samples16k.length; i++) sum += samples16k[i] * samples16k[i];
+        const rms = Math.sqrt(sum / samples16k.length);
+
+        // User speaks while AI is talking -> barge-in / interrupt
+        if (state.playing && rms > 0.035) {
           stopPlayback();
           setStatus(t().listening);
         }
-        const pcm16 = float32ToPcm16(f32);
-        const b64 = bufToB64(pcm16.buffer);
-        const msg = {realtime_input:{media_chunks:[{mime_type:AUDIO_IN_MIME,data:b64}]}};
+
+        const b64 = float32ToB64Pcm16(samples16k);
+        const msg = {
+          realtime_input: {
+            media_chunks: [{
+              mime_type: 'audio/pcm;rate=16000',
+              data: b64,
+            }],
+          },
+        };
         try { state.ws.send(JSON.stringify(msg)); } catch (_) {}
       };
+
       sourceNode.connect(processor);
-      processor.connect(ctx.destination);
-      state.sourceNode = processor;
+      processor.connect(muteGain);
+      muteGain.connect(ctx.destination);
       return true;
     } catch (err) {
-      console.warn('DooriLive: mic error', err);
+      console.warn('[DooriLive] mic error', err);
       return false;
     }
   }
 
   function stopMic() {
-    try { state.sourceNode?.disconnect(); } catch (_) {}
-    state.sourceNode = null;
+    try {
+      state.sourceNode?.disconnect();
+      state.processorNode?.disconnect();
+      state.muteGain?.disconnect();
+    } catch (_) {}
+    state.sourceNode    = null;
+    state.processorNode = null;
+    state.muteGain      = null;
+    delete root._dooriLiveProcessor;
     state.micStream?.getTracks().forEach(t => t.stop());
     state.micStream = null;
   }
 
-  /* ── Token fetch ──────────────────────────────────────────────────── */
+  /* ── Ephemeral Token ──────────────────────────────────────────────── */
   async function fetchToken() {
     if (state.token && Date.now() < state.tokenExpiry) return state.token;
     const result = await root.accountFunctions.httpsCallable('getLiveToken')({});
     const tok = result?.data?.token;
     if (!tok) throw new Error('No token');
-    state.token  = tok;
+    state.token = tok;
     state.tokenExpiry = Number(result?.data?.expiresAt || 0) || (Date.now() + 1800000);
     return tok;
   }
 
-  /* ── WebSocket lifecycle ──────────────────────────────────────────── */
+  /* ── WebSocket Connection ─────────────────────────────────────────── */
   async function connect() {
-    if (state.ws) { state.ws.close(); state.ws = null; }
+    if (state.ws) {
+      try { state.ws.close(); } catch (_) {}
+      state.ws = null;
+    }
     let token;
     try {
       token = await fetchToken();
@@ -280,7 +361,7 @@
         scheduleQuotaRetry();
         return;
       }
-      console.warn('DooriLive: token error', err);
+      console.warn('[DooriLive] token error', err);
       setStatus(t().error);
       scheduleReconnect();
       return;
@@ -292,27 +373,25 @@
 
     ws.onopen = async () => {
       state.retryDelay = RECONNECT_INIT;
+      state.ready      = false;
       const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the language of the user and always reply in the same language. Support German, English, Arabic, Persian, and Turkish. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.';
       const setup = {
         setup: {
           model: 'models/gemini-3.8-live',
           generation_config: {
             response_modalities: ['AUDIO'],
-            speech_config: { voice_config: { prebuilt_voice_config: { voice_name: 'Aoede' } } },
+            speech_config: {
+              voice_config: {
+                prebuilt_voice_config: { voice_name: 'Aoede' },
+              },
+            },
           },
           system_instruction: {
-            parts: [{ text: sysPrompt }]
-          }
+            parts: [{ text: sysPrompt }],
+          },
         },
       };
       ws.send(JSON.stringify(setup));
-      const micOk = await startMic();
-      if (!micOk) {
-        setStatus(t().error);
-        stopSession(false);
-        return;
-      }
-      setStatus(t().listening);
       updateBtn();
     };
 
@@ -321,37 +400,47 @@
         const text = typeof event.data === 'string' ? event.data : await event.data.text();
         const msg = JSON.parse(text);
 
+        if (msg.setupComplete) {
+          state.ready = true;
+          setStatus(t().listening);
+          return;
+        }
+
+        // Server-side barge-in: user interrupted the AI
         if (msg.serverContent?.interrupted) {
           stopPlayback();
           setStatus(t().listening);
           return;
         }
 
+        // Handle model turn parts
         const parts = msg.serverContent?.modelTurn?.parts || [];
         for (const part of parts) {
-          if (part.inlineData?.mimeType?.startsWith('audio/pcm') && part.inlineData.data) {
-            setStatus(t().speaking);
-            schedulePlay(b64ToBuffer(part.inlineData.data));
+          if (part.inlineData?.data) {
+            const rawB64 = part.inlineData.data;
+            const bin = atob(rawB64);
+            const u8 = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+            playPcm24k(u8);
           }
         }
 
         if (msg.serverContent?.turnComplete) {
-          setStatus(t().listening);
+          if (!state.playing) setStatus(t().listening);
         }
       } catch (e) {
-        console.warn('DooriLive: parse error', e);
+        console.warn('[DooriLive] parse error', e);
       }
     };
 
     ws.onerror = (e) => {
-      console.warn('DooriLive: ws error', e);
+      console.warn('[DooriLive] ws error', e);
     };
 
     ws.onclose = (event) => {
       stopMic();
       stopPlayback();
-      if (!state.active) return; // clean close by user
-      // 429 inside WS close reason
+      if (!state.active) return;
       if (event.reason?.includes('429') || event.reason?.includes('RESOURCE_EXHAUSTED')) {
         state.quotaBlocked = true;
         setStatus(t().quota);
@@ -364,7 +453,6 @@
     };
   }
 
-  /* ── Reconnect / quota retry ─────────────────────────────────────── */
   function scheduleReconnect() {
     if (!state.active) return;
     clearTimeout(state.retryTimer);
@@ -376,34 +464,43 @@
   }
 
   function scheduleQuotaRetry() {
-    // Retry every 60 s to see if quota cleared
     clearTimeout(state.retryTimer);
     state.retryTimer = setTimeout(async () => {
       if (!state.active) return;
       try {
-        await fetchToken(); // if this succeeds, quota is back
+        await fetchToken();
         state.quotaBlocked = false;
-        state.retryDelay  = RECONNECT_INIT;
+        state.retryDelay   = RECONNECT_INIT;
         updateBtn();
         await connect();
       } catch (_) {
-        scheduleQuotaRetry(); // still blocked
+        scheduleQuotaRetry();
       }
     }, 60000);
   }
 
-  /* ── Session control ─────────────────────────────────────────────── */
+  /* ── Session Start / Stop ─────────────────────────────────────────── */
   async function startSession() {
     if (state.active) return;
-    if (!root.WebSocket) { setStatus(t().unsupported); return; }
-    // Unlock audio context on user gesture (required by browsers)
-    getAudioCtx();
-    state.active = true;
+    if (!root.WebSocket) {
+      setStatus(t().unsupported);
+      return;
+    }
+    unlockAudio();
+    state.active       = true;
     state.quotaBlocked = false;
-    state.retryDelay  = RECONNECT_INIT;
+    state.ready        = false;
+    state.retryDelay   = RECONNECT_INIT;
     updateBtn();
-    // Stop normal TTS/assistant recording if running
     root.DooriTTS?.stop?.();
+
+    setStatus(t().connecting);
+    const micOk = await startMic();
+    if (!micOk) {
+      setStatus(t().error);
+      stopSession(false);
+      return;
+    }
     await connect();
   }
 
@@ -411,7 +508,10 @@
     state.active = false;
     clearTimeout(state.retryTimer);
     state.retryTimer = null;
-    if (state.ws) { try { state.ws.close(1000, 'user_closed'); } catch (_) {} state.ws = null; }
+    if (state.ws) {
+      try { state.ws.close(1000, 'user_closed'); } catch (_) {}
+      state.ws = null;
+    }
     stopMic();
     stopPlayback();
     if (updateUi) {
@@ -426,7 +526,7 @@
     else startSession();
   }
 
-  /* ── Button injection & initialization ───────────────────────────── */
+  /* ── Button Injection & Wiring ────────────────────────────────────── */
   function injectButton() {
     let liveBtn = document.getElementById('doori-live-btn');
     const micBtn = document.getElementById('assistant-mic-btn');
@@ -437,8 +537,8 @@
       statusEl.style.cssText = 'font-size:12px;color:var(--accent);margin-left:4px;vertical-align:middle;';
 
       liveBtn = document.createElement('button');
-      liveBtn.type    = 'button';
-      liveBtn.id      = 'doori-live-btn';
+      liveBtn.type = 'button';
+      liveBtn.id = 'doori-live-btn';
       liveBtn.className = 'icon-btn assistant-control live-btn hidden';
       liveBtn.style.cssText = 'font-size:11px;font-weight:700;letter-spacing:0.04em;padding:0 8px;min-width:40px;border-radius:20px;background:linear-gradient(135deg,#00c6fb,#005bea);color:#fff;border:none;box-shadow:0 2px 8px rgba(0,98,234,0.35);transition:opacity .2s,filter .2s;';
       liveBtn.setAttribute('aria-pressed', 'false');
@@ -448,7 +548,7 @@
     }
     if (liveBtn && !liveBtn.dataset.bound) {
       liveBtn.dataset.bound = 'true';
-      liveBtn.addEventListener('touchstart', () => getAudioCtx(), { passive: true });
+      liveBtn.addEventListener('touchstart', unlockAudio, { passive: true });
       liveBtn.addEventListener('click', toggle);
     }
     updateBtn();
@@ -457,12 +557,10 @@
   function showControls(visible) {
     const b = btn();
     if (b) b.classList.toggle('hidden', !visible);
-    // status visibility is managed separately
   }
 
   function initialize() {
     injectButton();
-    // Show/hide when assistant chat is active
     root.addEventListener('doori-assistant-activated', () => showControls(true));
     root.addEventListener('doori-assistant-deactivated', () => {
       showControls(false);
@@ -493,6 +591,6 @@
   })();
 
   /* ── Public API ──────────────────────────────────────────────────── */
-  root.DooriLive = { initialize, showControls, toggle, stopSession, updateBtn };
+  root.DooriLive = { initialize, showControls, toggle, stopSession, updateBtn, unlockAudio };
 
 })(window);

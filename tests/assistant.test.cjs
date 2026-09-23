@@ -152,7 +152,7 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.match(html,/id="doori-live-btn"/);
  assert.match(html,/id="doori-live-status"/);
- assert.match(html,/doori-live\.js\?v=1/);
+ assert.match(html,/doori-live\.js\?v=\d+/);
  const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
  assert.match(sw,/doori-live\.js/);
  const build=fs.readFileSync(path.join(root,'scripts/build-hosting.cjs'),'utf8');
