@@ -130,6 +130,7 @@ test('per-user AI limits and protected operator dashboard are server enforced',(
  assert.match(functions,/textMessagesPerUser:100/);assert.match(functions,/voiceSecondsPerUser:3600/);
  assert.match(functions,/reserveUserAssistantUsage/);assert.match(functions,/defineSecret\('DOORI_ADMIN_EMAIL'\)/);
  assert.match(functions,/exports\.transcribeDooriSpeech=onCall/);assert.match(functions,/whisper-large-v3-turbo/);assert.match(functions,/transcribeWithGemini/);assert.match(functions,/geminiSpeechDailyRequests:100/);assert.match(functions,/reserveDailySpeechSeconds/);
+ assert.match(functions,/validSpeechResult/);assert.match(functions,/Script=Han/);assert.match(functions,/transcript=validSpeechResult\(await transcribeWithGroq/);
  assert.match(functions,/exports\.getAssistantAdminDashboard=onCall/);assert.match(functions,/exports\.updateAssistantAdminConfig=onCall/);
  assert.match(functions,/cloudflareDailyNeurons:10000/);assert.match(functions,/cloudflare-neurons-/);assert.doesNotMatch(functions,/cloudflareDailyRequests:3/);
  assert.match(functions,/exports\.synthesizeDooriSpeech=onCall/);assert.match(functions,/gemini-2\.5-flash-preview-tts/);assert.match(functions,/geminiTtsDailyRequests:100/);
