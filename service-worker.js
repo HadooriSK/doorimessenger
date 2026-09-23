@@ -1,9 +1,10 @@
-const CACHE_NAME = 'web-messenger-v109-mobile-left-dock';
+const CACHE_NAME = 'web-messenger-v110-ai-assistant';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=330',
-  '/app.js?v=349',
+  '/style.css?v=331',
+  '/app.js?v=350',
+  '/assistant.js?v=1',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',

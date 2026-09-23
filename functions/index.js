@@ -6,10 +6,13 @@ const {getAuth}=require('firebase-admin/auth');
 const {getFirestore,Timestamp}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
 const {RtcTokenBuilder,RtcRole}=require('agora-token');
+const {createAssistantRouter,LocalFallbackError}=require('./assistant-router');
 initializeApp();
 const db=getFirestore(),auth=getAuth();
 const BREVO_API_KEY=defineSecret('BREVO_API_KEY');
 const AGORA_APP_CERTIFICATE=defineSecret('AGORA_APP_CERTIFICATE');
+const GROQ_API_KEY=defineSecret('GROQ_API_KEY');
+const CLOUDFLARE_API_TOKEN=defineSecret('CLOUDFLARE_API_TOKEN');
 const options={region:'europe-west3',maxInstances:10,timeoutSeconds:30,memory:'256MiB'};
 const AGORA_APP_ID='275401ea48a74f4b9f9cac0107362c6c'; // Public Agora project identifier.
 const WEB_API_KEY='AIzaSyAIV8HtZGe8RBzqcDLwc8RT2iY3TSWrnIk'; // Public Firebase Web identifier.
@@ -69,6 +72,10 @@ async function limit(request,bucket,max=10){
  const now=Date.now(),ip=request.rawRequest?.ip||'unknown';
  const id=createHash('sha256').update(bucket+':'+ip).digest('hex'),ref=db.collection('_rateLimits').doc(id);
  await db.runTransaction(async tx=>{const old=(await tx.get(ref)).data(),active=old&&old.until.toMillis()>now,count=active?old.count:0;if(count>=max)throw new HttpsError('resource-exhausted','Try later.');tx.set(ref,{count:count+1,until:active?old.until:Timestamp.fromMillis(now+15*60*1000)});});
+}
+async function reserveDailyAssistantBudget(provider,max){
+ const day=new Date().toISOString().slice(0,10),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
+ return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),count=Number(snapshot.data()?.count||0);if(count>=max)return false;tx.set(ref,{count:count+1,day,updatedAt:Timestamp.now()});return true;});
 }
 async function ensureAccount(uid){
  const mapped=await db.collection('accounts').doc(uid).get();if(mapped.exists)return mapped.data();
@@ -186,4 +193,27 @@ exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async
  const htmlContent=`<div dir="${direction}"><h2>${safe(copy.title)}</h2><p style="font-size:15px;line-height:1.6;">${safe(copy.message)}</p></div>`;
  try{await sendBrevo(email,copy,textContent,htmlContent);}catch(mailErr){console.error('Final deletion email error',mailErr);}
  return {success:true};
+});
+
+exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,CLOUDFLARE_API_TOKEN]},async request=>{
+ const uid=signedIn(request);
+ await limit(request,'assistant-user:'+uid,20);
+ const rawMessages=Array.isArray(request.data?.messages)?request.data.messages:[];
+ if(rawMessages.length<1||rawMessages.length>10)throw new HttpsError('invalid-argument','Invalid assistant context.');
+ const messages=rawMessages.map(message=>({role:message?.role==='assistant'?'assistant':'user',content:String(message?.content||'')}));
+ if(messages.some(message=>!message.content.trim()||message.content.length>2000))throw new HttpsError('invalid-argument','Invalid assistant message.');
+ const language=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'auto';
+ const router=createAssistantRouter({
+  groqKey:GROQ_API_KEY.value(),
+  cloudflareToken:CLOUDFLARE_API_TOKEN.value(),
+  allowGroq:true,
+  allowCloudflare:true,
+  beforeProvider:provider=>reserveDailyAssistantBudget(provider,provider==='groq'?100:3)
+ });
+ try{return await router({messages,language});}
+ catch(error){
+  if(error instanceof LocalFallbackError||error?.code==='LOCAL_FALLBACK_REQUIRED')return {localFallback:true};
+  console.error('Assistant request failed without provider details');
+  return {localFallback:true};
+ }
 });

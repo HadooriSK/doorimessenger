@@ -424,6 +424,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     });
     function getTranslatedChatName(chat) {
         if (!chat) return '';
+        if (chat.type === 'assistant' || window.DooriAssistant?.isAssistant(chat.id)) return window.DooriAssistant.getName();
         if (chat.id === 'saved') return (TRANSLATIONS[currentLang] || TRANSLATIONS['en'])['chat_saved'];
         const cname = (chat.name || '').toLowerCase().trim();
         if (chat.id === 'general' || cname === 'allgemein' || cname === 'general') return (TRANSLATIONS[currentLang] || TRANSLATIONS['en'])['chat_general'];
@@ -552,6 +553,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         renderChatList();
         if (currentChat) {
             currentChatName.textContent = getTranslatedChatName(currentChat);
+            if (currentChat.type === 'assistant') window.DooriAssistant?.activate();
         }
         window.dispatchEvent(new CustomEvent('doori-language-change', { detail: { lang } }));
     }
@@ -914,6 +916,13 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             if (!users.has(currentUser)) users.set(currentUser, { avatarUrl: null, profilePics: [], status: 'Online', bio: '' });
         }
         
+        const assistantId = window.DooriAssistant?.CHAT_ID;
+        if (assistantId && !chatData.contacts.some(contact => contact.id === assistantId)) {
+            chatData.contacts.unshift({ id: assistantId, name: assistantId, type: 'assistant', isSecret: false });
+        }
+        if (assistantId && !chatData.active_chats.some(chat => chat.id === assistantId)) {
+            chatData.active_chats.unshift({ id: assistantId, name: assistantId, type: 'assistant', isSecret: false });
+        }
         applyTranslation(currentLang);
         setupFirestoreListeners();
         startOnlineTracking();
@@ -2437,10 +2446,14 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         }
     }
 
-    messageForm.addEventListener('submit', (e) => {
+    messageForm.addEventListener('submit', async (e) => {
         e.preventDefault(); const text = messageInput.value.trim();
-        if (text) { sendMessage(text); messageInput.value = ''; }
+        if (!text) return;
+        messageInput.value = '';
+        if (currentChat?.type === 'assistant') await window.DooriAssistant?.send(text);
+        else sendMessage(text);
     });
+    window.DooriAssistant?.initialize();
 
     // Recording
     let isRecordingCancelled = false;
@@ -2605,6 +2618,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (!chat) return;
         currentChat = chat;
         window.currentChat = chat;
+        document.querySelector('.composer-tools-row')?.classList.toggle('assistant-mode-hidden', type === 'assistant');
         
         currentChatName.textContent = getTranslatedChatName(chat);
         const detailsName = document.getElementById('details-chat-name');
@@ -2612,7 +2626,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const detailsAvatar = document.getElementById('details-chat-avatar');
         if (detailsName) detailsName.textContent = getTranslatedChatName(chat);
         if (detailsStatus) detailsStatus.textContent = currentChatStatus.textContent || '';
-        if (type === 'saved') currentChatAvatar.textContent = '💾';
+        if (type === 'assistant') currentChatAvatar.textContent = '✦';
+        else if (type === 'saved') currentChatAvatar.textContent = '💾';
         else if (type === 'room' || type === 'channel') {
             currentChatAvatar.textContent = '#';
         }
@@ -2645,13 +2660,15 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
         const bBtn = document.getElementById('buzz-btn');
         const iBtn = document.getElementById('group-info-btn');
-        if (type === 'room' || type === 'channel') {
+        if (type === 'room' || type === 'channel' || type === 'assistant') {
             if (bBtn) bBtn.style.display = 'none';
-            if (iBtn) iBtn.style.display = 'flex';
+            if (iBtn) iBtn.style.display = type === 'assistant' ? 'none' : 'flex';
         } else {
             if (bBtn) bBtn.style.display = 'flex';
             if (iBtn) iBtn.style.display = 'none';
         }
+        if (type === 'assistant') window.DooriAssistant?.activate();
+        else window.DooriAssistant?.updateControls();
 
         if (window.currentGroupListener) { window.currentGroupListener(); window.currentGroupListener = null; }
         if (window.currentChatStatusListener) { window.currentChatStatusListener(); window.currentChatStatusListener = null; }
@@ -2985,7 +3002,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             div.className = classNames;
             div.dataset.id = chat.id; div.dataset.type = chat.type;
             let avatarHtml = '';
-            if (chat.type === 'saved') avatarHtml = '💾'; else if (chat.type === 'room' || chat.type === 'channel') avatarHtml = '#';
+            if (chat.type === 'assistant') avatarHtml = '✦'; else if (chat.type === 'saved') avatarHtml = '💾'; else if (chat.type === 'room' || chat.type === 'channel') avatarHtml = '#';
             else {
                 let p = getUserProfile(chat.name || chat.id);
                 if (!p) {
@@ -2997,7 +3014,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             }
             const mentionBadgeHtml = mentionedChats.has(chat.id) ? '<div class="mention-badge" style="position:absolute; top:-5px; right:-5px; background:var(--accent); color:#000; border-radius:50%; width:16px; height:16px; font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 5px rgba(0,0,0,0.5);">@</div>' : '';
             let statusBadgeHtml = '';
-            if (chat.type !== 'room' && chat.type !== 'channel' && chat.type !== 'saved') {
+            if (chat.type !== 'room' && chat.type !== 'channel' && chat.type !== 'saved' && chat.type !== 'assistant') {
                 let p = getUserProfile(chat.name || chat.id);
                 const rawStatus = p && (p.bio || p.status) ? (p.bio || p.status) : '';
                 if (rawStatus && rawStatus.toLowerCase() !== 'online') {
@@ -3033,7 +3050,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
             let filtered = Array.from(allMap.values());
             if (activeChatFilter === 'direct') {
-                filtered = filtered.filter(c => c.type === 'dm' || (!c.type && c.id !== 'saved'));
+                filtered = filtered.filter(c => c.type === 'dm' || c.type === 'assistant' || (!c.type && c.id !== 'saved'));
             } else if (activeChatFilter === 'groups') {
                 filtered = filtered.filter(c => c.type === 'room' || c.type === 'channel' || c.type === 'group');
             } else if (activeChatFilter === 'unread') {

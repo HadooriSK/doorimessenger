@@ -2073,3 +2073,19 @@ body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important
   #start-page.active .scrollable-nav { padding-inline:6px!important; }
   #start-page.active .nav-tab,#start-page.active #add-contact-btn { flex-basis:45px!important;min-height:45px!important;border-radius:13px!important; }
 }
+.assistant-control {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.composer-tools-row.assistant-mode-hidden { display: none !important; }
+
+.chat-item[data-type="assistant"] .avatar {
+    background: linear-gradient(145deg, #79c6ff, #8174e8);
+    color: #07111d;
+    box-shadow: 0 8px 24px rgba(111, 174, 255, .28);
+}
