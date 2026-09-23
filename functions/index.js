@@ -89,7 +89,16 @@ async function reserveDailyAssistantBudget(provider,max){
  const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),count=Number(snapshot.data()?.count||0);if(count>=max)return false;tx.set(ref,{count:count+1,day,updatedAt:Timestamp.now()});return true;});
 }
-const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,speechRecognitionSecondsPerDay:28000,geminiSpeechDailyRequests:100,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
+async function adjustCloudflareNeuronBudget(delta){
+ const day=new Date().toISOString().slice(0,10),ref=db.collection('_assistantBudgets').doc(`cloudflare-neurons-${day}`);
+ return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),used=Math.max(0,Number(snapshot.data()?.neurons||0)+Number(delta||0));tx.set(ref,{neurons:used,day,unit:'neurons',updatedAt:Timestamp.now()});return used;});
+}
+async function reserveCloudflareNeurons(amount,max){
+ const day=new Date().toISOString().slice(0,10),ref=db.collection('_assistantBudgets').doc(`cloudflare-neurons-${day}`);
+ return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),used=Number(snapshot.data()?.neurons||0);if(used+amount>max)return false;tx.set(ref,{neurons:used+amount,day,unit:'neurons',updatedAt:Timestamp.now()});return true;});
+}
+const CLOUDFLARE_NEURON_RESERVATION=12;
+const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,speechRecognitionSecondsPerDay:28000,geminiSpeechDailyRequests:100,geminiTtsDailyRequests:100,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyNeurons:10000,providerTimeoutMs:4500};
 function assistantDay(date=new Date()){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
  const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${values.year}-${values.month}-${values.day}`;
@@ -106,6 +115,14 @@ async function transcribeWithGemini(encoded,mime,languageHint){
  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+encodeURIComponent(GEMINI_API_KEY.value()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Transcribe this recording exactly. Detect the spoken language. Return only JSON with text and language, where language is one of de, en, tr, ar, fa. The interface hint is ${languageHint}, but use it only when the recording is ambiguous.`},{inlineData:{mimeType:mime==='audio/mp4'?'audio/m4a':mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Object.assign(new Error('Gemini speech recognition failed'),{status:response.status});const payload=await response.json(),raw=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'';return JSON.parse(raw);
 }
+function pcmToWavBase64(pcmBase64){
+ const pcm=Buffer.from(pcmBase64,'base64'),header=Buffer.alloc(44),rate=24000,channels=1,bits=16,byteRate=rate*channels*bits/8;
+ header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(channels,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(byteRate,28);header.writeUInt16LE(channels*bits/8,32);header.writeUInt16LE(bits,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);return Buffer.concat([header,pcm]).toString('base64');
+}
+async function synthesizeWithGemini(text,language,gender){
+ const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(GEMINI_API_KEY.value()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(30000)});
+ if(!response.ok)throw Object.assign(new Error('Gemini TTS failed'),{status:response.status});const payload=await response.json(),audio=payload?.candidates?.[0]?.content?.parts?.find(part=>part.inlineData?.data)?.inlineData;if(!audio?.data)throw new Error('Gemini TTS returned no audio');return {audioBase64:pcmToWavBase64(audio.data),mimeType:'audio/wav'};
+}
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
  const day=assistantDay(),ref=db.collection('_assistantUsage').doc(`${day}_${uid}`),isVoice=source==='voice',seconds=Math.max(1,Math.min(120,Math.ceil(Number(voiceSeconds)||1)));
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),old=snapshot.data()||{},textRequests=Number(old.textRequests||0),usedVoice=Number(old.voiceSeconds||0);
@@ -117,7 +134,7 @@ async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
 async function recordAssistantMetrics(events){
  if(!events.length)return;const day=assistantDay(),ref=db.collection('_assistantMetrics').doc(day);
  await db.runTransaction(async tx=>{const snapshot=await tx.get(ref),data=snapshot.data()||{day,providers:{},automaticSwitches:0,errors:0};
-  data.providers=data.providers||{};events.forEach(event=>{const current=data.providers[event.provider]||{requests:0,inputTokens:0,outputTokens:0,errors:0,limits:0,timeouts:0,languageErrors:0};current.requests+=event.outcome==='limit'?0:1;current.inputTokens+=Number(event.inputTokens||0);current.outputTokens+=Number(event.outputTokens||0);if(event.outcome==='error')current.errors++;if(event.outcome==='language')current.languageErrors++;if(event.outcome==='limit')current.limits++;if(event.outcome==='timeout')current.timeouts++;data.providers[event.provider]=current;});
+  data.providers=data.providers||{};events.forEach(event=>{const current=data.providers[event.provider]||{requests:0,inputTokens:0,outputTokens:0,neurons:0,errors:0,limits:0,timeouts:0,languageErrors:0};current.requests+=event.outcome==='limit'?0:1;current.inputTokens+=Number(event.inputTokens||0);current.outputTokens+=Number(event.outputTokens||0);current.neurons+=Number(event.neurons||0);if(event.outcome==='error')current.errors++;if(event.outcome==='language')current.languageErrors++;if(event.outcome==='limit')current.limits++;if(event.outcome==='timeout')current.timeouts++;data.providers[event.provider]=current;});
   data.errors=Number(data.errors||0)+events.filter(event=>['error','timeout','language'].includes(event.outcome)).length;data.automaticSwitches=Number(data.automaticSwitches||0)+Math.max(0,events.length-1);data.updatedAt=Timestamp.now();tx.set(ref,data);
  });
 }
@@ -315,8 +332,8 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
   allowGemini:true,
   allowCloudflare:true,
   providerTimeoutMs:config.providerTimeoutMs,
-  beforeProvider:provider=>reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
-  onProviderEvent:event=>{events.push(event);}
+  beforeProvider:provider=>provider==='cloudflare'?reserveCloudflareNeurons(CLOUDFLARE_NEURON_RESERVATION,config.cloudflareDailyNeurons):reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
+  onProviderEvent:async event=>{events.push(event);if(event.provider==='cloudflare'){const actual=event.outcome==='success'||event.outcome==='language'?Number(event.neurons||0):0;await adjustCloudflareNeuronBudget(actual-CLOUDFLARE_NEURON_RESERVATION).catch(error=>console.error('Cloudflare neuron reconciliation failed',error?.message||error));}}
  });
  try{const result=await router({messages,language});await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
  catch(error){
@@ -337,10 +354,16 @@ exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_AP
  if(!allowed[mime]||!encoded||encoded.length>8_000_000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new HttpsError('invalid-argument','Invalid speech recording.');
  const audio=Buffer.from(encoded,'base64');if(audio.length<128||audio.length>6_000_000)throw new HttpsError('invalid-argument','Invalid speech recording size.');
  const config=await assistantConfig();if(!await reserveDailySpeechSeconds(request.data?.voiceSeconds,config.speechRecognitionSecondsPerDay))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');
- const fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';let result,provider='groq';
- try{result=await transcribeWithGroq(audio,mime,allowed[mime]);}
- catch(error){console.warn('Groq speech recognition unavailable; trying Gemini',error?.status||error?.name||'error');if(!await reserveDailyAssistantBudget('gemini-speech',config.geminiSpeechDailyRequests))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');try{result=await transcribeWithGemini(encoded,mime,fallback);provider='gemini';}catch(secondError){console.error('All cloud speech recognition providers failed',secondError?.status||secondError?.name||'error');throw new HttpsError('unavailable','Speech recognition unavailable.');}}
- const text=String(result?.text||'').trim().slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');const language=speechLanguage(result?.language,text,fallback);return {text,language,providerSwitched:provider==='gemini'};
+ const fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';let result,provider='gemini';
+ try{if(!await reserveDailyAssistantBudget('gemini-speech',config.geminiSpeechDailyRequests))throw Object.assign(new Error('Gemini speech limit reached'),{status:429});result=await transcribeWithGemini(encoded,mime,fallback);}
+ catch(error){console.warn('Gemini speech recognition unavailable; trying Groq',error?.status||error?.name||'error');try{result=await transcribeWithGroq(audio,mime,allowed[mime]);provider='groq';}catch(secondError){console.error('All cloud speech recognition providers failed',secondError?.status||secondError?.name||'error');throw new HttpsError('unavailable','Speech recognition unavailable.');}}
+ const text=String(result?.text||'').trim().slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');const language=speechLanguage(result?.language,text,fallback);return {text,language,providerSwitched:provider!=='gemini'};
+});
+
+exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{
+ signedIn(request);const text=String(request.data?.text||'').trim(),language=['de','en','tr','ar','fa'].includes(request.data?.language)?request.data.language:'en',gender=request.data?.gender==='male'?'male':'female';
+ if(!text||text.length>1200)throw new HttpsError('invalid-argument','Invalid speech text.');const config=await assistantConfig();if(!await reserveDailyAssistantBudget('gemini-tts',config.geminiTtsDailyRequests))throw new HttpsError('resource-exhausted','Free TTS limit reached.');
+ try{return await synthesizeWithGemini(text,language,gender);}catch(error){console.warn('Gemini TTS unavailable',error?.status||error?.name||'error');throw new HttpsError('unavailable','Speech output unavailable.');}
 });
 
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
@@ -348,13 +371,13 @@ exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
  const users={active:usageSnapshot.size,textRequests:0,voiceSeconds:0};usageSnapshot.forEach(doc=>{const data=doc.data();users.textRequests+=Number(data.textRequests||0);users.voiceSeconds+=Number(data.voiceSeconds||0);});
  const dates=Array.from({length:7},(_,index)=>{const date=new Date();date.setDate(date.getDate()-index);return assistantDay(date);});
  const metricDocs=await Promise.all(dates.map(day=>db.collection('_assistantMetrics').doc(day).get()));
- const telephony=await getTelephonyDashboardData(db);
- return {today,config,users,days:metricDocs.filter(doc=>doc.exists).map(doc=>doc.data()),telephony,generatedAt:new Date().toISOString()};
+ const telephony=await getTelephonyDashboardData(db),cloudflareDay=new Date().toISOString().slice(0,10),cloudflareBudget=(await db.collection('_assistantBudgets').doc(`cloudflare-neurons-${cloudflareDay}`).get()).data()||{};
+ return {today,config,users,days:metricDocs.filter(doc=>doc.exists).map(doc=>doc.data()),cloudflareUsage:{day:cloudflareDay,neurons:Number(cloudflareBudget.neurons||0)},telephony,generatedAt:new Date().toISOString()};
 });
 
 exports.updateAssistantAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const data=request.data||{},next={};
- for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['geminiSpeechDailyRequests',1,2000],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
+ for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['geminiSpeechDailyRequests',1,2000],['geminiTtsDailyRequests',1,2000],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyNeurons',1,10000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
  await db.collection('_assistantConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});return {config:{...assistantDefaults,...next}};
 });
 

@@ -27,6 +27,11 @@ tr:{
 }
 };
 Object.assign(T.de,{speechLimit:'Whisper-Stunden gesamt',geminiSpeechLimit:'Gemini-Spracherkennungen'});Object.assign(T.en,{speechLimit:'Total Whisper hours',geminiSpeechLimit:'Gemini speech transcriptions'});Object.assign(T.ar,{speechLimit:'إجمالي ساعات Whisper',geminiSpeechLimit:'عمليات التعرّف الصوتي عبر Gemini'});Object.assign(T.fa,{speechLimit:'مجموع ساعت‌های Whisper',geminiSpeechLimit:'تشخیص‌های گفتار Gemini'});Object.assign(T.tr,{speechLimit:'Toplam Whisper saati',geminiSpeechLimit:'Gemini konuşma tanımaları'});
+Object.assign(T.de,{geminiTtsLimit:'Gemini-Sprachausgaben',cloudflareNeuronLimit:'Cloudflare Neurons pro UTC-Tag',aiMetricNotice:'Groq und Gemini zeigen interne Doori-Schutzlimits, keine vom Anbieter gemeldeten Restkontingente. Cloudflare wird anhand der gemeldeten Tokens in geschätzte Neurons umgerechnet; das offizielle Kontingent wird täglich um 00:00 UTC zurückgesetzt.',estimatedNeurons:'geschätzte Neurons',internalRequests:'interne Requests'});
+Object.assign(T.en,{geminiTtsLimit:'Gemini voice outputs',cloudflareNeuronLimit:'Cloudflare Neurons per UTC day',aiMetricNotice:'Groq and Gemini show internal Doori safety caps, not provider-reported remaining quotas. Cloudflare tokens are converted to estimated Neurons; the official allocation resets daily at 00:00 UTC.',estimatedNeurons:'estimated Neurons',internalRequests:'internal requests'});
+Object.assign(T.ar,{geminiTtsLimit:'مخرجات Gemini الصوتية',cloudflareNeuronLimit:'وحدات Neurons لـ Cloudflare لكل يوم UTC',aiMetricNotice:'يعرض Groq وGemini حدود الحماية الداخلية في Doori وليس الحصص المتبقية المبلغ عنها من المزود. تُحوّل رموز Cloudflare إلى Neurons تقديرية، وتُعاد الحصة الرسمية يومياً عند 00:00 UTC.',estimatedNeurons:'Neurons تقديرية',internalRequests:'طلبات داخلية'});
+Object.assign(T.fa,{geminiTtsLimit:'خروجی‌های صوتی Gemini',cloudflareNeuronLimit:'واحدهای Neurons کلادفلر در هر روز UTC',aiMetricNotice:'Groq و Gemini سقف‌های حفاظتی داخلی Doori را نشان می‌دهند، نه سهمیه باقی‌مانده اعلام‌شده از سوی ارائه‌دهنده. توکن‌های Cloudflare به Neurons تخمینی تبدیل می‌شوند و سهمیه رسمی هر روز ساعت ۰۰:۰۰ UTC بازنشانی می‌شود.',estimatedNeurons:'Neurons تخمینی',internalRequests:'درخواست‌های داخلی'});
+Object.assign(T.tr,{geminiTtsLimit:'Gemini sesli yanıtları',cloudflareNeuronLimit:'UTC günü başına Cloudflare Neurons',aiMetricNotice:'Groq ve Gemini, sağlayıcının bildirdiği kalan kotaları değil, Doori iç güvenlik sınırlarını gösterir. Cloudflare tokenları tahmini Neurons değerine dönüştürülür; resmi kota her gün 00:00 UTC’de sıfırlanır.',estimatedNeurons:'tahmini Neurons',internalRequests:'dahili istek'});
 
 let lang=localStorage.getItem('doori_operator_lang')||'de';
 const $=id=>document.getElementById(id),copy=()=>T[lang]||T.en;
@@ -50,14 +55,17 @@ function render(data){
  $('voice-total').textContent=(data.users.voiceSeconds/60).toFixed(1)+' min';
  const today=data.days.find(d=>d.day===data.today)||{providers:{},automaticSwitches:0};
  $('switch-total').textContent=today.automaticSwitches||0;
- const limits={groq:data.config.groqDailyRequests,gemini:data.config.geminiDailyRequests,cloudflare:data.config.cloudflareDailyRequests};
+ const limits={groq:data.config.groqDailyRequests,gemini:data.config.geminiDailyRequests,cloudflare:data.config.cloudflareDailyNeurons};
  $('provider-rows').innerHTML=['groq','gemini','cloudflare'].map(name=>{
-  const p=today.providers?.[name]||{},used=p.requests||0,max=limits[name],pct=Math.min(100,Math.round(used/max*100));
-  return `<tr><td>${name[0].toUpperCase()+name.slice(1)}</td><td>${used}</td><td>${(p.inputTokens||0)+(p.outputTokens||0)}</td><td>${pct}%<div class="meter"><i style="width:${pct}%"></i></div></td><td>${Math.max(0,max-used)}</td><td>${(p.errors||0)+(p.limits||0)}</td><td>${p.timeouts||0}</td></tr>`;
+  const p=today.providers?.[name]||{},requests=Number(p.requests||0),isCloudflare=name==='cloudflare';
+  const used=isCloudflare?Number(data.cloudflareUsage?.neurons||0):requests,max=Number(limits[name]||0),pct=max>0?Math.min(100,used/max*100):0;
+  const pctLabel=pct>0&&pct<0.1?'&lt;0.1%':`${pct.toFixed(1)}%`,remaining=Math.max(0,max-used);
+  const unit=isCloudflare?copy().estimatedNeurons:copy().internalRequests;
+  return `<tr><td>${name[0].toUpperCase()+name.slice(1)}</td><td>${requests}</td><td>${(p.inputTokens||0)+(p.outputTokens||0)}${isCloudflare?`<br><small>${used.toFixed(4)} ${copy().estimatedNeurons}</small>`:''}</td><td>${pctLabel}<div class="meter"><i style="width:${pct}%"></i></div></td><td>${isCloudflare?remaining.toFixed(4):Math.floor(remaining)} <small>${unit}</small></td><td>${(p.errors||0)+(p.limits||0)}</td><td>${p.timeouts||0}</td></tr>`;
  }).join('');
 
  const f=$('config-form');
- for(const key of ['textMessagesPerUser','geminiSpeechDailyRequests','groqDailyRequests','geminiDailyRequests','cloudflareDailyRequests','providerTimeoutMs'])f.elements[key].value=data.config[key];
+ for(const key of ['textMessagesPerUser','geminiSpeechDailyRequests','geminiTtsDailyRequests','groqDailyRequests','geminiDailyRequests','cloudflareDailyNeurons','providerTimeoutMs'])f.elements[key].value=data.config[key];
  f.elements.voiceMinutes.value=data.config.voiceSecondsPerUser/60;
  f.elements.speechRecognitionHours.value=(data.config.speechRecognitionSecondsPerDay/3600).toFixed(1);
 
@@ -135,9 +143,10 @@ $('config-form').onsubmit=async e=>{
    voiceSecondsPerUser:Number(f.elements.voiceMinutes.value)*60,
    speechRecognitionSecondsPerDay:Math.round(Number(f.elements.speechRecognitionHours.value)*3600),
    geminiSpeechDailyRequests:Number(f.elements.geminiSpeechDailyRequests.value),
+   geminiTtsDailyRequests:Number(f.elements.geminiTtsDailyRequests.value),
    groqDailyRequests:Number(f.elements.groqDailyRequests.value),
    geminiDailyRequests:Number(f.elements.geminiDailyRequests.value),
-   cloudflareDailyRequests:Number(f.elements.cloudflareDailyRequests.value),
+   cloudflareDailyNeurons:Number(f.elements.cloudflareDailyNeurons.value),
    providerTimeoutMs:Number(f.elements.providerTimeoutMs.value)
   });
   $('save-state').textContent=copy().saved;

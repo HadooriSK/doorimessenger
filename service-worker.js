@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v114-video-layout-fix';
+const CACHE_NAME = 'web-messenger-v115-gemini-voice-metrics';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
   '/app.js?v=352',
-  '/tts.js?v=1',
-  '/assistant.js?v=2',
+  '/tts.js?v=3',
+  '/assistant.js?v=4',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',

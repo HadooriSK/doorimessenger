@@ -5,6 +5,8 @@ const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL='openai/gpt-oss-20b';
 const GEMINI_MODEL='gemini-2.5-flash-lite';
 const CLOUDFLARE_MODEL='@cf/meta/llama-3.2-1b-instruct';
+const CLOUDFLARE_INPUT_NEURONS_PER_MILLION=2457;
+const CLOUDFLARE_OUTPUT_NEURONS_PER_MILLION=18252;
 
 class LocalFallbackError extends Error{
  constructor(){super('LOCAL_FALLBACK_REQUIRED');this.code='LOCAL_FALLBACK_REQUIRED';}
@@ -25,6 +27,7 @@ function systemPrompt(language){
 }
 const estimatedTokens=value=>Math.max(1,Math.ceil(String(value||'').length/4));
 const estimatedInput=messages=>messages.reduce((sum,message)=>sum+estimatedTokens(message.content),0);
+const cloudflareNeurons=(inputTokens,outputTokens)=>Number(((Number(inputTokens||0)*CLOUDFLARE_INPUT_NEURONS_PER_MILLION+Number(outputTokens||0)*CLOUDFLARE_OUTPUT_NEURONS_PER_MILLION)/1_000_000).toFixed(4));
 
 async function parseJson(response){
  try{return await response.json();}catch{return null;}
@@ -64,7 +67,10 @@ async function callCloudflare({fetchImpl,token,accountId,messages,language,signa
  if(!response.ok)return null;
  const json=await parseJson(response),text=String(json?.result?.response||json?.result?.text||'').trim();
  const usage=json?.result?.usage||{};
- return text?{text,inputTokens:Number(usage.prompt_tokens||usage.input_tokens||estimatedInput(cloudflareMessages)),outputTokens:Number(usage.completion_tokens||usage.output_tokens||estimatedTokens(text))}:null;
+ if(!text)return null;
+ const inputTokens=Number(usage.prompt_tokens||usage.input_tokens||estimatedInput(cloudflareMessages));
+ const outputTokens=Number(usage.completion_tokens||usage.output_tokens||estimatedTokens(text));
+ return {text,inputTokens,outputTokens,neurons:cloudflareNeurons(inputTokens,outputTokens)};
 }
 
 async function withDeadline(task,milliseconds){
@@ -78,18 +84,18 @@ function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudfla
   const compact=compactMessages(messages);
   if(!compact.length)throw new LocalFallbackError();
   const providers=[
-   ['groq',allowGroq,signal=>callGroq({fetchImpl,key:groqKey,messages:compact,language,signal})],
    ['gemini',allowGemini,signal=>callGemini({fetchImpl,key:geminiKey,messages:compact,language,signal})],
+   ['groq',allowGroq,signal=>callGroq({fetchImpl,key:groqKey,messages:compact,language,signal})],
    ['cloudflare',allowCloudflare,signal=>callCloudflare({fetchImpl,token:cloudflareToken,accountId:cloudflareAccountId,messages:compact,language,signal})]
   ];
   for(const [provider,allowed,task] of providers){
    if(!allowed)continue;
    if(!await beforeProvider(provider)){await onProviderEvent({provider,outcome:'limit',inputTokens:0,outputTokens:0});continue;}
-   try{const answer=await withDeadline(task,providerTimeoutMs);if(answer&&!sameLanguage(answer.text,language)){await onProviderEvent({provider,outcome:'language',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});continue;}if(answer){await onProviderEvent({provider,outcome:'success',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});return language?{text:answer.text,language}:{text:answer.text};}await onProviderEvent({provider,outcome:'error',inputTokens:0,outputTokens:0});}
+   try{const answer=await withDeadline(task,providerTimeoutMs);if(answer&&!sameLanguage(answer.text,language)){await onProviderEvent({provider,outcome:'language',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens,neurons:answer.neurons});continue;}if(answer){await onProviderEvent({provider,outcome:'success',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens,neurons:answer.neurons});return language?{text:answer.text,language}:{text:answer.text};}await onProviderEvent({provider,outcome:'error',inputTokens:0,outputTokens:0,neurons:0});}
    catch(error){await onProviderEvent({provider,outcome:error?.name==='AbortError'||String(error?.message).includes('TIMEOUT')?'timeout':'error',inputTokens:0,outputTokens:0});}
   }
   throw new LocalFallbackError();
  };
 }
 
-module.exports={createAssistantRouter,compactMessages,LocalFallbackError,GROQ_MODEL,GEMINI_MODEL,CLOUDFLARE_MODEL};
+module.exports={createAssistantRouter,compactMessages,LocalFallbackError,GROQ_MODEL,GEMINI_MODEL,CLOUDFLARE_MODEL,cloudflareNeurons};
