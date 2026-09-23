@@ -343,3 +343,32 @@ Ein Blick in die Cloud Functions Logs zeigte die Ursache für den Tonausfall:
 - `npm.cmd run build`: **36 allowlistete Dateien erfolgreich gebaut**.
 - Cloud Functions & Hosting erfolgreich aktualisiert.
 
+---
+
+## 11. Gemini Live Echtzeit-Sprachmodus (`gemini-3.8-live`)
+
+### 11.1 Anforderung & Architektur
+Echter bidirektionaler Live-Sprachmodus in Echtzeit mit Unterbrechungen (Barge-in), separatem „Live"-Button und 100% kostenfreier Nutzung ohne Billing-Risiko:
+- **Modell:** `models/gemini-3.8-live` (Google AI Studio Live API)
+- **Sicherheit & Secret-Isolation:** Der `GEMINI_API_KEY` verlässt niemals das Backend. Die Cloud Function `getLiveToken` ruft Googles REST-Endpoint `https://generativelanguage.googleapis.com/v1beta/auth_tokens` auf und generiert ein flüchtiges (ephemeral) Token.
+- **WebSocket-Verbindung:** Der Browser verbindet sich direkt mit `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=<ephemeralToken>`
+- **Audio-Streaming:**
+  - Aufnahme: 16 kHz PCM (Int16) via AudioWorklet / ScriptProcessor, base64-kodiert als `realtime_input`.
+  - Wiedergabe: 24 kHz PCM (Int16) via Web Audio API (`AudioContext`).
+- **Unterbrechungen (Barge-in):** Die KI kann jederzeit unterbrochen werden. Empfangene `interrupted: true` Server-Events sowie lokale Lautstärkeerkennung (RMS > 0.04) stoppen die Audiowiedergabe sofort und versetzen Doori in den Zuhörmodus.
+- **Kontingentschutz & Auto-Deaktivierung:**
+  - Tägliches Budget wird in Firestore (`_assistantBudgets/live-{uid}-{day}`) erfasst.
+  - Bei 429 (`RESOURCE_EXHAUSTED`) oder erschöpftem Budget wird der Live-Button optisch deaktiviert und zeigt: *„Live momentan nicht verfügbar – kostenloses Kontingent erreicht. Bitte später erneut versuchen.“* (in allen 5 Sprachen).
+  - Ein sanfter Retry-Timer (alle 60s) prüft im Hintergrund, ob das Kontingent wieder frei ist, und reaktiviert den Button automatisch ohne App-Neustart.
+- **Bestehende Funktionen:** Der normale Sprachbutton (`#assistant-mic-btn`), Textchat, Telefonie und alle sonstigen Funktionen bleiben zu 100% unberührt.
+- **Mehrsprachigkeit:** Vollständige Übersetzungen für Deutsch, Englisch, Arabisch, Persisch (RTL) und Türkisch.
+
+### 11.2 Geänderte & neue Dateien
+1. **`doori-live.js` (NEU):** Client-Modul für Gemini Live API, WebSocket-Lifecycle, PCM-Audio, Barge-in, Quota-Handling.
+2. **`functions/index.js`:** Cloud Function `getLiveToken` mit Budget-Prüfung und `v1beta/auth_tokens`-Anbindung.
+3. **`assistant.js`:** Steuerung des Live-Buttons synchron zum Assistenten-Status (`updateControls`, `initialize`).
+4. **`index.html`:** `#doori-live-btn` und `#doori-live-status` im Composer integriert; `doori-live.js?v=1` eingebunden; Versionen gebumpt (`assistant.js?v=9`, `app.js?v=354`).
+5. **`service-worker.js`:** Cache `web-messenger-v121-gemini-live` mit `doori-live.js?v=1`.
+6. **`scripts/build-hosting.cjs`:** `doori-live.js` zur Allowlist hinzugefügt (37 Dateien).
+7. **`tests/assistant.test.cjs`:** Test für Gemini Live Modus ergänzt (55/55 Tests grün).
+

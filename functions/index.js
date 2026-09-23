@@ -371,6 +371,37 @@ exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeou
  try{return await synthesizeWithGemini(text,language,gender);}catch(error){console.warn('Gemini TTS unavailable',error?.status||error?.name||'error');throw new HttpsError('unavailable','Speech output unavailable.');}
 });
 
+exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=>{
+ const uid=signedIn(request);
+ await limit(request,'live-token:'+uid,10);
+ const config=await assistantConfig();
+ const liveDailyLimit=Number(config.liveDailySessionsPerUser||20);
+ const day=assistantDay();
+ const budgetRef=db.collection('_assistantBudgets').doc(`live-${uid}-${day}`);
+ const allowed=await db.runTransaction(async tx=>{
+  const snap=await tx.get(budgetRef);
+  const used=Number(snap.data()?.sessions||0);
+  if(used>=liveDailyLimit)return false;
+  tx.set(budgetRef,{sessions:used+1,day,uid,updatedAt:Timestamp.now()});
+  return true;
+ });
+ if(!allowed)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
+ const key=getGeminiKey();
+ if(!key)throw new HttpsError('internal','Live AI not configured.');
+ const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/auth_tokens?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({}),signal:AbortSignal.timeout(10000)});
+ if(!response.ok){
+  const errBody=await response.json().catch(()=>({}));
+  if(response.status===429)throw new HttpsError('resource-exhausted','Live quota reached.');
+  console.error('getLiveToken: Gemini error',response.status,errBody?.error?.message||'');
+  throw new HttpsError('unavailable','Live token unavailable.');
+ }
+ const json=await response.json();
+ const raw=String(json?.name||json?.token||'').trim();
+ const token=raw.replace(/^auth_tokens\//,'');
+ if(!token)throw new HttpsError('internal','Invalid live token response.');
+ return {token,expiresAt:Date.now()+1800000};
+});
+
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const config=await assistantConfig(),today=assistantDay(),usageSnapshot=await db.collection('_assistantUsage').where('day','==',today).get();
  const users={active:usageSnapshot.size,textRequests:0,voiceSeconds:0};usageSnapshot.forEach(doc=>{const data=doc.data();users.textRequests+=Number(data.textRequests||0);users.voiceSeconds+=Number(data.voiceSeconds||0);});

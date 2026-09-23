@@ -141,3 +141,25 @@ test('per-user AI limits and protected operator dashboard are server enforced',(
  assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8'),/operator-console|operator\.html/);
  const config=JSON.parse(fs.readFileSync(path.join(root,'firebase.json'),'utf8'));assert.ok(config.hosting.rewrites.some(item=>item.source==='/operator-console'&&item.destination==='/operator.html'));
 });
+
+test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 languages and secure isolation',()=>{
+ const liveClient=fs.readFileSync(path.join(root,'doori-live.js'),'utf8');
+ for(const lang of ['de','en','ar','fa','tr']) assert.match(liveClient,new RegExp(`\\b${lang}:\\s*\\{`));
+ assert.match(liveClient,/models\/gemini-3\.8-live/);
+ assert.match(liveClient,/BidiGenerateContentConstrained/);
+ assert.match(liveClient,/getLiveToken/);
+ assert.doesNotMatch(liveClient,/AIza|AQ\.[A-Za-z0-9]|GROQ_API_KEY|CLOUDFLARE_API_TOKEN/);
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ assert.match(html,/id="doori-live-btn"/);
+ assert.match(html,/id="doori-live-status"/);
+ assert.match(html,/doori-live\.js\?v=1/);
+ const sw=fs.readFileSync(path.join(root,'service-worker.js'),'utf8');
+ assert.match(sw,/doori-live\.js/);
+ const build=fs.readFileSync(path.join(root,'scripts/build-hosting.cjs'),'utf8');
+ assert.match(build,/'doori-live\.js'/);
+ const functions=fs.readFileSync(path.join(root,'functions/index.js'),'utf8');
+ assert.match(functions,/exports\.getLiveToken=onCall/);
+ assert.match(functions,/v1beta\/auth_tokens/);
+ assert.match(functions,/liveDailySessionsPerUser/);
+ assert.match(functions,/liveDailyLimit/);
+});

@@ -325,6 +325,8 @@
                             <div class="composer-main-row">
                                 <textarea id="message-input" placeholder="Nachricht schreiben..." data-i18n="placeholder_msg" style="flex-grow: 1; resize: none; min-height: 40px; max-height: 100px; font-family: inherit; font-size: inherit; border-radius: 20px; padding: 10px 15px; border: 1px solid rgba(128,128,128,0.2); background: transparent; color: var(--text);"></textarea>
                                 <button type="button" id="assistant-mic-btn" class="icon-btn assistant-control hidden" aria-label="Mit Doori sprechen">🎙️</button>
+                                <button type="button" id="doori-live-btn" class="icon-btn assistant-control live-btn hidden" aria-label="Live">Live</button>
+                                <span id="doori-live-status" class="doori-live-status hidden"></span>
                                 <button type="button" id="assistant-voice-btn" class="icon-btn assistant-control hidden" aria-label="Sprachausgabe">🔊</button>
                                 <select id="assistant-voice-select" class="assistant-voice-select hidden" aria-label="Stimme"><option value="female">Weibliche Stimme</option><option value="male">Männliche Stimme</option></select>
                                 <div class="send-btn-container composer-send">
@@ -995,8 +997,9 @@
     <meta name="doori-tts-endpoint" content="">
     <script src="assistant-language.js?v=1"></script>
     <script src="tts.js?v=7"></script>
-    <script src="assistant.js?v=8"></script>
-    <script src="app.js?v=353"></script>
+    <script src="doori-live.js?v=1"></script>
+    <script src="assistant.js?v=9"></script>
+    <script src="app.js?v=354"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="vendor/telephony-providers.js?v=1"></script>
     <script src="agora-calls.js?v=3"></script>

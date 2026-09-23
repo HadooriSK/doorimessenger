@@ -1,11 +1,12 @@
-const CACHE_NAME = 'web-messenger-v120-ios-audio-brevity';
+const CACHE_NAME = 'web-messenger-v121-gemini-live';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
-  '/app.js?v=353',
+  '/app.js?v=354',
   '/tts.js?v=7',
-  '/assistant.js?v=8',
+  '/doori-live.js?v=1',
+  '/assistant.js?v=9',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',
