@@ -1,0 +1,25 @@
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.DooriLanguage=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ 'use strict';
+ const supported=['de','en','tr','ar','fa'];
+ const words={
+  de:new Set('der die das ein eine einen und ist sind ich du wir nicht bitte wie was warum kann kannst mein meine mit für auf auch mir dir'.split(' ')),
+  en:new Set('the a an and is are i you we not please how what why can could my your with for also me'.split(' ')),
+  tr:new Set('bir bu şu ve ile için ben sen biz siz değil lütfen nasıl ne neden niçin benim senin mı mi mu mü'.split(' ')),
+  ar:new Set('هذا هذه هو هي أنا انت أنت نحن ليس لا من إلى على في كيف ماذا لماذا هل رجاء شكرا'.split(' ')),
+  fa:new Set('این آن است هست من تو شما ما نیست نه از به برای در چگونه چه چرا آیا لطفا ممنون می'.split(' '))
+ };
+ const normalize=value=>String(value||'').toLocaleLowerCase().replace(/[’']/g,'').match(/[\p{L}\p{M}]+/gu)||[];
+ function detect(value,fallback='en'){
+  const text=String(value||'').trim(),safe=supported.includes(fallback)?fallback:'en';if(!text)return {language:safe,confidence:0};
+  const scores={de:0,en:0,tr:0,ar:0,fa:0},tokens=normalize(text);
+  for(const token of tokens)for(const language of supported)if(words[language].has(token))scores[language]+=1;
+  if(/[ğüşöçıİ]/i.test(text))scores.tr+=4;if(/[äöüß]/i.test(text))scores.de+=4;
+  if(/[\u0600-\u06ff]/.test(text)){scores.ar+=2;scores.fa+=2;if(/[پچژگک‌ی]/.test(text))scores.fa+=4;if(/[ةۀؤإأٱ]/.test(text))scores.ar+=3;}
+  const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]),best=ranked[0],second=ranked[1];
+  if(best[1]>=2&&best[1]-second[1]>=1)return {language:best[0],confidence:Math.min(.99,.55+best[1]*.08)};
+  return {language:safe,confidence:best[1]?0.45:0.2};
+ }
+ function sameLanguage(value,expected){const result=detect(value,expected);return result.confidence<.7||result.language===expected;}
+ function locale(language){return {de:'de-DE',en:'en-US',tr:'tr-TR',ar:'ar-SA',fa:'fa-IR'}[language]||'en-US';}
+ return {supported,detect,sameLanguage,locale};
+});

@@ -46,6 +46,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+tts-server/voices/
 
 # Optional npm cache directory
 .npm

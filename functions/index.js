@@ -7,6 +7,7 @@ const {getFirestore,Timestamp}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
 const {RtcTokenBuilder,RtcRole}=require('agora-token');
 const {createAssistantRouter,LocalFallbackError}=require('./assistant-router');
+const {detect:detectAssistantLanguage}=require('./assistant-language');
 initializeApp();
 const db=getFirestore(),auth=getAuth();
 const BREVO_API_KEY=defineSecret('BREVO_API_KEY');
@@ -96,8 +97,8 @@ async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
 async function recordAssistantMetrics(events){
  if(!events.length)return;const day=assistantDay(),ref=db.collection('_assistantMetrics').doc(day);
  await db.runTransaction(async tx=>{const snapshot=await tx.get(ref),data=snapshot.data()||{day,providers:{},automaticSwitches:0,errors:0};
-  data.providers=data.providers||{};events.forEach(event=>{const current=data.providers[event.provider]||{requests:0,inputTokens:0,outputTokens:0,errors:0,limits:0,timeouts:0};current.requests+=event.outcome==='limit'?0:1;current.inputTokens+=Number(event.inputTokens||0);current.outputTokens+=Number(event.outputTokens||0);if(event.outcome==='error')current.errors++;if(event.outcome==='limit')current.limits++;if(event.outcome==='timeout')current.timeouts++;data.providers[event.provider]=current;});
-  data.errors=Number(data.errors||0)+events.filter(event=>['error','timeout'].includes(event.outcome)).length;data.automaticSwitches=Number(data.automaticSwitches||0)+Math.max(0,events.length-1);data.updatedAt=Timestamp.now();tx.set(ref,data);
+  data.providers=data.providers||{};events.forEach(event=>{const current=data.providers[event.provider]||{requests:0,inputTokens:0,outputTokens:0,errors:0,limits:0,timeouts:0,languageErrors:0};current.requests+=event.outcome==='limit'?0:1;current.inputTokens+=Number(event.inputTokens||0);current.outputTokens+=Number(event.outputTokens||0);if(event.outcome==='error')current.errors++;if(event.outcome==='language')current.languageErrors++;if(event.outcome==='limit')current.limits++;if(event.outcome==='timeout')current.timeouts++;data.providers[event.provider]=current;});
+  data.errors=Number(data.errors||0)+events.filter(event=>['error','timeout','language'].includes(event.outcome)).length;data.automaticSwitches=Number(data.automaticSwitches||0)+Math.max(0,events.length-1);data.updatedAt=Timestamp.now();tx.set(ref,data);
  });
 }
 function requireAdmin(request){signedIn(request,true);const allowed=String(DOORI_ADMIN_EMAIL.value()||'').trim().toLowerCase(),actual=String(request.auth.token.email||'').trim().toLowerCase();if(!allowed||actual!==allowed)throw new HttpsError('permission-denied','Operator access required.');}
@@ -226,7 +227,9 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
  if(rawMessages.length<1||rawMessages.length>10)throw new HttpsError('invalid-argument','Invalid assistant context.');
  const messages=rawMessages.map(message=>({role:message?.role==='assistant'?'assistant':'user',content:String(message?.content||'')}));
  if(messages.some(message=>!message.content.trim()||message.content.length>2000))throw new HttpsError('invalid-argument','Invalid assistant message.');
- const language=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'auto';
+ const requestedLanguage=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'en';
+ const latestUser=[...messages].reverse().find(message=>message.role==='user')?.content||'';
+ const language=detectAssistantLanguage(latestUser,requestedLanguage).language;
  const config=await assistantConfig(),source=request.data?.source==='voice'?'voice':'text';
  const userUsage=await reserveUserAssistantUsage(uid,source,request.data?.voiceSeconds,config);
  const events=[];

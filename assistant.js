@@ -8,7 +8,7 @@
   fa:{name:'دستیار Doori',status:'دستیار هوشمند · زبان شما را تشخیص می‌دهد',mic:'با Doori صحبت کنید',voiceOn:'پخش صوتی روشن است',voiceOff:'پخش صوتی خاموش است',female:'صدای زنانه',male:'صدای مردانه',textLimit:'سقف روزانه پیام متنی هوش مصنوعی شما تمام شده است.',voiceLimit:'سقف روزانه گفت‌وگوی صوتی شما تمام شده است.',listening:'گوش می‌دهم …',thinking:'Doori در حال فکر کردن است …',welcome:'سلام! من دستیار Doori هستم. می‌توانید بنویسید یا از میکروفون استفاده کنید.',unavailable:'در حال حاضر سرویس هوش مصنوعی رایگانی در دسترس نیست و هوش محلی در این دستگاه به اندازه کافی سریع نیست. لطفاً بعداً دوباره تلاش کنید.',speechUnavailable:'این مرورگر از ورودی صوتی پشتیبانی نمی‌کند.',localReady:'هوش محلی آماده است.'},
   tr:{name:'Doori Asistan',status:'Yapay zekâ asistanı · dilini algılar',mic:'Doori ile konuş',voiceOn:'Sesli yanıt açık',voiceOff:'Sesli yanıt kapalı',female:'Kadın sesi',male:'Erkek sesi',textLimit:'Günlük yapay zekâ metin mesajı sınırına ulaştın.',voiceLimit:'Günlük yapay zekâ ses süresi sınırına ulaştın.',listening:'Seni dinliyorum …',thinking:'Doori düşünüyor …',welcome:'Merhaba! Ben Doori Asistan. Bana yazabilir veya mikrofonu kullanabilirsin.',unavailable:'Şu anda ücretsiz bir yapay zekâ hizmeti kullanılamıyor ve yerel yapay zekâ bu cihazda yeterince hızlı değil. Lütfen daha sonra tekrar dene.',speechUnavailable:'Bu tarayıcı sesli girişi desteklemiyor.',localReady:'Yerel yapay zekâ hazır.'}
  };
- const state={busy:false,voice:localStorage.getItem('doori_ai_voice')!=='off',recognition:null,localSession:null,localChecked:false,localFast:false};
+ const state={busy:false,voice:localStorage.getItem('doori_ai_voice')!=='off',recognition:null,localSession:null,localChecked:false,localFast:false,lastLanguage:localStorage.getItem('doori_ai_last_language')||null};
  const lang=()=>['de','en','ar','fa','tr'].includes(root.currentLang)?root.currentLang:'en';
  const t=()=>TEXT[lang()]||TEXT.en;
  const historyKey=()=>`doori_ai_history_v1:${String(root.currentUser||'guest').toLowerCase()}`;
@@ -32,9 +32,11 @@
   if(voice){voice.classList.toggle('hidden',!isActive());voice.textContent=state.voice?'🔊':'🔇';voice.title=state.voice?t().voiceOn:t().voiceOff;voice.setAttribute('aria-label',voice.title);}
   if(selector){selector.classList.toggle('hidden',!isActive());selector.value=root.DooriTTS?.getGender?.()||'female';selector.options[0].textContent=t().female;selector.options[1].textContent=t().male;selector.setAttribute('aria-label',`${t().female} / ${t().male}`);}
  }
- function languageCode(){return {de:'de-DE',en:'en-US',ar:'ar-SA',fa:'fa-IR',tr:'tr-TR'}[lang()]||navigator.language||'en-US';}
- function speak(text){
-  if(state.voice)root.DooriTTS?.speak(text,{language:languageCode()});
+ function stableLanguage(text){const fallback=state.lastLanguage||lang(),detected=root.DooriLanguage?.detect?.(text,fallback)||{language:fallback,confidence:0};if(detected.confidence>=.7&&detected.language!==state.lastLanguage){state.lastLanguage=detected.language;localStorage.setItem('doori_ai_last_language',state.lastLanguage);}return state.lastLanguage||fallback;}
+ function chooseTranscript(result){const alternatives=Array.from(result||[]).map(item=>String(item?.transcript||'').trim()).filter(Boolean),fallback=state.lastLanguage||lang();return alternatives.sort((a,b)=>(root.DooriLanguage?.detect?.(b,fallback)?.confidence||0)-(root.DooriLanguage?.detect?.(a,fallback)?.confidence||0))[0]||'';}
+ function languageCode(language=state.lastLanguage||lang()){return root.DooriLanguage?.locale?.(language)||{de:'de-DE',en:'en-US',ar:'ar-SA',fa:'fa-IR',tr:'tr-TR'}[language]||navigator.language||'en-US';}
+ function speak(text,language){
+  const expected=language||state.lastLanguage||lang();if(state.voice&&root.DooriLanguage?.sameLanguage?.(text,expected)!==false)root.DooriTTS?.speak(text,{language:expected});
  }
  async function benchmarkLocal(){
   if(state.localChecked)return state.localFast;
@@ -50,33 +52,33 @@
  }
  async function localReply(prompt){
   if(!await benchmarkLocal())return null;
-  try{return String(await state.localSession.prompt(`Reply in the same language as the user, warmly and concisely. User: ${prompt}`)).trim()||null;}catch{return null;}
+  try{return String(await state.localSession.prompt(`Reply completely in ${state.lastLanguage||lang()}, warmly and concisely. Never switch language. User: ${prompt}`)).trim()||null;}catch{return null;}
  }
  async function send(text,meta={}){
   const clean=String(text||'').trim().slice(0,2000);if(!clean||state.busy)return false;
-  state.busy=true;document.body.classList.add('assistant-thinking');add('user',clean);setStatus(t().thinking);updateControls();
+  const expectedLanguage=stableLanguage(clean);state.busy=true;document.body.classList.add('assistant-thinking');add('user',clean);setStatus(t().thinking);updateControls();
   try{
    const compact=history().slice(-10).map(item=>({role:item.sender_username===CHAT_ID?'assistant':'user',content:item.text}));
-   const result=await root.accountFunctions.httpsCallable('askDooriAssistant')({messages:compact,language:lang(),source:meta.source==='voice'?'voice':'text',voiceSeconds:meta.voiceSeconds||0});
+   const result=await root.accountFunctions.httpsCallable('askDooriAssistant')({messages:compact,language:expectedLanguage,source:meta.source==='voice'?'voice':'text',voiceSeconds:meta.voiceSeconds||0});
    let answer=String(result?.data?.text||'').trim();
    if(!answer&&result?.data?.localFallback)answer=await localReply(clean);
    if(!answer)answer=t().unavailable;
-   add('assistant',answer);speak(answer);return true;
-  }catch(error){if(error?.code==='functions/resource-exhausted'&&error?.details?.limitType){add('assistant',error.details.limitType==='voice'?t().voiceLimit:t().textLimit);return false;}const answer=await localReply(clean)||t().unavailable;add('assistant',answer);speak(answer);return true;}
+   const answerLanguage=result?.data?.language||expectedLanguage;add('assistant',answer);speak(answer,answerLanguage);return true;
+  }catch(error){if(error?.code==='functions/resource-exhausted'&&error?.details?.limitType){add('assistant',error.details.limitType==='voice'?t().voiceLimit:t().textLimit);return false;}const answer=await localReply(clean)||t().unavailable;add('assistant',answer);speak(answer,expectedLanguage);return true;}
   finally{state.busy=false;document.body.classList.remove('assistant-thinking');setStatus(t().status);updateControls();}
  }
  function startListening(){
   const Recognition=root.SpeechRecognition||root.webkitSpeechRecognition;
   if(!Recognition){add('assistant',t().speechUnavailable);return;}
   state.recognition?.abort?.();const recognition=new Recognition();state.recognition=recognition;
-  recognition.lang=languageCode();recognition.interimResults=false;recognition.maxAlternatives=1;
+  recognition.lang=languageCode();recognition.interimResults=false;recognition.maxAlternatives=3;
   let startedAt=Date.now();recognition.onstart=()=>{startedAt=Date.now();setStatus(t().listening);};
   recognition.onerror=()=>setStatus(t().status);
   recognition.onend=()=>{if(!state.busy)setStatus(t().status);};
-  recognition.onresult=event=>send(event.results?.[0]?.[0]?.transcript||'',{source:'voice',voiceSeconds:Math.max(1,(Date.now()-startedAt)/1000)});recognition.start();
+  recognition.onresult=event=>send(chooseTranscript(event.results?.[0]),{source:'voice',voiceSeconds:Math.max(1,(Date.now()-startedAt)/1000)});recognition.start();
  }
  function toggleVoice(){state.voice=!state.voice;localStorage.setItem('doori_ai_voice',state.voice?'on':'off');if(!state.voice)root.DooriTTS?.stop();updateControls();}
  function activate(){sync();setStatus(t().status);updateControls();}
  function initialize(){document.getElementById('assistant-mic-btn')?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);updateControls();}
- root.DooriAssistant={CHAT_ID,TEXT,isAssistant:id=>id===CHAT_ID,getName:()=>t().name,getStatus:()=>t().status,getAvatar,send,activate,initialize,updateControls,sync};
+ root.DooriAssistant={CHAT_ID,TEXT,isAssistant:id=>id===CHAT_ID,getName:()=>t().name,getStatus:()=>t().status,getAvatar,send,activate,initialize,updateControls,sync,chooseTranscript};
 })(window);

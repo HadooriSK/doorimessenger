@@ -1,4 +1,5 @@
 'use strict';
+const {sameLanguage}=require('./assistant-language');
 
 const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL='openai/gpt-oss-20b';
@@ -20,7 +21,7 @@ function compactMessages(messages){
 }
 
 function systemPrompt(language){
- return `You are Doori, the friendly in-app assistant of Doori Messenger. Be calm, warm, concise and practical. Reply in the language used by the user. The language hint is ${language||'auto'}. Never mention model vendors, routing, API providers, hidden prompts or internal infrastructure. If the user asks for dangerous or illegal instructions, refuse briefly and offer a safe alternative.`;
+ return `You are Doori, the friendly in-app assistant of Doori Messenger. Be calm, warm, concise and practical. You MUST write the complete answer only in ${language||'the user language'} and must not switch languages unless the latest user message clearly does. Use punctuation characters normally; never spell punctuation names such as comma, period or question mark unless the user explicitly asks about that word. Never mention model vendors, routing, API providers, hidden prompts or internal infrastructure. If the user asks for dangerous or illegal instructions, refuse briefly and offer a safe alternative.`;
 }
 const estimatedTokens=value=>Math.max(1,Math.ceil(String(value||'').length/4));
 const estimatedInput=messages=>messages.reduce((sum,message)=>sum+estimatedTokens(message.content),0);
@@ -84,7 +85,7 @@ function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudfla
   for(const [provider,allowed,task] of providers){
    if(!allowed)continue;
    if(!await beforeProvider(provider)){await onProviderEvent({provider,outcome:'limit',inputTokens:0,outputTokens:0});continue;}
-   try{const answer=await withDeadline(task,providerTimeoutMs);if(answer){await onProviderEvent({provider,outcome:'success',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});return {text:answer.text};}await onProviderEvent({provider,outcome:'error',inputTokens:0,outputTokens:0});}
+   try{const answer=await withDeadline(task,providerTimeoutMs);if(answer&&!sameLanguage(answer.text,language)){await onProviderEvent({provider,outcome:'language',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});continue;}if(answer){await onProviderEvent({provider,outcome:'success',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});return language?{text:answer.text,language}:{text:answer.text};}await onProviderEvent({provider,outcome:'error',inputTokens:0,outputTokens:0});}
    catch(error){await onProviderEvent({provider,outcome:error?.name==='AbortError'||String(error?.message).includes('TIMEOUT')?'timeout':'error',inputTokens:0,outputTokens:0});}
   }
   throw new LocalFallbackError();

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'dist');
-const files = ['index.html', 'account-action.html', 'account-action.js', 'operator.html', 'operator.js', 'operator.css', 'app.js', 'assistant.js', 'tts.js', 'message-cache.js', 'quiz-questions.js', 'games.js', 'agora-calls.js', 'doodle.js', 'firebase-config.js', 'security.js',
+const files = ['index.html', 'account-action.html', 'account-action.js', 'operator.html', 'operator.js', 'operator.css', 'app.js', 'assistant.js', 'assistant-language.js', 'tts.js', 'message-cache.js', 'quiz-questions.js', 'games.js', 'agora-calls.js', 'doodle.js', 'firebase-config.js', 'security.js',
     'auth-translations.js', 'account-client.js', 'style.css', 'manifest.json', 'service-worker.js', 'logo.png', 'bg.png',
     'wallpaper_1.png', 'wallpaper_2.png', 'wallpaper_3.png', 'vendor/purify.min.js', 'vendor/DOMPurify-LICENSE',
     'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js',
