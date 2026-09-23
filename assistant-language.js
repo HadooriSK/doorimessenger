@@ -2,11 +2,11 @@
  'use strict';
  const supported=['de','en','tr','ar','fa'];
  const words={
-  de:new Set('der die das ein eine einen und ist sind ich du wir nicht bitte wie was warum kann kannst mein meine mit für auf auch mir dir'.split(' ')),
-  en:new Set('the a an and is are i you we not please how what why can could my your with for also me'.split(' ')),
-  tr:new Set('bir bu şu ve ile için ben sen biz siz değil lütfen nasıl ne neden niçin benim senin mı mi mu mü'.split(' ')),
-  ar:new Set('هذا هذه هو هي أنا انت أنت نحن ليس لا من إلى على في كيف ماذا لماذا هل رجاء شكرا'.split(' ')),
-  fa:new Set('این آن است هست من تو شما ما نیست نه از به برای در چگونه چه چرا آیا لطفا ممنون می'.split(' '))
+  de:new Set('hallo guten morgen abend danke der die das ein eine einen und ist sind ich du wir nicht bitte wie was warum kann kannst mein meine mit für auf auch mir dir deutsch'.split(' ')),
+  en:new Set('hello hi thanks thank good morning evening the a an and is are i you we not please how what why can could my your with for also me english'.split(' ')),
+  tr:new Set('merhaba selam teşekkürler nasılsın bir bu şu ve ile için ben sen biz siz değil lütfen nasıl ne neden niçin benim senin mı mi mu mü türkçe'.split(' ')),
+  ar:new Set('مرحبا أهلا شكرا كيفك هذا هذه هو هي أنا انت أنت نحن ليس لا من إلى على في كيف ماذا لماذا هل رجاء العربية عربي'.split(' ')),
+  fa:new Set('سلام درود ممنون متشکرم خوبی چطوری فارسی این آن است هست من تو شما ما نیست نه از به برای در چگونه چه چرا آیا لطفا می'.split(' '))
  };
  const normalize=value=>String(value||'').toLocaleLowerCase().replace(/[’']/g,'').match(/[\p{L}\p{M}]+/gu)||[];
  function detect(value,fallback='en'){

@@ -68,8 +68,20 @@ test('central TTS keeps the selected gender independent of providers',()=>{
  assert.equal(dom.window.DooriTTS.engineFor('fa'),'parsvoice-xtts');assert.equal(dom.window.DooriTTS.engineFor('de'),'xtts-v2');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Hallo Komma wie geht es Fragezeichen','de'),'Hallo, wie geht es?');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Das Wort „Komma“ wird ausgesprochen.','de'),'Das Wort „Komma“ wird ausgesprochen.');
+ assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Punkt Punkt Komma Punkt Komma','de'),'.');
  const source=fs.readFileSync(path.join(root,'tts.js'),'utf8');assert.doesNotMatch(source,/groq|gemini|cloudflare/i);
  dom.window.close();
+});
+
+test('iPhone-compatible recorder sends MP4 audio to multilingual Whisper before chat',async()=>{
+ const html='<button id="assistant-mic-btn"></button><button id="assistant-voice-btn"></button><select id="assistant-voice-select"><option value="female"></option><option value="male"></option></select><div id="current-chat-status"></div><div id="current-chat-avatar"></div>';
+ const dom=new JSDOM(html,{url:'https://doori-messenger.de',runScripts:'outside-only'}),calls=[];const w=dom.window,track={stopped:false,stop(){this.stopped=true;}},stream={getTracks:()=>[track]};
+ w.currentLang='de';w.currentUser='tester';w.currentChat={type:'assistant'};w.messages=new Map();w.renderMessages=()=>{};w.renderChatList=()=>{};w.DooriTTS={getGender:()=> 'female',setGender:value=>value,stop(){},speak(){}};
+ Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>stream}});
+ class Recorder{static isTypeSupported(type){return type==='audio/mp4';}constructor(input,options){this.stream=input;this.mimeType=options.mimeType;this.state='inactive';Recorder.last=this;}start(){this.state='recording';}stop(){this.state='inactive';this.ondataavailable?.({data:new w.Blob(['a'.repeat(512)],{type:this.mimeType})});this.onstop?.();}}w.MediaRecorder=Recorder;
+ w.accountFunctions={httpsCallable:name=>async payload=>{calls.push({name,payload});if(name==='transcribeDooriSpeech')return {data:{text:'سلام، حال شما چطور است؟',language:'fa'}};return {data:{text:'من خوبم، ممنون.',language:'fa'}};}};
+ w.eval(fs.readFileSync(path.join(root,'assistant-language.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'assistant.js'),'utf8'));w.DooriAssistant.initialize();const mic=w.document.getElementById('assistant-mic-btn');mic.click();await new Promise(resolve=>setTimeout(resolve,5));assert.equal(Recorder.last.mimeType,'audio/mp4');mic.click();await new Promise(resolve=>setTimeout(resolve,150));
+ assert.equal(calls[0].name,'transcribeDooriSpeech');assert.equal(calls[0].payload.mimeType,'audio/mp4');assert.ok(calls[0].payload.audioBase64);assert.equal(calls[1].payload.language,'fa');assert.equal(calls[1].payload.source,'voice');assert.equal(track.stopped,true);dom.window.close();
 });
 
 test('language lock recognizes all five languages and rejects confident provider drift',async()=>{
@@ -88,7 +100,7 @@ test('speech dialog keeps detected language, supports deliberate switching and p
  w.accountFunctions={httpsCallable:()=>async payload=>{calls.push(payload);return {data:{text:payload.language==='tr'?'Bu Türkçe bir yanıttır.':'Das ist eine deutsche Antwort.',language:payload.language}};}};
  class Recognition{constructor(){Recognition.last=this;}start(){this.onstart?.();}abort(){}}w.SpeechRecognition=Recognition;
  w.eval(fs.readFileSync(path.join(root,'assistant-language.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'assistant.js'),'utf8'));w.DooriAssistant.initialize();
- w.document.getElementById('assistant-mic-btn').click();Recognition.last.onresult({results:[[{transcript:'Warum ist das auf Deutsch?',confidence:.9}]]});await new Promise(resolve=>setTimeout(resolve,10));
+ w.document.getElementById('assistant-mic-btn').click();await new Promise(resolve=>setTimeout(resolve,5));Recognition.last.onresult({results:[[{transcript:'Warum ist das auf Deutsch?',confidence:.9}]]});await new Promise(resolve=>setTimeout(resolve,10));
  assert.equal(calls[0].language,'de');assert.equal(calls[0].source,'voice');assert.ok(calls[0].voiceSeconds>=1);assert.equal(spoken[0].options.language,'de');
  await w.DooriAssistant.send('Bu neden Türkçe değil?');assert.equal(calls[1].language,'tr');assert.equal(spoken[1].options.language,'tr');
  dom.window.close();
@@ -110,6 +122,7 @@ test('per-user AI limits and protected operator dashboard are server enforced',(
  const functions=fs.readFileSync(path.join(root,'functions','index.js'),'utf8');
  assert.match(functions,/textMessagesPerUser:100/);assert.match(functions,/voiceSecondsPerUser:3600/);
  assert.match(functions,/reserveUserAssistantUsage/);assert.match(functions,/defineSecret\('DOORI_ADMIN_EMAIL'\)/);
+ assert.match(functions,/exports\.transcribeDooriSpeech=onCall/);assert.match(functions,/whisper-large-v3-turbo/);assert.match(functions,/reserveDailySpeechSeconds/);
  assert.match(functions,/exports\.getAssistantAdminDashboard=onCall/);assert.match(functions,/exports\.updateAssistantAdminConfig=onCall/);
  assert.match(functions,/requireAdmin\(request\)\{signedIn\(request,true\)/);assert.match(functions,/actual!==allowed/);assert.match(functions,/recordAssistantMetrics/);
  const html=fs.readFileSync(path.join(root,'operator.html'),'utf8'),client=fs.readFileSync(path.join(root,'operator.js'),'utf8');

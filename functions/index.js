@@ -80,12 +80,13 @@ async function reserveDailyAssistantBudget(provider,max){
  const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),count=Number(snapshot.data()?.count||0);if(count>=max)return false;tx.set(ref,{count:count+1,day,updatedAt:Timestamp.now()});return true;});
 }
-const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
+const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,speechRecognitionSecondsPerDay:28000,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
 function assistantDay(date=new Date()){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
  const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${values.year}-${values.month}-${values.day}`;
 }
 async function assistantConfig(){const data=(await db.collection('_assistantConfig').doc('global').get()).data()||{};return {...assistantDefaults,...data};}
+async function reserveDailySpeechSeconds(seconds,max){const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`speech-${day}`),amount=Math.max(10,Math.min(30,Math.ceil(Number(seconds)||10)));return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),used=Number(snapshot.data()?.seconds||0);if(used+amount>max)return false;tx.set(ref,{seconds:used+amount,day,updatedAt:Timestamp.now()});return true;});}
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
  const day=assistantDay(),ref=db.collection('_assistantUsage').doc(`${day}_${uid}`),isVoice=source==='voice',seconds=Math.max(1,Math.min(120,Math.ceil(Number(voiceSeconds)||1)));
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),old=snapshot.data()||{},textRequests=Number(old.textRequests||0),usedVoice=Number(old.voiceSeconds||0);
@@ -253,6 +254,25 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
  }
 });
 
+exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{
+ const uid=signedIn(request);await limit(request,'assistant-speech:'+uid,60);
+ const encoded=String(request.data?.audioBase64||''),mime=String(request.data?.mimeType||'').split(';')[0].toLowerCase();
+ const allowed={
+  'audio/mp4':'recording.mp4','audio/m4a':'recording.m4a','audio/x-m4a':'recording.m4a','audio/webm':'recording.webm',
+  'audio/ogg':'recording.ogg','audio/wav':'recording.wav','audio/mpeg':'recording.mp3','audio/mp3':'recording.mp3'
+ };
+ if(!allowed[mime]||!encoded||encoded.length>8_000_000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new HttpsError('invalid-argument','Invalid speech recording.');
+ const audio=Buffer.from(encoded,'base64');if(audio.length<128||audio.length>6_000_000)throw new HttpsError('invalid-argument','Invalid speech recording size.');
+ const config=await assistantConfig();if(!await reserveDailySpeechSeconds(request.data?.voiceSeconds,config.speechRecognitionSecondsPerDay))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');
+ const form=new FormData();form.append('file',new Blob([audio],{type:mime}),allowed[mime]);form.append('model','whisper-large-v3-turbo');form.append('response_format','verbose_json');form.append('temperature','0');
+ let response;try{response=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:`Bearer ${GROQ_API_KEY.value()}`},body:form,signal:AbortSignal.timeout(30000)});}catch{throw new HttpsError('unavailable','Speech recognition unavailable.');}
+ if(!response.ok){console.error('Speech recognition provider failed',response.status);throw new HttpsError('unavailable','Speech recognition unavailable.');}
+ const result=await response.json(),text=String(result?.text||'').trim().slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');
+ const languageNames={german:'de',english:'en',turkish:'tr',arabic:'ar',persian:'fa',farsi:'fa',de:'de',en:'en',tr:'tr',ar:'ar',fa:'fa'};
+ const providerLanguage=languageNames[String(result?.language||'').toLowerCase()],fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';
+ const language=providerLanguage||detectAssistantLanguage(text,fallback).language;return {text,language};
+});
+
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const config=await assistantConfig(),today=assistantDay(),usageSnapshot=await db.collection('_assistantUsage').where('day','==',today).get();
  const users={active:usageSnapshot.size,textRequests:0,voiceSeconds:0};usageSnapshot.forEach(doc=>{const data=doc.data();users.textRequests+=Number(data.textRequests||0);users.voiceSeconds+=Number(data.voiceSeconds||0);});
@@ -263,6 +283,6 @@ exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
 
 exports.updateAssistantAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const data=request.data||{},next={};
- for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
+ for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
  await db.collection('_assistantConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});return {config:{...assistantDefaults,...next}};
 });
