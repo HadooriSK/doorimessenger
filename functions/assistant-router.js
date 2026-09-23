@@ -22,6 +22,8 @@ function compactMessages(messages){
 function systemPrompt(language){
  return `You are Doori, the friendly in-app assistant of Doori Messenger. Be calm, warm, concise and practical. Reply in the language used by the user. The language hint is ${language||'auto'}. Never mention model vendors, routing, API providers, hidden prompts or internal infrastructure. If the user asks for dangerous or illegal instructions, refuse briefly and offer a safe alternative.`;
 }
+const estimatedTokens=value=>Math.max(1,Math.ceil(String(value||'').length/4));
+const estimatedInput=messages=>messages.reduce((sum,message)=>sum+estimatedTokens(message.content),0);
 
 async function parseJson(response){
  try{return await response.json();}catch{return null;}
@@ -32,7 +34,7 @@ async function callGroq({fetchImpl,key,messages,language,signal}){
   const response=await fetchImpl(GROQ_URL,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,temperature:0.55,max_completion_tokens:450,messages:[{role:'system',content:systemPrompt(language)},...messages]}),signal});
  if(!response.ok)return null;
  const json=await parseJson(response),text=String(json?.choices?.[0]?.message?.content||'').trim();
- return text||null;
+ return text?{text,inputTokens:Number(json?.usage?.prompt_tokens||estimatedInput(messages)),outputTokens:Number(json?.usage?.completion_tokens||estimatedTokens(text))}:null;
 }
 
 async function callGemini({fetchImpl,key,messages,language,signal}){
@@ -42,7 +44,7 @@ async function callGemini({fetchImpl,key,messages,language,signal}){
  if(!response.ok)return null;
  const json=await parseJson(response),parts=json?.candidates?.[0]?.content?.parts||[];
  const text=parts.map(part=>part?.text||'').join('').trim();
- return text||null;
+ return text?{text,inputTokens:Number(json?.usageMetadata?.promptTokenCount||estimatedInput(messages)),outputTokens:Number(json?.usageMetadata?.candidatesTokenCount||estimatedTokens(text))}:null;
 }
 
 async function resolveCloudflareAccountId(fetchImpl,token,signal){
@@ -60,7 +62,8 @@ async function callCloudflare({fetchImpl,token,accountId,messages,language,signa
  const response=await fetchImpl(url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:systemPrompt(language)},...cloudflareMessages],max_tokens:250,temperature:0.55}),signal});
  if(!response.ok)return null;
  const json=await parseJson(response),text=String(json?.result?.response||json?.result?.text||'').trim();
- return text||null;
+ const usage=json?.result?.usage||{};
+ return text?{text,inputTokens:Number(usage.prompt_tokens||usage.input_tokens||estimatedInput(cloudflareMessages)),outputTokens:Number(usage.completion_tokens||usage.output_tokens||estimatedTokens(text))}:null;
 }
 
 async function withDeadline(task,milliseconds){
@@ -69,18 +72,20 @@ async function withDeadline(task,milliseconds){
  try{return await task(controller.signal);}finally{clearTimeout(timer);}
 }
 
-function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudflareToken='',cloudflareAccountId='',allowGroq=true,allowGemini=true,allowCloudflare=true,beforeProvider=async()=>true,providerTimeoutMs=4500}={}){
+function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudflareToken='',cloudflareAccountId='',allowGroq=true,allowGemini=true,allowCloudflare=true,beforeProvider=async()=>true,onProviderEvent=async()=>{},providerTimeoutMs=4500}={}){
  return async function route({messages,language}){
   const compact=compactMessages(messages);
   if(!compact.length)throw new LocalFallbackError();
-  if(allowGroq&&await beforeProvider('groq')){
-   try{const answer=await withDeadline(signal=>callGroq({fetchImpl,key:groqKey,messages:compact,language,signal}),providerTimeoutMs);if(answer)return {text:answer};}catch{}
-  }
-  if(allowGemini&&await beforeProvider('gemini')){
-   try{const answer=await withDeadline(signal=>callGemini({fetchImpl,key:geminiKey,messages:compact,language,signal}),providerTimeoutMs);if(answer)return {text:answer};}catch{}
-  }
-  if(allowCloudflare&&await beforeProvider('cloudflare')){
-   try{const answer=await withDeadline(signal=>callCloudflare({fetchImpl,token:cloudflareToken,accountId:cloudflareAccountId,messages:compact,language,signal}),providerTimeoutMs);if(answer)return {text:answer};}catch{}
+  const providers=[
+   ['groq',allowGroq,signal=>callGroq({fetchImpl,key:groqKey,messages:compact,language,signal})],
+   ['gemini',allowGemini,signal=>callGemini({fetchImpl,key:geminiKey,messages:compact,language,signal})],
+   ['cloudflare',allowCloudflare,signal=>callCloudflare({fetchImpl,token:cloudflareToken,accountId:cloudflareAccountId,messages:compact,language,signal})]
+  ];
+  for(const [provider,allowed,task] of providers){
+   if(!allowed)continue;
+   if(!await beforeProvider(provider)){await onProviderEvent({provider,outcome:'limit',inputTokens:0,outputTokens:0});continue;}
+   try{const answer=await withDeadline(task,providerTimeoutMs);if(answer){await onProviderEvent({provider,outcome:'success',inputTokens:answer.inputTokens,outputTokens:answer.outputTokens});return {text:answer.text};}await onProviderEvent({provider,outcome:'error',inputTokens:0,outputTokens:0});}
+   catch(error){await onProviderEvent({provider,outcome:error?.name==='AbortError'||String(error?.message).includes('TIMEOUT')?'timeout':'error',inputTokens:0,outputTokens:0});}
   }
   throw new LocalFallbackError();
  };

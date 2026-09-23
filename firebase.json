@@ -23,6 +23,10 @@
         "destination": "/account-action.html"
       },
       {
+        "source": "/operator-console",
+        "destination": "/operator.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

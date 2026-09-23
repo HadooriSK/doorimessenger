@@ -14,6 +14,7 @@ const AGORA_APP_CERTIFICATE=defineSecret('AGORA_APP_CERTIFICATE');
 const GROQ_API_KEY=defineSecret('GROQ_API_KEY');
 const CLOUDFLARE_API_TOKEN=defineSecret('CLOUDFLARE_API_TOKEN');
 const GEMINI_API_KEY=defineSecret('GEMINI_API_KEY');
+const DOORI_ADMIN_EMAIL=defineSecret('DOORI_ADMIN_EMAIL');
 const options={region:'europe-west3',maxInstances:10,timeoutSeconds:30,memory:'256MiB'};
 const AGORA_APP_ID='275401ea48a74f4b9f9cac0107362c6c'; // Public Agora project identifier.
 const WEB_API_KEY='AIzaSyAIV8HtZGe8RBzqcDLwc8RT2iY3TSWrnIk'; // Public Firebase Web identifier.
@@ -75,9 +76,31 @@ async function limit(request,bucket,max=10){
  await db.runTransaction(async tx=>{const old=(await tx.get(ref)).data(),active=old&&old.until.toMillis()>now,count=active?old.count:0;if(count>=max)throw new HttpsError('resource-exhausted','Try later.');tx.set(ref,{count:count+1,until:active?old.until:Timestamp.fromMillis(now+15*60*1000)});});
 }
 async function reserveDailyAssistantBudget(provider,max){
- const day=new Date().toISOString().slice(0,10),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
+ const day=assistantDay(),ref=db.collection('_assistantBudgets').doc(`${provider}-${day}`);
  return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),count=Number(snapshot.data()?.count||0);if(count>=max)return false;tx.set(ref,{count:count+1,day,updatedAt:Timestamp.now()});return true;});
 }
+const assistantDefaults={textMessagesPerUser:100,voiceSecondsPerUser:3600,groqDailyRequests:100,geminiDailyRequests:50,cloudflareDailyRequests:3,providerTimeoutMs:4500};
+function assistantDay(date=new Date()){
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+ const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));return `${values.year}-${values.month}-${values.day}`;
+}
+async function assistantConfig(){const data=(await db.collection('_assistantConfig').doc('global').get()).data()||{};return {...assistantDefaults,...data};}
+async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
+ const day=assistantDay(),ref=db.collection('_assistantUsage').doc(`${day}_${uid}`),isVoice=source==='voice',seconds=Math.max(1,Math.min(120,Math.ceil(Number(voiceSeconds)||1)));
+ return db.runTransaction(async tx=>{const snapshot=await tx.get(ref),old=snapshot.data()||{},textRequests=Number(old.textRequests||0),usedVoice=Number(old.voiceSeconds||0);
+  if(isVoice&&usedVoice+seconds>config.voiceSecondsPerUser)throw new HttpsError('resource-exhausted','Assistant voice limit reached.',{limitType:'voice'});
+  if(!isVoice&&textRequests+1>config.textMessagesPerUser)throw new HttpsError('resource-exhausted','Assistant text limit reached.',{limitType:'text'});
+  const next={uid,day,textRequests:textRequests+(isVoice?0:1),voiceSeconds:usedVoice+(isVoice?seconds:0),updatedAt:Timestamp.now()};tx.set(ref,next);return next;
+ });
+}
+async function recordAssistantMetrics(events){
+ if(!events.length)return;const day=assistantDay(),ref=db.collection('_assistantMetrics').doc(day);
+ await db.runTransaction(async tx=>{const snapshot=await tx.get(ref),data=snapshot.data()||{day,providers:{},automaticSwitches:0,errors:0};
+  data.providers=data.providers||{};events.forEach(event=>{const current=data.providers[event.provider]||{requests:0,inputTokens:0,outputTokens:0,errors:0,limits:0,timeouts:0};current.requests+=event.outcome==='limit'?0:1;current.inputTokens+=Number(event.inputTokens||0);current.outputTokens+=Number(event.outputTokens||0);if(event.outcome==='error')current.errors++;if(event.outcome==='limit')current.limits++;if(event.outcome==='timeout')current.timeouts++;data.providers[event.provider]=current;});
+  data.errors=Number(data.errors||0)+events.filter(event=>['error','timeout'].includes(event.outcome)).length;data.automaticSwitches=Number(data.automaticSwitches||0)+Math.max(0,events.length-1);data.updatedAt=Timestamp.now();tx.set(ref,data);
+ });
+}
+function requireAdmin(request){signedIn(request,true);const allowed=String(DOORI_ADMIN_EMAIL.value()||'').trim().toLowerCase(),actual=String(request.auth.token.email||'').trim().toLowerCase();if(!allowed||actual!==allowed)throw new HttpsError('permission-denied','Operator access required.');}
 async function ensureAccount(uid){
  const mapped=await db.collection('accounts').doc(uid).get();if(mapped.exists)return mapped.data();
  const users=await db.collection('users').where('uid','==',uid).limit(2).get();
@@ -204,6 +227,9 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
  const messages=rawMessages.map(message=>({role:message?.role==='assistant'?'assistant':'user',content:String(message?.content||'')}));
  if(messages.some(message=>!message.content.trim()||message.content.length>2000))throw new HttpsError('invalid-argument','Invalid assistant message.');
  const language=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'auto';
+ const config=await assistantConfig(),source=request.data?.source==='voice'?'voice':'text';
+ const userUsage=await reserveUserAssistantUsage(uid,source,request.data?.voiceSeconds,config);
+ const events=[];
  const router=createAssistantRouter({
   groqKey:GROQ_API_KEY.value(),
   geminiKey:GEMINI_API_KEY.value(),
@@ -211,12 +237,29 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
   allowGroq:true,
   allowGemini:true,
   allowCloudflare:true,
-  beforeProvider:provider=>reserveDailyAssistantBudget(provider,provider==='cloudflare'?3:(provider==='gemini'?50:100))
+  providerTimeoutMs:config.providerTimeoutMs,
+  beforeProvider:provider=>reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
+  onProviderEvent:event=>{events.push(event);}
  });
- try{return await router({messages,language});}
+ try{const result=await router({messages,language});await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
  catch(error){
+  await recordAssistantMetrics(events).catch(()=>{});
   if(error instanceof LocalFallbackError||error?.code==='LOCAL_FALLBACK_REQUIRED')return {localFallback:true};
   console.error('Assistant request failed without provider details');
   return {localFallback:true};
  }
+});
+
+exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
+ requireAdmin(request);const config=await assistantConfig(),today=assistantDay(),usageSnapshot=await db.collection('_assistantUsage').where('day','==',today).get();
+ const users={active:usageSnapshot.size,textRequests:0,voiceSeconds:0};usageSnapshot.forEach(doc=>{const data=doc.data();users.textRequests+=Number(data.textRequests||0);users.voiceSeconds+=Number(data.voiceSeconds||0);});
+ const dates=Array.from({length:7},(_,index)=>{const date=new Date();date.setDate(date.getDate()-index);return assistantDay(date);});
+ const metricDocs=await Promise.all(dates.map(day=>db.collection('_assistantMetrics').doc(day).get()));
+ return {today,config,users,days:metricDocs.filter(doc=>doc.exists).map(doc=>doc.data()),generatedAt:new Date().toISOString()};
+});
+
+exports.updateAssistantAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
+ requireAdmin(request);const data=request.data||{},next={};
+ for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
+ await db.collection('_assistantConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});return {config:{...assistantDefaults,...next}};
 });

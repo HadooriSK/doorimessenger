@@ -79,3 +79,16 @@ test('assistant client covers all five languages and secrets stay server-side',(
  assert.match(functions,/defineSecret\('GEMINI_API_KEY'\)/);
  assert.match(functions,/reserveDailyAssistantBudget/);
 });
+
+test('per-user AI limits and protected operator dashboard are server enforced',()=>{
+ const functions=fs.readFileSync(path.join(root,'functions','index.js'),'utf8');
+ assert.match(functions,/textMessagesPerUser:100/);assert.match(functions,/voiceSecondsPerUser:3600/);
+ assert.match(functions,/reserveUserAssistantUsage/);assert.match(functions,/defineSecret\('DOORI_ADMIN_EMAIL'\)/);
+ assert.match(functions,/exports\.getAssistantAdminDashboard=onCall/);assert.match(functions,/exports\.updateAssistantAdminConfig=onCall/);
+ assert.match(functions,/requireAdmin\(request\)\{signedIn\(request,true\)/);assert.match(functions,/actual!==allowed/);assert.match(functions,/recordAssistantMetrics/);
+ const html=fs.readFileSync(path.join(root,'operator.html'),'utf8'),client=fs.readFileSync(path.join(root,'operator.js'),'utf8');
+ for(const language of ['de','en','ar','fa','tr'])assert.match(client,new RegExp(`\\b${language}:\\{`));
+ assert.match(html,/id="provider-rows"/);assert.match(html,/id="config-form"/);
+ assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8'),/operator-console|operator\.html/);
+ const config=JSON.parse(fs.readFileSync(path.join(root,'firebase.json'),'utf8'));assert.ok(config.hosting.rewrites.some(item=>item.source==='/operator-console'&&item.destination==='/operator.html'));
+});
