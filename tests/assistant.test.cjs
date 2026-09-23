@@ -70,7 +70,7 @@ test('central Gemini TTS keeps the selected gender and has a system fallback',as
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Hallo Komma wie geht es Fragezeichen','de'),'Hallo, wie geht es?');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Das Wort „Komma“ wird ausgesprochen.','de'),'Das Wort „Komma“ wird ausgesprochen.');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Punkt Punkt Komma Punkt Komma','de'),'.');
- const source=fs.readFileSync(path.join(root,'tts.js'),'utf8');assert.match(source,/synthesizeDooriSpeech/);
+ const source=fs.readFileSync(path.join(root,'tts.js'),'utf8');assert.match(source,/synthesizeDooriSpeech/);assert.match(source,/webkit-playsinline/);assert.match(source,/audio\.muted=false/);assert.match(source,/appendChild\(activeAudio\)/);assert.match(source,/speechSynthesis\.resume/);
  dom.window.close();
 });
 

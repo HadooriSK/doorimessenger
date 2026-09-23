@@ -1,10 +1,10 @@
-const CACHE_NAME = 'web-messenger-v118-ios-audio-quality';
+const CACHE_NAME = 'web-messenger-v119-ios-tts-playback';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
   '/app.js?v=352',
-  '/tts.js?v=5',
+  '/tts.js?v=6',
   '/assistant.js?v=7',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
