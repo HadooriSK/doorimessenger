@@ -8,7 +8,7 @@
   fa:{name:'دستیار Doori',status:'دستیار هوشمند · زبان شما را تشخیص می‌دهد',mic:'با Doori صحبت کنید',voiceOn:'پخش صوتی روشن است',voiceOff:'پخش صوتی خاموش است',female:'صدای زنانه',male:'صدای مردانه',textLimit:'سقف روزانه پیام متنی هوش مصنوعی شما تمام شده است.',voiceLimit:'سقف روزانه گفت‌وگوی صوتی شما تمام شده است.',listening:'گوش می‌دهم … برای ارسال دوباره ضربه بزنید.',thinking:'Doori در حال فکر کردن است …',welcome:'سلام! من دستیار Doori هستم. می‌توانید بنویسید یا از میکروفون استفاده کنید.',unavailable:'در حال حاضر سرویس هوش مصنوعی رایگانی در دسترس نیست و هوش محلی در این دستگاه به اندازه کافی سریع نیست. لطفاً بعداً دوباره تلاش کنید.',speechUnavailable:'ورودی صوتی در حال حاضر روی این دستگاه در دسترس نیست.',speechFailed:'گفتار شما شناسایی نشد. لطفاً دوباره تلاش کنید.',localReady:'هوش محلی آماده است.'},
   tr:{name:'Doori Asistan',status:'Yapay zekâ asistanı · dilini algılar',mic:'Doori ile konuş',voiceOn:'Sesli yanıt açık',voiceOff:'Sesli yanıt kapalı',female:'Kadın sesi',male:'Erkek sesi',textLimit:'Günlük yapay zekâ metin mesajı sınırına ulaştın.',voiceLimit:'Günlük yapay zekâ ses süresi sınırına ulaştın.',listening:'Seni dinliyorum … Göndermek için tekrar dokun.',thinking:'Doori düşünüyor …',welcome:'Merhaba! Ben Doori Asistan. Bana yazabilir veya mikrofonu kullanabilirsin.',unavailable:'Şu anda ücretsiz bir yapay zekâ hizmeti kullanılamıyor ve yerel yapay zekâ bu cihazda yeterince hızlı değil. Lütfen daha sonra tekrar dene.',speechUnavailable:'Sesli giriş şu anda bu cihazda kullanılamıyor.',speechFailed:'Konuşman tanınamadı. Lütfen tekrar dene.',localReady:'Yerel yapay zekâ hazır.'}
  };
- const state={busy:false,voice:localStorage.getItem('doori_ai_voice')!=='off',recognition:null,recorder:null,recordStream:null,recordStarted:0,recordChunks:[],recordTimer:null,localSession:null,localChecked:false,localFast:false,lastLanguage:localStorage.getItem('doori_ai_last_language')||null};
+ const state={busy:false,starting:false,transcribing:false,initialized:false,voice:localStorage.getItem('doori_ai_voice')!=='off',recognition:null,recorder:null,recordStream:null,recordStarted:0,recordChunks:[],recordTimer:null,localSession:null,localChecked:false,localFast:false,lastLanguage:localStorage.getItem('doori_ai_last_language')||null};
  const lang=()=>['de','en','ar','fa','tr'].includes(root.currentLang)?root.currentLang:'en';
  const t=()=>TEXT[lang()]||TEXT.en;
  const historyKey=()=>`doori_ai_history_v1:${String(root.currentUser||'guest').toLowerCase()}`;
@@ -55,7 +55,7 @@
   try{return String(await state.localSession.prompt(`Reply completely in ${state.lastLanguage||lang()}, warmly and concisely. Never switch language. User: ${prompt}`)).trim()||null;}catch{return null;}
  }
  async function send(text,meta={}){
-  const clean=String(text||'').trim().slice(0,2000);if(!clean||state.busy)return false;
+  const clean=String(text||'').trim().slice(0,2000);if(!clean||state.busy)return false;root.DooriTTS?.stop();
   const suppliedLanguage=root.DooriLanguage?.supported?.includes(meta.language)?meta.language:null,expectedLanguage=suppliedLanguage||stableLanguage(clean);if(suppliedLanguage){state.lastLanguage=suppliedLanguage;localStorage.setItem('doori_ai_last_language',suppliedLanguage);}state.busy=true;document.body.classList.add('assistant-thinking');add('user',clean);setStatus(t().thinking);updateControls();
   try{
    const compact=history().slice(-10).map(item=>({role:item.sender_username===CHAT_ID?'assistant':'user',content:item.text}));
@@ -63,8 +63,8 @@
    let answer=String(result?.data?.text||'').trim();
    if(!answer&&result?.data?.localFallback)answer=await localReply(clean);
    if(!answer)answer=t().unavailable;
-   const answerLanguage=result?.data?.language||expectedLanguage;add('assistant',answer);speak(answer,answerLanguage);return true;
-  }catch(error){if(error?.code==='functions/resource-exhausted'&&error?.details?.limitType){add('assistant',error.details.limitType==='voice'?t().voiceLimit:t().textLimit);return false;}const answer=await localReply(clean)||t().unavailable;add('assistant',answer);speak(answer,expectedLanguage);return true;}
+   const answerLanguage=result?.data?.language||expectedLanguage;add('assistant',answer);if(meta.source==='voice')speak(answer,answerLanguage);return true;
+  }catch(error){if(error?.code==='functions/resource-exhausted'&&error?.details?.limitType){add('assistant',error.details.limitType==='voice'?t().voiceLimit:t().textLimit);return false;}const answer=await localReply(clean)||t().unavailable;add('assistant',answer);if(meta.source==='voice')speak(answer,expectedLanguage);return true;}
   finally{state.busy=false;document.body.classList.remove('assistant-thinking');setStatus(t().status);updateControls();}
  }
  function preferredAudioType(){return ['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'].find(type=>root.MediaRecorder?.isTypeSupported?.(type))||'';}
@@ -80,9 +80,9 @@
    const recorder=mimeType?new MediaRecorder(stream,{mimeType}):new MediaRecorder(stream);state.recordStream=stream;state.recorder=recorder;state.recordChunks=[];state.recordStarted=Date.now();
    recorder.ondataavailable=event=>{if(event.data?.size)state.recordChunks.push(event.data);};
    recorder.onerror=()=>{stream.getTracks().forEach(track=>track.stop());state.recorder=null;setStatus(t().speechFailed);};
-   recorder.onstop=async()=>{clearTimeout(state.recordTimer);state.recordTimer=null;const seconds=Math.max(1,Math.min(30,(Date.now()-state.recordStarted)/1000)),type=recorder.mimeType||state.recordChunks[0]?.type||'audio/mp4',blob=new Blob(state.recordChunks,{type});stream.getTracks().forEach(track=>track.stop());state.recorder=null;state.recordStream=null;state.recordChunks=[];document.getElementById('assistant-mic-btn')?.classList.remove('recording');if(blob.size<128){setStatus(t().speechFailed);return;}setStatus(t().thinking);try{const audioBase64=await blobToBase64(blob),result=await root.accountFunctions.httpsCallable('transcribeDooriSpeech')({audioBase64,mimeType:type,voiceSeconds:seconds,languageHint:state.lastLanguage||lang()});const transcript=String(result?.data?.text||'').trim(),language=result?.data?.language;if(!transcript)throw new Error('EMPTY_TRANSCRIPT');await send(transcript,{source:'voice',voiceSeconds:seconds,language});}catch{add('assistant',t().speechFailed);setStatus(t().status);}};
-   recorder.start(250);document.getElementById('assistant-mic-btn')?.classList.add('recording');setStatus(t().listening);state.recordTimer=setTimeout(()=>{if(state.recorder===recorder&&recorder.state==='recording')recorder.stop();},30000);return true;
-  }catch{return false;}
+   recorder.onstop=async()=>{clearTimeout(state.recordTimer);state.recordTimer=null;const seconds=Math.max(1,Math.min(30,(Date.now()-state.recordStarted)/1000)),type=recorder.mimeType||state.recordChunks[0]?.type||'audio/mp4',blob=new Blob(state.recordChunks,{type});stream.getTracks().forEach(track=>track.stop());state.recorder=null;state.recordStream=null;state.recordChunks=[];document.getElementById('assistant-mic-btn')?.classList.remove('recording');if(blob.size<128){setStatus(t().speechFailed);return;}state.transcribing=true;setStatus(t().thinking);try{const audioBase64=await blobToBase64(blob),result=await root.accountFunctions.httpsCallable('transcribeDooriSpeech')({audioBase64,mimeType:type,voiceSeconds:seconds,languageHint:state.lastLanguage||lang()});const transcript=String(result?.data?.text||'').trim(),language=result?.data?.language;if(!transcript)throw new Error('EMPTY_TRANSCRIPT');await send(transcript,{source:'voice',voiceSeconds:seconds,language});}catch{add('assistant',t().speechFailed);setStatus(t().status);}finally{state.transcribing=false;}};
+   recorder.start();document.getElementById('assistant-mic-btn')?.classList.add('recording');setStatus(t().listening);state.recordTimer=setTimeout(()=>{if(state.recorder===recorder&&recorder.state==='recording')recorder.stop();},30000);return true;
+  }catch{state.recordStream?.getTracks().forEach(track=>track.stop());state.recorder=null;state.recordStream=null;add('assistant',t().speechUnavailable);setStatus(t().status);return true;}
  }
  function browserRecognition(){
   const Recognition=root.SpeechRecognition||root.webkitSpeechRecognition;
@@ -94,9 +94,9 @@
   recognition.onend=()=>{if(!state.busy)setStatus(t().status);};
   recognition.onresult=event=>send(chooseTranscript(event.results?.[0]),{source:'voice',voiceSeconds:Math.max(1,(Date.now()-startedAt)/1000)});recognition.start();
  }
- async function startListening(){if(!await startRecording())browserRecognition();}
+ async function startListening(){if(state.starting||state.transcribing||state.busy)return;state.starting=true;root.DooriTTS?.stop();try{if(!await startRecording())browserRecognition();}finally{state.starting=false;}}
  function toggleVoice(){state.voice=!state.voice;localStorage.setItem('doori_ai_voice',state.voice?'on':'off');if(!state.voice)root.DooriTTS?.stop();updateControls();}
  function activate(){sync();setStatus(t().status);updateControls();}
- function initialize(){document.getElementById('assistant-mic-btn')?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);updateControls();}
+ function initialize(){if(state.initialized)return;state.initialized=true;document.getElementById('assistant-mic-btn')?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);updateControls();}
  root.DooriAssistant={CHAT_ID,TEXT,isAssistant:id=>id===CHAT_ID,getName:()=>t().name,getStatus:()=>t().status,getAvatar,send,activate,initialize,updateControls,sync,chooseTranscript};
 })(window);

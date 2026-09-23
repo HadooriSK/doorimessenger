@@ -102,7 +102,7 @@ test('speech dialog keeps detected language, supports deliberate switching and p
  w.eval(fs.readFileSync(path.join(root,'assistant-language.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'assistant.js'),'utf8'));w.DooriAssistant.initialize();
  w.document.getElementById('assistant-mic-btn').click();await new Promise(resolve=>setTimeout(resolve,5));Recognition.last.onresult({results:[[{transcript:'Warum ist das auf Deutsch?',confidence:.9}]]});await new Promise(resolve=>setTimeout(resolve,10));
  assert.equal(calls[0].language,'de');assert.equal(calls[0].source,'voice');assert.ok(calls[0].voiceSeconds>=1);assert.equal(spoken[0].options.language,'de');
- await w.DooriAssistant.send('Bu neden Türkçe değil?');assert.equal(calls[1].language,'tr');assert.equal(spoken[1].options.language,'tr');
+ await w.DooriAssistant.send('Bu neden Türkçe değil?');assert.equal(calls[1].language,'tr');assert.equal(spoken.length,1,'typed replies must not trigger speech');
  dom.window.close();
 });
 
