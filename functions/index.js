@@ -16,6 +16,15 @@ const GROQ_API_KEY=defineSecret('GROQ_API_KEY');
 const CLOUDFLARE_API_TOKEN=defineSecret('CLOUDFLARE_API_TOKEN');
 const GEMINI_API_KEY=defineSecret('GEMINI_API_KEY');
 const DOORI_ADMIN_EMAIL=defineSecret('DOORI_ADMIN_EMAIL');
+const DAILY_API_KEY=defineSecret('DAILY_API_KEY');
+const STREAM_API_SECRET=defineSecret('STREAM_API_SECRET');
+const {
+ resolveTelephonySession,
+ recordTelephonyDuration,
+ getTelephonyDashboardData,
+ getTelephonyConfig,
+ telephonyDefaults
+}=require('./telephony-router');
 const options={region:'europe-west3',maxInstances:10,timeoutSeconds:30,memory:'256MiB'};
 const AGORA_APP_ID='275401ea48a74f4b9f9cac0107362c6c'; // Public Agora project identifier.
 const WEB_API_KEY='AIzaSyAIV8HtZGe8RBzqcDLwc8RT2iY3TSWrnIk'; // Public Firebase Web identifier.
@@ -154,6 +163,60 @@ exports.getAgoraToken=onCall({...options,secrets:[AGORA_APP_CERTIFICATE]},async 
  const token=RtcTokenBuilder.buildTokenWithUserAccount(AGORA_APP_ID,AGORA_APP_CERTIFICATE.value(),channel,account.key,RtcRole.PUBLISHER,expiresIn,expiresIn);
  return {appId:AGORA_APP_ID,token,channel,uid:account.key,expiresIn};
 });
+exports.getTelephonySession=onCall({...options,secrets:[AGORA_APP_CERTIFICATE,DAILY_API_KEY,STREAM_API_SECRET]},async request=>{
+ const uid=signedIn(request),scope=String(request.data?.scope||''),id=String(request.data?.id||'');
+ if(!['direct','group'].includes(scope)||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new HttpsError('invalid-argument','Invalid call scope.');
+ await limit(request,'telephony-session:'+uid,30);
+ const account=await ensureAccount(uid);
+ let isOwner=false;
+ if(scope==='direct'){
+  const call=await db.collection('calls').doc(id).get();
+  if(!call.exists)throw new HttpsError('not-found','Call not found.');
+  const data=call.data();
+  if(![data.caller,data.receiver].map(keyOf).includes(account.key)||!['calling','connected'].includes(data.status))throw new HttpsError('permission-denied','Not a call participant.');
+  isOwner=keyOf(data.caller)===account.key;
+ }else{
+  const group=await db.collection('groups').doc(id).get();
+  if(!group.exists)throw new HttpsError('not-found','Group not found.');
+  const data=group.data(),members=data.members||{};
+  const isMember=Array.isArray(members)?members.map(keyOf).includes(account.key):Object.prototype.hasOwnProperty.call(members,account.key);
+  if(!isMember||!data.activeCall)throw new HttpsError('permission-denied','No active group call.');
+  isOwner=data.owner===account.key||data.createdBy===account.key;
+ }
+ const channel='doori_'+(scope==='direct'?'d':'g')+'_'+createHash('sha256').update(id).digest('hex').slice(0,32);
+ const failedProviders=Array.isArray(request.data?.failedProviders)?request.data.failedProviders.map(String):[];
+ const type=request.data?.type==='video'?'video':'audio';
+ try{
+  const session=await resolveTelephonySession({
+   db,
+   channel,
+   accountKey:account.key,
+   username:account.username,
+   scope,
+   type,
+   failedProviders,
+   secrets:{
+    agoraCertificate:AGORA_APP_CERTIFICATE.value(),
+    dailyKey:DAILY_API_KEY.value(),
+    streamSecret:STREAM_API_SECRET.value()
+   },
+   isOwner
+  });
+  return session;
+ }catch(err){
+  console.error('Telephony session resolution error:',err.message);
+  throw new HttpsError('unavailable',err.message||'Telephony session failed');
+ }
+});
+exports.recordCallDuration=onCall(options,async request=>{
+ const uid=signedIn(request);
+ const provider=String(request.data?.provider||'');
+ const durationSeconds=Number(request.data?.durationSeconds||0);
+ const callType=request.data?.callType==='video'?'video':'audio';
+ if(!['agora','daily','getstream'].includes(provider)||durationSeconds<=0||durationSeconds>86400)return {recorded:false};
+ await recordTelephonyDuration(db,{provider,durationSeconds,callType});
+ return {recorded:true};
+});
 exports.loginWithUsername=onCall(options,async request=>{
  const {username,id,password}=request.data||{},key=keyOf(username);
  if(typeof username!=='string'||username.length>128||username.includes('/')||typeof password!=='string'||password.length>4096||!/^\d{6}$/.test(String(id||'')))throw new HttpsError('unauthenticated','Invalid credentials.');
@@ -285,11 +348,28 @@ exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
  const users={active:usageSnapshot.size,textRequests:0,voiceSeconds:0};usageSnapshot.forEach(doc=>{const data=doc.data();users.textRequests+=Number(data.textRequests||0);users.voiceSeconds+=Number(data.voiceSeconds||0);});
  const dates=Array.from({length:7},(_,index)=>{const date=new Date();date.setDate(date.getDate()-index);return assistantDay(date);});
  const metricDocs=await Promise.all(dates.map(day=>db.collection('_assistantMetrics').doc(day).get()));
- return {today,config,users,days:metricDocs.filter(doc=>doc.exists).map(doc=>doc.data()),generatedAt:new Date().toISOString()};
+ const telephony=await getTelephonyDashboardData(db);
+ return {today,config,users,days:metricDocs.filter(doc=>doc.exists).map(doc=>doc.data()),telephony,generatedAt:new Date().toISOString()};
 });
 
 exports.updateAssistantAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
  requireAdmin(request);const data=request.data||{},next={};
  for(const [key,min,max] of [['textMessagesPerUser',1,1000],['voiceSecondsPerUser',60,86400],['speechRecognitionSecondsPerDay',600,28800],['geminiSpeechDailyRequests',1,2000],['groqDailyRequests',1,10000],['geminiDailyRequests',1,10000],['cloudflareDailyRequests',1,1000],['providerTimeoutMs',1000,15000]]){const value=Number(data[key]);if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);next[key]=value;}
  await db.collection('_assistantConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});return {config:{...assistantDefaults,...next}};
+});
+
+exports.updateTelephonyAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{
+ requireAdmin(request);const data=request.data||{},next={};
+ for(const [key,min,max] of [['agoraMonthlyMinutes',100,500000],['dailyMonthlyMinutes',100,500000],['getstreamMonthlyMinutes',100,500000],['failoverTimeoutMs',1000,30000]]){
+  if(data[key]!==undefined){
+   const value=Number(data[key]);
+   if(!Number.isInteger(value)||value<min||value>max)throw new HttpsError('invalid-argument',`Invalid ${key}.`);
+   next[key]=value;
+  }
+ }
+ if(Array.isArray(data.telephonyOrder)&&data.telephonyOrder.length===3&&data.telephonyOrder.every(p=>['agora','daily','getstream'].includes(p))){
+  next.telephonyOrder=data.telephonyOrder;
+ }
+ await db.collection('_telephonyConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});
+ return {config:{...telephonyDefaults,...next}};
 });

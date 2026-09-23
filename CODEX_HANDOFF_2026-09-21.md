@@ -452,3 +452,38 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
    - **Sichtbare Rückmeldung bei Mikrofonverweigerung:** Lehnt der Nutzer den Mikrofonzugriff ab, erscheint eine klare lokalisierte Hinweismeldung (`t().speechUnavailable`) statt eines fehlerhaften Umschaltens auf die unzuverlässige Browser-Erkennung.
    - **Doppelte Event-Listener unterbunden:** `initialize()` verhindert mehrfache Registrierung von Klick-Listenern via `state.initialized`.
 
+---
+
+## 10. Multi-Provider Sprach- und Videotelefonie mit Fallback-Kaskade (2026-09-23)
+
+**Frontend:** `agora-calls.js?v=2`, `operator.html`, `operator.js?v=2`, `operator.css?v=2`, `service-worker.js`  
+**Backend:** `functions/telephony-router.js`, `functions/index.js`  
+**Teststand:** **51/51 Tests bestanden** (100% grün).  
+**Build-Stand:** **35 allowlistete Dateien** erfolgreich nach `dist/` gebaut.
+
+### Funktionsübersicht:
+1. **Multi-Provider Fallback-Kaskade (`functions/telephony-router.js` & `agora-calls.js`):**
+   - Strikte Kaskaden-Reihenfolge: **Agora RTC (Hauptanbieter)** $\to$ **Daily.co (Fallback 1)** $\to$ **GetStream Video (Fallback 2)**.
+   - Gilt für Sprachanrufe und Videoanrufe (1-zu-1 und Gruppen).
+   - Fällt der aktuelle Anbieter aus, meldet einen Fehler oder ist das Monatskontingent aufgebraucht, wechselt das System automatisch und ohne sichtbare Unterbrechung zum nächsten Anbieter.
+   - Die bestehende Anrufoberfläche (Modals, Timer, Raster, Stummschaltung, Kamera-Switch, Screen-Sharing) bleibt zu 100% erhalten.
+2. **Server-seitige Sitzungsauflösung & Token-Generierung (`getTelephonySession`):**
+   - Prüft vor Verbindungsaufbau automatisch die verbleibenden Monatskontingente in Firestore (`_telephonyBudgets`).
+   - Generiert für Agora ein RTC-Token via `agora-token`.
+   - Erstellt für Daily bei Bedarf Räume via Daily REST API (`POST https://api.daily.co/v1/rooms`) und erzeugt Meeting-Tokens.
+   - Generiert für GetStream kryptografische JWT-Tokens (HMAC-SHA256 nativ) und verifiziert den Call-Endpunkt via Stream REST API.
+3. **Echtzeit-Quotenverwaltung (`recordCallDuration`):**
+   - Da Drittanbieter-APIs (Agora, Daily, Stream) Verbrauchs- und Abrechnungsdaten mit bis zu 24 Stunden Verzögerung zurückgeben, erfasst Doori Gesprächsdauern sekundengenau und atomar im Firestore-Backend (`_telephonyBudgets/{provider}-{month}` und `_telephonyMetrics/{day}`).
+   - Aufteilung in Audio- und Video-Minuten.
+   - Schutz vor unerwarteten Abrechnungskosten: Erreicht ein Anbieter sein Limit (Agora: 10.000 min, Daily: 10.000 min, GetStream: 66.000 min), schaltet das Backend sofort auf den nächsten Provider um.
+4. **Betreiber-Konsole (`operator.html`, `operator.js`, `operator.css`):**
+   - Saubere visuelle Trennung: Eigener Bereich für den **Sprachassistenten (KI)** (Groq, Gemini, Cloudflare) und eigener Bereich für **Sprach- und Videotelefonie** (Agora, Daily, GetStream).
+   - Telefonie-Tabelle mit Rolle (`Hauptanbieter`, `Fallback 1`, `Fallback 2`), Status-Pills (`Aktiv`, `Fehler / Gestört`, `Limit erreicht`), Audio- und Video-Minuten, Auslastungsmeter, Restkontingent und Monatslimit.
+   - Informationstext zur Erfassungsmethode: Erklärt transparent den Unterschied zwischen verzögerten Anbieter-APIs und der sekundengenauen internen Backend-Messung.
+   - Konfigurationsformular für Monatslimits und Failover-Timeout (`updateTelephonyAdminConfig`).
+   - Volle Synchronisation über alle 5 Sprachen (`de`, `en`, `ar`, `fa`, `tr`) inklusive RTL.
+5. **Sicherheitsarchitektur:**
+   - Server-only Secrets: `AGORA_APP_CERTIFICATE`, `DAILY_API_KEY`, `STREAM_API_SECRET`.
+   - Öffentliche Client-IDs: `AGORA_APP_ID`, `STREAM_PUBLIC_KEY`.
+   - Null Plaintext-Secrets im Client oder Repository.
+

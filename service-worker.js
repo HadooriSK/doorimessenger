@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-messenger-v111-ai-gemini-tts';
+const CACHE_NAME = 'web-messenger-v112-telephony-fallback';
 const urlsToCache = [
   '/',
   '/index.html',

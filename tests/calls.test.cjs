@@ -84,3 +84,137 @@ test('Agora token generation is server-side and participant-authorized', () => {
   assert.match(functions, /No active group call/);
   assert.doesNotMatch(source, /AGORA_APP_CERTIFICATE|appCertificate/i);
 });
+
+test('telephony router resolves fallback cascade in Agora -> Daily -> GetStream order', async () => {
+  const {resolveTelephonySession, recordTelephonyDuration, telephonyDefaults} = require(path.join(root, 'functions', 'telephony-router.js'));
+  assert.deepEqual(telephonyDefaults.telephonyOrder, ['agora', 'daily', 'getstream']);
+
+  // Mock database
+  const store = new Map();
+  const mockDb = {
+    collection: name => ({
+      doc: id => ({
+        get: async () => ({
+          exists: store.has(`${name}/${id}`),
+          data: () => store.get(`${name}/${id}`)
+        }),
+        set: async (val, opt) => {
+          const key = `${name}/${id}`;
+          if (opt?.merge && store.has(key)) {
+            store.set(key, {...store.get(key), ...val});
+          } else {
+            store.set(key, val);
+          }
+        }
+      })
+    }),
+    runTransaction: async fn => fn({
+      get: async ref => ref.get(),
+      set: async (ref, val, opt) => ref.set(val, opt)
+    })
+  };
+
+  const secrets = {
+    agoraCertificate: 'mock_agora_cert',
+    dailyKey: 'mock_daily_key',
+    streamSecret: 'mock_stream_secret_that_is_at_least_32_bytes_long_here'
+  };
+
+  // 1. Primary provider Agora is picked first
+  const session1 = await resolveTelephonySession({
+    db: mockDb,
+    channel: 'test_call_1',
+    accountKey: '@alice',
+    username: '@alice',
+    scope: 'direct',
+    type: 'audio',
+    failedProviders: [],
+    secrets,
+    fetchImpl: async () => ({ok: true, json: async () => ({url: 'https://doori.daily.co/test_call_1'})})
+  });
+  assert.equal(session1.provider, 'agora');
+  assert.equal(session1.role, 'primary');
+
+  // 2. When Agora fails or is in failedProviders, Daily is chosen
+  const session2 = await resolveTelephonySession({
+    db: mockDb,
+    channel: 'test_call_2',
+    accountKey: '@alice',
+    username: '@alice',
+    scope: 'direct',
+    type: 'audio',
+    failedProviders: ['agora'],
+    secrets,
+    fetchImpl: async () => ({ok: true, json: async () => ({url: 'https://doori.daily.co/test_call_2'})})
+  });
+  assert.equal(session2.provider, 'daily');
+  assert.equal(session2.role, 'fallback1');
+
+  // 3. When Agora and Daily fail, GetStream is chosen
+  const session3 = await resolveTelephonySession({
+    db: mockDb,
+    channel: 'test_call_3',
+    accountKey: '@alice',
+    username: '@alice',
+    scope: 'direct',
+    type: 'video',
+    failedProviders: ['agora', 'daily'],
+    secrets,
+    fetchImpl: async () => ({ok: true, json: async () => ({})})
+  });
+  assert.equal(session3.provider, 'getstream');
+  assert.equal(session3.role, 'fallback2');
+
+  // 4. Record call duration updates budgets
+  await recordTelephonyDuration(mockDb, {provider: 'agora', durationSeconds: 120, callType: 'audio'});
+  await recordTelephonyDuration(mockDb, {provider: 'daily', durationSeconds: 300, callType: 'video'});
+});
+
+test('telephony secrets remain server-side and operator console cleanly separates AI and Telephony', () => {
+  const functions = fs.readFileSync(path.join(root, 'functions', 'index.js'), 'utf8');
+  assert.match(functions, /defineSecret\('DAILY_API_KEY'\)/);
+  assert.match(functions, /defineSecret\('STREAM_API_SECRET'\)/);
+  assert.match(functions, /exports\.getTelephonySession=onCall/);
+  assert.match(functions, /exports\.recordCallDuration=onCall/);
+  assert.match(functions, /exports\.updateTelephonyAdminConfig=onCall/);
+
+  // Client does not contain secrets
+  assert.doesNotMatch(source, /DAILY_API_KEY|STREAM_API_SECRET/i);
+
+  // Operator UI HTML structure
+  const opHtml = fs.readFileSync(path.join(root, 'operator.html'), 'utf8');
+  assert.match(opHtml, /data-t="sectionAi"/);
+  assert.match(opHtml, /data-t="sectionTelephony"/);
+  assert.match(opHtml, /id="telephony-rows"/);
+  assert.match(opHtml, /id="telephony-config-form"/);
+  assert.match(opHtml, /data-t="telephonyNotice"/);
+
+  // Operator JS localization across all 5 languages
+  const opJs = fs.readFileSync(path.join(root, 'operator.js'), 'utf8');
+  const context = { window: {}, document: {}, localStorage: { getItem: () => 'de', setItem: () => {} } };
+  vm.createContext(context);
+  // Extract T object
+  const startT = opJs.indexOf('const T={');
+  const endT = opJs.indexOf('};\nObject.assign(T.de', startT) + 1;
+  vm.runInContext(`globalThis.T = ${opJs.slice(startT + 8, endT)}`, context);
+  const T = context.T;
+
+  const languages = ['de', 'en', 'ar', 'fa', 'tr'];
+  const telephonyKeys = [
+    'sectionAi', 'sectionTelephony', 'telephonyNotice', 'telephonyAudioToday',
+    'telephonyVideoToday', 'telephonySwitchesToday', 'telephonyProvidersTitle',
+    'telephonyConfigTitle', 'role', 'status', 'audioMin', 'videoMin', 'totalMin',
+    'monthlyLimit', 'trackingMethod', 'trackingInfo', 'rolePrimary', 'roleFallback1',
+    'roleFallback2', 'statusActive', 'statusDegraded', 'statusLimitReached',
+    'agoraLimit', 'dailyLimit', 'streamLimit', 'failoverTimeout'
+  ];
+
+  for (const lang of languages) {
+    assert.ok(T[lang], `missing language ${lang} in operator console`);
+    for (const key of telephonyKeys) {
+      assert.ok(T[lang][key], `missing operator console key ${lang}.${key}`);
+      assert.ok(T[lang][key].trim().length > 0, `empty operator console key ${lang}.${key}`);
+    }
+  }
+});
+
