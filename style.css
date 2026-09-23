@@ -2083,6 +2083,27 @@ body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .composer-tools-row.assistant-mode-hidden { display: none !important; }
+.assistant-voice-select {
+    height: 42px;
+    max-width: 150px;
+    padding: 0 30px 0 12px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel-bg));
+    color: var(--text);
+}
+.chat-item[data-type="assistant"] .avatar,
+body.assistant-chat-open #current-chat-avatar {
+    background: linear-gradient(145deg, #93d8ff, #8776ef);
+    color: #101526;
+    box-shadow: 0 8px 24px rgba(111, 174, 255, .32);
+    font-size: 23px;
+}
+body.assistant-thinking #current-chat-avatar { animation: assistant-breathe 1.4s ease-in-out infinite; }
+@keyframes assistant-breathe { 50% { transform: scale(1.07); box-shadow: 0 10px 32px rgba(132, 117, 239, .48); } }
+@media (max-width: 600px) {
+    .assistant-voice-select { max-width: 92px; font-size: 12px; }
+}
 
 .chat-item[data-type="assistant"] .avatar {
     background: linear-gradient(145deg, #79c6ff, #8174e8);

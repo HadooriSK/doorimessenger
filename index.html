@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=331">
+    <link rel="stylesheet" href="style.css?v=332">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -326,6 +326,7 @@
                                 <textarea id="message-input" placeholder="Nachricht schreiben..." data-i18n="placeholder_msg" style="flex-grow: 1; resize: none; min-height: 40px; max-height: 100px; font-family: inherit; font-size: inherit; border-radius: 20px; padding: 10px 15px; border: 1px solid rgba(128,128,128,0.2); background: transparent; color: var(--text);"></textarea>
                                 <button type="button" id="assistant-mic-btn" class="icon-btn assistant-control hidden" aria-label="Mit Doori sprechen">🎙️</button>
                                 <button type="button" id="assistant-voice-btn" class="icon-btn assistant-control hidden" aria-label="Sprachausgabe">🔊</button>
+                                <select id="assistant-voice-select" class="assistant-voice-select hidden" aria-label="Stimme"><option value="female">Weibliche Stimme</option><option value="male">Männliche Stimme</option></select>
                                 <div class="send-btn-container composer-send">
                                     <button type="submit" id="send-btn" class="icon-btn primary" data-i18n-title="title_send_message" title="Nachricht senden">➤</button>
                                     <div id="send-options-popup" class="popup-menu hidden">
@@ -991,8 +992,9 @@
     <script src="message-cache.js?v=1"></script>
     <script src="quiz-questions.js?v=1"></script>
     <script src="games.js?v=4"></script>
-    <script src="assistant.js?v=1"></script>
-    <script src="app.js?v=350"></script>
+    <script src="tts.js?v=1"></script>
+    <script src="assistant.js?v=2"></script>
+    <script src="app.js?v=351"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="agora-calls.js?v=1"></script>
     <script src="doodle.js?v=276"></script>

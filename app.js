@@ -2618,6 +2618,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (!chat) return;
         currentChat = chat;
         window.currentChat = chat;
+        document.body.classList.toggle('assistant-chat-open', type === 'assistant');
+        if (type !== 'assistant') document.body.classList.remove('assistant-thinking');
         document.querySelector('.composer-tools-row')?.classList.toggle('assistant-mode-hidden', type === 'assistant');
         
         currentChatName.textContent = getTranslatedChatName(chat);
@@ -2626,7 +2628,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const detailsAvatar = document.getElementById('details-chat-avatar');
         if (detailsName) detailsName.textContent = getTranslatedChatName(chat);
         if (detailsStatus) detailsStatus.textContent = currentChatStatus.textContent || '';
-        if (type === 'assistant') currentChatAvatar.textContent = '✦';
+        if (type === 'assistant') currentChatAvatar.textContent = window.DooriAssistant?.getAvatar?.() || '👩‍💻';
         else if (type === 'saved') currentChatAvatar.textContent = '💾';
         else if (type === 'room' || type === 'channel') {
             currentChatAvatar.textContent = '#';
@@ -3002,7 +3004,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             div.className = classNames;
             div.dataset.id = chat.id; div.dataset.type = chat.type;
             let avatarHtml = '';
-            if (chat.type === 'assistant') avatarHtml = '✦'; else if (chat.type === 'saved') avatarHtml = '💾'; else if (chat.type === 'room' || chat.type === 'channel') avatarHtml = '#';
+            if (chat.type === 'assistant') avatarHtml = window.DooriAssistant?.getAvatar?.() || '👩‍💻'; else if (chat.type === 'saved') avatarHtml = '💾'; else if (chat.type === 'room' || chat.type === 'channel') avatarHtml = '#';
             else {
                 let p = getUserProfile(chat.name || chat.id);
                 if (!p) {

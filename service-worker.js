@@ -1,10 +1,11 @@
-const CACHE_NAME = 'web-messenger-v110-ai-assistant';
+const CACHE_NAME = 'web-messenger-v111-ai-gemini-tts';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=331',
-  '/app.js?v=350',
-  '/assistant.js?v=1',
+  '/style.css?v=332',
+  '/app.js?v=351',
+  '/tts.js?v=1',
+  '/assistant.js?v=2',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',

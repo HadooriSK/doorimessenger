@@ -13,6 +13,7 @@ const BREVO_API_KEY=defineSecret('BREVO_API_KEY');
 const AGORA_APP_CERTIFICATE=defineSecret('AGORA_APP_CERTIFICATE');
 const GROQ_API_KEY=defineSecret('GROQ_API_KEY');
 const CLOUDFLARE_API_TOKEN=defineSecret('CLOUDFLARE_API_TOKEN');
+const GEMINI_API_KEY=defineSecret('GEMINI_API_KEY');
 const options={region:'europe-west3',maxInstances:10,timeoutSeconds:30,memory:'256MiB'};
 const AGORA_APP_ID='275401ea48a74f4b9f9cac0107362c6c'; // Public Agora project identifier.
 const WEB_API_KEY='AIzaSyAIV8HtZGe8RBzqcDLwc8RT2iY3TSWrnIk'; // Public Firebase Web identifier.
@@ -195,7 +196,7 @@ exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async
  return {success:true};
 });
 
-exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,CLOUDFLARE_API_TOKEN]},async request=>{
+exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KEY,CLOUDFLARE_API_TOKEN]},async request=>{
  const uid=signedIn(request);
  await limit(request,'assistant-user:'+uid,20);
  const rawMessages=Array.isArray(request.data?.messages)?request.data.messages:[];
@@ -205,10 +206,12 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,CLOUDFLARE_AP
  const language=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'auto';
  const router=createAssistantRouter({
   groqKey:GROQ_API_KEY.value(),
+  geminiKey:GEMINI_API_KEY.value(),
   cloudflareToken:CLOUDFLARE_API_TOKEN.value(),
   allowGroq:true,
+  allowGemini:true,
   allowCloudflare:true,
-  beforeProvider:provider=>reserveDailyAssistantBudget(provider,provider==='groq'?100:3)
+  beforeProvider:provider=>reserveDailyAssistantBudget(provider,provider==='cloudflare'?3:(provider==='gemini'?50:100))
  });
  try{return await router({messages,language});}
  catch(error){
