@@ -19,11 +19,11 @@ const ui = {
 };
 
 const TEXT = {
- de:{incomingAudio:'Eingehender Sprachanruf …',incomingVideo:'Eingehender Videoanruf …',groupVideo:'Gruppen-Videoanruf',groupAudio:'Gruppenanruf',calling:'Wird angerufen …',connecting:'Verbindung wird hergestellt …',connected:'Verbunden',reconnecting:'Verbindung wird wiederhergestellt …',failed:'Verbindung fehlgeschlagen',encrypted:'Ende-zu-Ende verschlüsselt',accept:'Annehmen',end:'Auflegen',mute:'Stumm',unmute:'Mikrofon an',speaker:'Ton',soundOff:'Ton aus',camera:'Kamera',cameraOn:'Kamera an',switchCamera:'Wechseln',shareScreen:'Bildschirm',stopShare:'Freigabe stoppen',fullscreen:'Vollbild',voiceCall:'Sprachanruf',videoCall:'Videoanruf',participants:'Teilnehmer',permissionDenied:'Bitte erlaube den Zugriff auf Mikrofon und Kamera in den Browser-Einstellungen.',deviceMissing:'Kein passendes Mikrofon oder keine Kamera gefunden.',callFailed:'Der Anruf konnte nicht aufgebaut werden.',alreadyCalling:'Es läuft bereits ein Anruf.',sdkMissing:'Der Anrufdienst konnte nicht geladen werden.'},
- en:{incomingAudio:'Incoming voice call …',incomingVideo:'Incoming video call …',groupVideo:'Group video call',groupAudio:'Group call',calling:'Calling …',connecting:'Establishing connection …',connected:'Connected',reconnecting:'Restoring connection …',failed:'Connection failed',encrypted:'End-to-end encrypted',accept:'Accept',end:'End call',mute:'Mute',unmute:'Unmute',speaker:'Sound',soundOff:'Sound off',camera:'Camera',cameraOn:'Camera on',switchCamera:'Switch',shareScreen:'Screen',stopShare:'Stop sharing',fullscreen:'Full screen',voiceCall:'Voice call',videoCall:'Video call',participants:'Participants',permissionDenied:'Please allow microphone and camera access in your browser settings.',deviceMissing:'No suitable microphone or camera was found.',callFailed:'The call could not be established.',alreadyCalling:'A call is already in progress.',sdkMissing:'The calling service could not be loaded.'},
- ar:{incomingAudio:'مكالمة صوتية واردة …',incomingVideo:'مكالمة فيديو واردة …',groupVideo:'مكالمة فيديو جماعية',groupAudio:'مكالمة جماعية',calling:'جارٍ الاتصال …',connecting:'جارٍ إنشاء الاتصال …',connected:'متصل',reconnecting:'جارٍ استعادة الاتصال …',failed:'فشل الاتصال',encrypted:'مشفر بين الطرفين',accept:'قبول',end:'إنهاء',mute:'كتم',unmute:'تشغيل الميكروفون',speaker:'الصوت',soundOff:'إيقاف الصوت',camera:'الكاميرا',cameraOn:'تشغيل الكاميرا',switchCamera:'تبديل',shareScreen:'الشاشة',stopShare:'إيقاف المشاركة',fullscreen:'ملء الشاشة',voiceCall:'مكالمة صوتية',videoCall:'مكالمة فيديو',participants:'المشاركون',permissionDenied:'يرجى السماح بالوصول إلى الميكروفون والكاميرا من إعدادات المتصفح.',deviceMissing:'لم يتم العثور على ميكروفون أو كاميرا مناسبة.',callFailed:'تعذر إنشاء المكالمة.',alreadyCalling:'توجد مكالمة جارية بالفعل.',sdkMissing:'تعذر تحميل خدمة المكالمات.'},
- fa:{incomingAudio:'تماس صوتی ورودی …',incomingVideo:'تماس تصویری ورودی …',groupVideo:'تماس تصویری گروهی',groupAudio:'تماس گروهی',calling:'در حال تماس …',connecting:'در حال برقراری ارتباط …',connected:'متصل',reconnecting:'در حال بازیابی ارتباط …',failed:'ارتباط ناموفق بود',encrypted:'رمزگذاری سرتاسری',accept:'پذیرفتن',end:'پایان تماس',mute:'بی‌صدا',unmute:'روشن کردن میکروفون',speaker:'صدا',soundOff:'قطع صدا',camera:'دوربین',cameraOn:'روشن کردن دوربین',switchCamera:'تغییر',shareScreen:'صفحه‌نمایش',stopShare:'پایان اشتراک‌گذاری',fullscreen:'تمام‌صفحه',voiceCall:'تماس صوتی',videoCall:'تماس تصویری',participants:'شرکت‌کنندگان',permissionDenied:'لطفاً دسترسی به میکروفون و دوربین را در تنظیمات مرورگر مجاز کنید.',deviceMissing:'میکروفون یا دوربین مناسبی پیدا نشد.',callFailed:'برقراری تماس ممکن نشد.',alreadyCalling:'یک تماس هم‌اکنون در حال اجرا است.',sdkMissing:'سرویس تماس بارگیری نشد.'},
- tr:{incomingAudio:'Gelen sesli arama …',incomingVideo:'Gelen görüntülü arama …',groupVideo:'Grup görüntülü araması',groupAudio:'Grup araması',calling:'Aranıyor …',connecting:'Bağlantı kuruluyor …',connected:'Bağlandı',reconnecting:'Bağlantı yeniden kuruluyor …',failed:'Bağlantı başarısız',encrypted:'Uçtan uca şifreli',accept:'Kabul et',end:'Kapat',mute:'Sessize al',unmute:'Mikrofonu aç',speaker:'Ses',soundOff:'Sesi kapat',camera:'Kamera',cameraOn:'Kamerayı aç',switchCamera:'Değiştir',shareScreen:'Ekran',stopShare:'Paylaşımı durdur',fullscreen:'Tam ekran',voiceCall:'Sesli arama',videoCall:'Görüntülü arama',participants:'Katılımcı',permissionDenied:'Lütfen tarayıcı ayarlarından mikrofon ve kamera erişimine izin verin.',deviceMissing:'Uygun mikrofon veya kamera bulunamadı.',callFailed:'Arama kurulamadı.',alreadyCalling:'Zaten devam eden bir arama var.',sdkMissing:'Arama hizmeti yüklenemedi.'}
+ de:{swapVideo:'Videoansicht wechseln',incomingAudio:'Eingehender Sprachanruf …',incomingVideo:'Eingehender Videoanruf …',groupVideo:'Gruppen-Videoanruf',groupAudio:'Gruppenanruf',calling:'Wird angerufen …',connecting:'Verbindung wird hergestellt …',connected:'Verbunden',reconnecting:'Verbindung wird wiederhergestellt …',failed:'Verbindung fehlgeschlagen',encrypted:'Ende-zu-Ende verschlüsselt',accept:'Annehmen',end:'Auflegen',mute:'Stumm',unmute:'Mikrofon an',speaker:'Ton',soundOff:'Ton aus',camera:'Kamera',cameraOn:'Kamera an',switchCamera:'Wechseln',shareScreen:'Bildschirm',stopShare:'Freigabe stoppen',fullscreen:'Vollbild',voiceCall:'Sprachanruf',videoCall:'Videoanruf',participants:'Teilnehmer',permissionDenied:'Bitte erlaube den Zugriff auf Mikrofon und Kamera in den Browser-Einstellungen.',deviceMissing:'Kein passendes Mikrofon oder keine Kamera gefunden.',callFailed:'Der Anruf konnte nicht aufgebaut werden.',alreadyCalling:'Es läuft bereits ein Anruf.',sdkMissing:'Der Anrufdienst konnte nicht geladen werden.'},
+ en:{swapVideo:'Switch video view',incomingAudio:'Incoming voice call …',incomingVideo:'Incoming video call …',groupVideo:'Group video call',groupAudio:'Group call',calling:'Calling …',connecting:'Establishing connection …',connected:'Connected',reconnecting:'Restoring connection …',failed:'Connection failed',encrypted:'End-to-end encrypted',accept:'Accept',end:'End call',mute:'Mute',unmute:'Unmute',speaker:'Sound',soundOff:'Sound off',camera:'Camera',cameraOn:'Camera on',switchCamera:'Switch',shareScreen:'Screen',stopShare:'Stop sharing',fullscreen:'Full screen',voiceCall:'Voice call',videoCall:'Video call',participants:'Participants',permissionDenied:'Please allow microphone and camera access in your browser settings.',deviceMissing:'No suitable microphone or camera was found.',callFailed:'The call could not be established.',alreadyCalling:'A call is already in progress.',sdkMissing:'The calling service could not be loaded.'},
+ ar:{swapVideo:'تبديل عرض الفيديو',incomingAudio:'مكالمة صوتية واردة …',incomingVideo:'مكالمة فيديو واردة …',groupVideo:'مكالمة فيديو جماعية',groupAudio:'مكالمة جماعية',calling:'جارٍ الاتصال …',connecting:'جارٍ إنشاء الاتصال …',connected:'متصل',reconnecting:'جارٍ استعادة الاتصال …',failed:'فشل الاتصال',encrypted:'مشفر بين الطرفين',accept:'قبول',end:'إنهاء',mute:'كتم',unmute:'تشغيل الميكروفون',speaker:'الصوت',soundOff:'إيقاف الصوت',camera:'الكاميرا',cameraOn:'تشغيل الكاميرا',switchCamera:'تبديل',shareScreen:'الشاشة',stopShare:'إيقاف المشاركة',fullscreen:'ملء الشاشة',voiceCall:'مكالمة صوتية',videoCall:'مكالمة فيديو',participants:'المشاركون',permissionDenied:'يرجى السماح بالوصول إلى الميكروفون والكاميرا من إعدادات المتصفح.',deviceMissing:'لم يتم العثور على ميكروفون أو كاميرا مناسبة.',callFailed:'تعذر إنشاء المكالمة.',alreadyCalling:'توجد مكالمة جارية بالفعل.',sdkMissing:'تعذر تحميل خدمة المكالمات.'},
+ fa:{swapVideo:'تغییر نمای ویدیو',incomingAudio:'تماس صوتی ورودی …',incomingVideo:'تماس تصویری ورودی …',groupVideo:'تماس تصویری گروهی',groupAudio:'تماس گروهی',calling:'در حال تماس …',connecting:'در حال برقراری ارتباط …',connected:'متصل',reconnecting:'در حال بازیابی ارتباط …',failed:'ارتباط ناموفق بود',encrypted:'رمزگذاری سرتاسری',accept:'پذیرفتن',end:'پایان تماس',mute:'بی‌صدا',unmute:'روشن کردن میکروفون',speaker:'صدا',soundOff:'قطع صدا',camera:'دوربین',cameraOn:'روشن کردن دوربین',switchCamera:'تغییر',shareScreen:'صفحه‌نمایش',stopShare:'پایان اشتراک‌گذاری',fullscreen:'تمام‌صفحه',voiceCall:'تماس صوتی',videoCall:'تماس تصویری',participants:'شرکت‌کنندگان',permissionDenied:'لطفاً دسترسی به میکروفون و دوربین را در تنظیمات مرورگر مجاز کنید.',deviceMissing:'میکروفون یا دوربین مناسبی پیدا نشد.',callFailed:'برقراری تماس ممکن نشد.',alreadyCalling:'یک تماس هم‌اکنون در حال اجرا است.',sdkMissing:'سرویس تماس بارگیری نشد.'},
+ tr:{swapVideo:'Video görünümünü değiştir',incomingAudio:'Gelen sesli arama …',incomingVideo:'Gelen görüntülü arama …',groupVideo:'Grup görüntülü araması',groupAudio:'Grup araması',calling:'Aranıyor …',connecting:'Bağlantı kuruluyor …',connected:'Bağlandı',reconnecting:'Bağlantı yeniden kuruluyor …',failed:'Bağlantı başarısız',encrypted:'Uçtan uca şifreli',accept:'Kabul et',end:'Kapat',mute:'Sessize al',unmute:'Mikrofonu aç',speaker:'Ses',soundOff:'Sesi kapat',camera:'Kamera',cameraOn:'Kamerayı aç',switchCamera:'Değiştir',shareScreen:'Ekran',stopShare:'Paylaşımı durdur',fullscreen:'Tam ekran',voiceCall:'Sesli arama',videoCall:'Görüntülü arama',participants:'Katılımcı',permissionDenied:'Lütfen tarayıcı ayarlarından mikrofon ve kamera erişimine izin verin.',deviceMissing:'Uygun mikrofon veya kamera bulunamadı.',callFailed:'Arama kurulamadı.',alreadyCalling:'Zaten devam eden bir arama var.',sdkMissing:'Arama hizmeti yüklenemedi.'}
 };
 
 const lang=()=>['de','en','ar','fa','tr'].includes(window.currentLang)?window.currentLang:'de';
@@ -44,7 +44,7 @@ function mediaError(error){if(error?.code==='PERMISSION_DENIED'||error?.name==='
 window.addEventListener('doori-language-change',translateCalls);translateCalls();
 
 let currentUser=null,incomingUnsubscribe=null,callDocUnsubscribe=null;
-let client=null,dailyClient=null,nativePeerConnection=null,localMediaStream=null;
+let client=null,dailyClient=null,streamClient=null,streamCall=null,streamParticipantsSub=null,streamBindings=[],nativePeerConnection=null,localMediaStream=null;
 let localAudio=null,localVideo=null,screenVideo=null;
 let timer=null,timeout=null,failoverTimer=null,ending=false,soundMuted=false,cameraIndex=0,groupParticipantsUnsubscribe=null;
 const remoteAudio=new Map(),remoteVideo=new Map();
@@ -72,7 +72,8 @@ function activeControls(type){
  if(type==='video'){show(ui.videoAccept,false);show(ui.videoEnd,true);[ui.videoMute,ui.videoCamera,ui.switchCamera,ui.videoSound].forEach(b=>show(b,true));show(ui.shareScreen,!!navigator.mediaDevices?.getDisplayMedia);if(ui.ringing)ui.ringing.style.display='none';}
  else{show(ui.audioAccept,false);show(ui.audioEnd,true);show(ui.audioMute,true);show(ui.audioSound,true);}
 }
-function prepareDirectGrid(){if(!ui.videoGrid)return;ui.videoGrid.innerHTML='';ui.videoGrid.style.gridTemplateColumns='1fr';const remote=document.createElement('div');remote.id='video-remote';ui.videoGrid.appendChild(remote);}
+function prepareDirectGrid(){if(!ui.videoGrid)return;ui.videoGrid.closest('.video-stage')?.classList.remove('local-video-main');ui.videoGrid.innerHTML='';ui.videoGrid.style.gridTemplateColumns='1fr';const remote=document.createElement('div');remote.id='video-remote';remote.className='agora-video-surface';remote.title=text('swapVideo');remote.setAttribute('aria-label',text('swapVideo'));ui.videoGrid.appendChild(remote);}
+function toggleVideoFocus(){if(!ui.localVideo?.querySelector('video,canvas,.agora_video_player'))return;ui.videoGrid?.closest('.video-stage')?.classList.toggle('local-video-main');}
 
 function tokenFunction(){if(!window.accountFunctions)throw new Error('Functions unavailable');return window.accountFunctions.httpsCallable('getAgoraToken');}
 
@@ -129,12 +130,13 @@ async function connectAgora(access,scope,type,onConnected,onFail){
 
 async function connectDaily(access,scope,type,onConnected,onFail){
  try{
-  if(window.DailyIframe&&typeof window.DailyIframe.createCallObject==='function'){
-   dailyClient=window.DailyIframe.createCallObject({subscribeToTracksAutomatically:true,audioSource:true,videoSource:type==='video'});
+  const Daily=window.DooriTelephonyProviders?.DailyIframe;
+  if(Daily&&typeof Daily.createCallObject==='function'){
+   dailyClient=Daily.createCallObject({subscribeToTracksAutomatically:true,audioSource:true,videoSource:type==='video'});
    dailyClient.on('joined-meeting',()=>onConnected());
    dailyClient.on('error',err=>onFail(err));
    dailyClient.on('track-started',ev=>{
-    if(ev.participant?.local)return;
+    if(ev.participant?.local){if(ev.track?.kind==='video'&&type==='video'&&ui.localVideo){const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=true;v.srcObject=new MediaStream([ev.track]);ui.localVideo.innerHTML='';ui.localVideo.appendChild(v);}return;}
     if(ev.track?.kind==='audio'){
      const a=new Audio();a.srcObject=new MediaStream([ev.track]);a.play().catch(()=>{});
      remoteAudio.set(ev.participant.session_id,{stop:()=>{ev.track.stop();a.srcObject=null;},setVolume:v=>{a.volume=v/100;}});
@@ -148,14 +150,27 @@ async function connectDaily(access,scope,type,onConnected,onFail){
    await dailyClient.join({url:access.roomUrl,token:access.token});
    return;
   }
-  await connectWebRtcFallback('daily',access,scope,type,onConnected,onFail);
+  throw new Error('Daily SDK missing');
  }catch(err){onFail(err);}
 }
 
 async function connectStream(access,scope,type,onConnected,onFail){
  try{
-  await connectWebRtcFallback('getstream',access,scope,type,onConnected,onFail);
+  const StreamVideoClient=window.DooriTelephonyProviders?.StreamVideoClient;if(!StreamVideoClient)throw new Error('Stream SDK missing');
+  streamClient=new StreamVideoClient({apiKey:access.apiKey,token:access.token,user:{id:access.userId,name:access.userId}});streamCall=streamClient.call('default',access.callId);
+  await streamCall.microphone.enable();if(type==='video')await streamCall.camera.enable();else await streamCall.camera.disable();
+  streamParticipantsSub=streamCall.state.participants$.subscribe(participants=>renderStreamParticipants(participants,scope,type));
+  await streamCall.join({create:false,maxJoinRetries:1});onConnected();
  }catch(err){onFail(err);}
+}
+
+function renderStreamParticipants(participants,scope,type){
+ streamBindings.splice(0).forEach(unbind=>{try{unbind();}catch{}});remoteAudio.clear();remoteVideo.clear();
+ for(const participant of participants){
+  const target=participant.isLocalParticipant?ui.localVideo:(scope==='group'?ensureGroupVideoTarget(participant.sessionId):$('video-remote'));
+  if(type==='video'&&target){target.innerHTML='';const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.muted=participant.isLocalParticipant;target.appendChild(video);streamBindings.push(streamCall.bindVideoElement(video,participant.sessionId,'videoTrack'));remoteVideo.set(participant.sessionId,{stop(){}});}
+  if(!participant.isLocalParticipant){const audio=document.createElement('audio');audio.autoplay=true;audio.style.display='none';document.body.appendChild(audio);streamBindings.push(()=>audio.remove(),streamCall.bindAudioElement(audio,participant.sessionId,'audioTrack'));remoteAudio.set(participant.sessionId,{stop:()=>audio.remove(),setVolume:value=>{audio.volume=value/100;}});}
+ }
 }
 
 async function connectWebRtcFallback(provider,access,scope,type,onConnected,onFail){
@@ -216,6 +231,8 @@ async function cleanupProvider(provider){
   if(localVideo){localVideo.stop();localVideo.close();localVideo=null;}
  }else if(provider==='daily'){
   if(dailyClient){try{await dailyClient.destroy();}catch{}}dailyClient=null;
+ }else if(provider==='getstream'){
+  streamParticipantsSub?.unsubscribe?.();streamParticipantsSub=null;streamBindings.splice(0).forEach(unbind=>{try{unbind();}catch{}});if(streamCall){try{await streamCall.leave();}catch{}}streamCall=null;if(streamClient){try{await streamClient.disconnectUser();}catch{}}streamClient=null;
  }
  if(nativePeerConnection){try{nativePeerConnection.close();}catch{}nativePeerConnection=null;}
  if(localMediaStream){localMediaStream.getTracks().forEach(t=>t.stop());localMediaStream=null;}
@@ -241,7 +258,7 @@ async function joinTelephonyCall(scope,id,type,failedProviders=[]){
    console.warn(`Provider ${session.provider} failed, triggering fallback:`,err?.message||err);
    await cleanupProvider(session.provider);
    const nextFailed=[...failedProviders,session.provider];
-   if(nextFailed.length<3){
+   if(nextFailed.length<4){
     try{
      status('connecting',type);
      const nextSession=await joinTelephonyCall(scope,id,type,nextFailed);
@@ -255,6 +272,7 @@ async function joinTelephonyCall(scope,id,type,failedProviders=[]){
   if(session.provider==='agora')connectAgora(session,scope,type,onConnected,onFail).catch(onFail);
   else if(session.provider==='daily')connectDaily(session,scope,type,onConnected,onFail).catch(onFail);
   else if(session.provider==='getstream')connectStream(session,scope,type,onConnected,onFail).catch(onFail);
+  else if(session.provider==='webrtc')connectWebRtcFallback('webrtc',session,scope,type,onConnected,onFail).catch(onFail);
   else onFail(new Error('Unknown provider: '+session.provider));
  });
 }
@@ -296,6 +314,7 @@ async function closeAgora(){
  if(call.signalingUnsub){call.signalingUnsub();call.signalingUnsub=null;}
  if(screenVideo){screenVideo.stop();screenVideo.close();screenVideo=null;}if(localVideo){localVideo.stop();localVideo.close();localVideo=null;}if(localAudio){localAudio.stop();localAudio.close();localAudio=null;}
  if(dailyClient){try{await dailyClient.destroy();}catch{}dailyClient=null;}
+ streamParticipantsSub?.unsubscribe?.();streamParticipantsSub=null;streamBindings.splice(0).forEach(unbind=>{try{unbind();}catch{}});if(streamCall){try{await streamCall.leave();}catch{}}streamCall=null;if(streamClient){try{await streamClient.disconnectUser();}catch{}}streamClient=null;
  if(nativePeerConnection){try{nativePeerConnection.close();}catch{}nativePeerConnection=null;}
  if(localMediaStream){localMediaStream.getTracks().forEach(t=>t.stop());localMediaStream=null;}
  remoteAudio.forEach(track=>{if(typeof track.stop==='function')track.stop();});remoteVideo.forEach(track=>{if(typeof track.stop==='function')track.stop();});remoteAudio.clear();remoteVideo.clear();
@@ -315,9 +334,9 @@ async function finish(update=true){
 }
 
 function getActiveAudio(){return localAudio||localMediaStream?.getAudioTracks()?.[0]||null;}
-async function toggleMute(button){const a=getActiveAudio();if(!a)return;let muted;if(typeof a.setMuted==='function'){muted=!a.muted;await a.setMuted(muted);}else{muted=a.enabled;a.enabled=!muted;}label(button,muted,muted?'disabled':'');}
+async function toggleMute(button){if(dailyClient){const enabled=dailyClient.localAudio();dailyClient.setLocalAudio(!enabled);label(button,enabled,enabled?'disabled':'');return;}if(streamCall){const enabled=streamCall.microphone.state.status==='enabled';if(enabled)await streamCall.microphone.disable();else await streamCall.microphone.enable();label(button,enabled,enabled?'disabled':'');return;}const a=getActiveAudio();if(!a)return;let muted;if(typeof a.setMuted==='function'){muted=!a.muted;await a.setMuted(muted);}else{muted=a.enabled;a.enabled=!muted;}label(button,muted,muted?'disabled':'');}
 function toggleSound(button){soundMuted=!soundMuted;remoteAudio.forEach(track=>track.setVolume(soundMuted?0:100));label(button,soundMuted,soundMuted?'disabled':'');}
-async function toggleCamera(){if(localVideo){const muted=!localVideo.muted;await localVideo.setMuted(muted);label(ui.videoCamera,muted,muted?'disabled':'');}else if(localMediaStream){const t=localMediaStream.getVideoTracks()[0];if(t){t.enabled=!t.enabled;label(ui.videoCamera,!t.enabled,!t.enabled?'disabled':'');}}}
+async function toggleCamera(){if(dailyClient){const enabled=dailyClient.localVideo();dailyClient.setLocalVideo(!enabled);label(ui.videoCamera,enabled,enabled?'disabled':'');}else if(streamCall){const enabled=streamCall.camera.state.status==='enabled';if(enabled)await streamCall.camera.disable();else await streamCall.camera.enable();label(ui.videoCamera,enabled,enabled?'disabled':'');}else if(localVideo){const muted=!localVideo.muted;await localVideo.setMuted(muted);label(ui.videoCamera,muted,muted?'disabled':'');}else if(localMediaStream){const t=localMediaStream.getVideoTracks()[0];if(t){t.enabled=!t.enabled;label(ui.videoCamera,!t.enabled,!t.enabled?'disabled':'');}}}
 async function switchCamera(){if(!localVideo)return;try{const cameras=await window.AgoraRTC.getCameras();if(cameras.length<2)return;cameraIndex=(cameraIndex+1)%cameras.length;await localVideo.setDevice(cameras[cameraIndex].deviceId);}catch(error){console.warn('Camera switch failed',error);alert(text('deviceMissing'));}}
 async function stopShare(){if(!screenVideo)return;const track=screenVideo;screenVideo=null;if(client)await client.unpublish(track).catch(()=>{});track.stop();track.close();if(localVideo&&client){await client.publish(localVideo);localVideo.play(ui.localVideo);}label(ui.shareScreen,'shareScreen','');}
 async function shareScreen(){
@@ -364,6 +383,7 @@ ui.audioButton?.addEventListener('click',()=>startDirect('audio'));ui.videoButto
 ui.audioAccept?.addEventListener('click',accept);ui.videoAccept?.addEventListener('click',accept);ui.audioEnd?.addEventListener('click',()=>finish(true));ui.videoEnd?.addEventListener('click',()=>groupId?leaveGroup():finish(true));
 ui.audioMute?.addEventListener('click',()=>toggleMute(ui.audioMute));ui.videoMute?.addEventListener('click',()=>toggleMute(ui.videoMute));ui.audioSound?.addEventListener('click',()=>toggleSound(ui.audioSound));ui.videoSound?.addEventListener('click',()=>toggleSound(ui.videoSound));
 ui.videoCamera?.addEventListener('click',toggleCamera);ui.switchCamera?.addEventListener('click',switchCamera);ui.shareScreen?.addEventListener('click',shareScreen);
+ui.localVideo?.addEventListener('click',toggleVideoFocus);ui.videoGrid?.addEventListener('click',event=>{if(event.target.closest?.('#video-remote'))toggleVideoFocus();});
 ui.fullscreen?.addEventListener('click',async()=>{const card=ui.videoModal?.querySelector('.video-call-card');try{if(document.fullscreenElement)await document.exitFullscreen();else await card?.requestFullscreen?.();}catch(error){console.warn('Fullscreen failed',error);}});
 ui.groupMute?.addEventListener('click',()=>toggleMute(ui.groupMute));ui.groupSound?.addEventListener('click',()=>toggleSound(ui.groupSound));ui.groupLeave?.addEventListener('click',leaveGroup);
 })();

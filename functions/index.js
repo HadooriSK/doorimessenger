@@ -367,7 +367,7 @@ exports.updateTelephonyAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
    next[key]=value;
   }
  }
- if(Array.isArray(data.telephonyOrder)&&data.telephonyOrder.length===3&&data.telephonyOrder.every(p=>['agora','daily','getstream'].includes(p))){
+ if(Array.isArray(data.telephonyOrder)&&data.telephonyOrder.length===4&&data.telephonyOrder.every(p=>['agora','daily','getstream','webrtc'].includes(p))){
   next.telephonyOrder=data.telephonyOrder;
  }
  await db.collection('_telephonyConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});

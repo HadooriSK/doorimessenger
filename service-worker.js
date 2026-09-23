@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v112-telephony-fallback';
+const CACHE_NAME = 'web-messenger-v114-video-layout-fix';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=332',
-  '/app.js?v=351',
+  '/style.css?v=333',
+  '/app.js?v=352',
   '/tts.js?v=1',
   '/assistant.js?v=2',
   '/quiz-questions.js?v=1',

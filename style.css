@@ -567,7 +567,11 @@ select option {
 .video-grid video, #video-remote, .agora-video-surface, .agora-video-surface video { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; display: block; }
 .video-grid:has(video:nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .video-grid:has(video:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#video-local { position: absolute; inset: auto 22px 22px auto; width: clamp(112px, 19vw, 210px); aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; background: #14232d; border: 2px solid rgba(255,255,255,.78); box-shadow: 0 15px 35px rgba(0,0,0,.48); z-index: 8; cursor: move; overflow: hidden; }
+#video-local { position: absolute; inset: auto 22px 22px auto; width: clamp(112px, 19vw, 210px); height: auto; aspect-ratio: 4 / 3; border-radius: 20px; background: #14232d; border: 2px solid rgba(255,255,255,.78); box-shadow: 0 15px 35px rgba(0,0,0,.48); z-index: 8; cursor: pointer; overflow: hidden; }
+#video-local video, #video-local canvas, #video-local .agora_video_player { width:100%!important; height:100%!important; object-fit:cover!important; }
+.video-stage.local-video-main #video-local { inset:0; width:100%; height:100%; aspect-ratio:auto; border:0; border-radius:0; z-index:2; }
+.video-stage.local-video-main .video-grid { position:absolute; right:22px; bottom:22px; width:clamp(112px,19vw,210px); height:auto; aspect-ratio:4/3; border:2px solid rgba(255,255,255,.78); border-radius:20px; overflow:hidden; box-shadow:0 15px 35px rgba(0,0,0,.48); z-index:8; cursor:pointer; }
+body.rtl-mode .video-stage.local-video-main .video-grid { right:auto; left:22px; }
 .call-participant-chip { padding: 8px 12px; border-radius: 999px; background: rgba(46,213,115,.16); border: 1px solid rgba(46,213,115,.28); }
 .video-topbar { position: absolute; inset: 0 0 auto; padding: 20px 22px 60px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 9; background: linear-gradient(rgba(0,0,0,.68), transparent); pointer-events: none; }
 .video-call-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -594,6 +598,8 @@ body.rtl-mode #video-local { right: auto; left: 22px; }
     .video-call-controls .call-control { min-width: 62px; flex: 0 0 62px; }
     .video-call-controls .call-control-icon { width: 50px; height: 50px; }
     #video-local { width: 112px; right: 12px; bottom: 12px; border-radius: 15px; }
+    .video-stage.local-video-main .video-grid { width:112px; right:12px; bottom:12px; border-radius:15px; }
+    body.rtl-mode .video-stage.local-video-main .video-grid { right:auto; left:12px; }
     body.rtl-mode #video-local { right: auto; left: 12px; }
     .video-topbar { padding: max(14px, env(safe-area-inset-top)) 14px 55px; }
     .video-security { display: none; }

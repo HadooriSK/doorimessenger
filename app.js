@@ -712,7 +712,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     bc.onmessage = (event) => {
         const data = event.data;
         if (data.type === 'user_login') {
-            handleUserOnline(data.username);
+            if (typeof window.handleUserOnline === 'function') window.handleUserOnline(data.username);
         }
     };
 

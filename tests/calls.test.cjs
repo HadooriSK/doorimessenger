@@ -85,9 +85,9 @@ test('Agora token generation is server-side and participant-authorized', () => {
   assert.doesNotMatch(source, /AGORA_APP_CERTIFICATE|appCertificate/i);
 });
 
-test('telephony router resolves fallback cascade in Agora -> Daily -> GetStream order', async () => {
+test('telephony router resolves fallback cascade in Agora -> Daily -> GetStream -> WebRTC order', async () => {
   const {resolveTelephonySession, recordTelephonyDuration, telephonyDefaults} = require(path.join(root, 'functions', 'telephony-router.js'));
-  assert.deepEqual(telephonyDefaults.telephonyOrder, ['agora', 'daily', 'getstream']);
+  assert.deepEqual(telephonyDefaults.telephonyOrder, ['agora', 'daily', 'getstream', 'webrtc']);
 
   // Mock database
   const store = new Map();
@@ -163,6 +163,13 @@ test('telephony router resolves fallback cascade in Agora -> Daily -> GetStream 
     fetchImpl: async () => ({ok: true, json: async () => ({})})
   });
   assert.equal(session3.provider, 'getstream');
+
+  const session4 = await resolveTelephonySession({
+    db:mockDb, channel:'test_call_4', accountKey:'@alice', username:'@alice', scope:'direct', type:'audio',
+    failedProviders:['agora','daily','getstream'], secrets:{}, fetchImpl:async()=>({ok:false,status:503,json:async()=>({})})
+  });
+  assert.equal(session4.provider,'webrtc');
+  assert.equal(session4.role,'fallback3');
   assert.equal(session3.role, 'fallback2');
 
   // 4. Record call duration updates budgets
@@ -216,5 +223,31 @@ test('telephony secrets remain server-side and operator console cleanly separate
       assert.ok(T[lang][key].trim().length > 0, `empty operator console key ${lang}.${key}`);
     }
   }
+});
+
+test('Daily and GetStream use their official browser SDKs and current public key', () => {
+  const calls = fs.readFileSync(path.join(root, 'agora-calls.js'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const router = fs.readFileSync(path.join(root, 'functions', 'telephony-router.js'), 'utf8');
+  assert.match(html, /vendor\/telephony-providers\.js/);
+  assert.match(calls, /DooriTelephonyProviders\?\.DailyIframe/);
+  assert.match(calls, /DooriTelephonyProviders\?\.StreamVideoClient/);
+  assert.match(calls, /streamCall\.join\(\{create:false,maxJoinRetries:1\}\)/);
+  assert.doesNotMatch(calls, /connectWebRtcFallback\('(?:daily|getstream)'/);
+  assert.match(router, /STREAM_PUBLIC_KEY = 'jp5eav3shbqe'/);
+  assert.match(router, /serverSide \? \{server: true\}/);
+  assert.match(router, /roomUrl,/);
+});
+
+test('video calls use picture-in-picture swapping and cross-tab login is safe', () => {
+  const calls=fs.readFileSync(path.join(root,'agora-calls.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+  const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+  assert.match(calls,/function toggleVideoFocus\(\)/);
+  assert.match(calls,/local-video-main/);
+  assert.match(css,/\.video-stage\.local-video-main #video-local/);
+  assert.match(css,/#video-local video/);
+  assert.match(app,/typeof window\.handleUserOnline === 'function'/);
+  for(const language of ['de','en','ar','fa','tr'])assert.match(calls,new RegExp(`${language}:\\{swapVideo:`));
 });
 

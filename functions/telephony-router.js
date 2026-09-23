@@ -3,14 +3,14 @@ const {createHash, createHmac} = require('node:crypto');
 const {RtcTokenBuilder, RtcRole} = require('agora-token');
 
 const AGORA_APP_ID = '275401ea48a74f4b9f9cac0107362c6c';
-const STREAM_PUBLIC_KEY = 's6n7gqy7w2v6';
+const STREAM_PUBLIC_KEY = 'jp5eav3shbqe';
 
 const telephonyDefaults = {
   agoraMonthlyMinutes: 10000,
   dailyMonthlyMinutes: 10000,
   getstreamMonthlyMinutes: 66000,
   failoverTimeoutMs: 6000,
-  telephonyOrder: ['agora', 'daily', 'getstream']
+  telephonyOrder: ['agora', 'daily', 'getstream', 'webrtc']
 };
 
 function telephonyMonth(date = new Date()) {
@@ -143,6 +143,7 @@ async function createDailySession({channel, accountKey, username, isOwner, daily
   return {
     provider: 'daily',
     url: roomUrl,
+    roomUrl,
     roomName: safeName,
     token
   };
@@ -153,10 +154,10 @@ function base64url(input) {
   return buf.toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function generateStreamToken(apiKey, apiSecret, userId, channel) {
+function generateStreamToken(apiKey, apiSecret, userId, channel, serverSide = false) {
   const header = base64url(JSON.stringify({alg: 'HS256', typ: 'JWT'}));
   const now = Math.floor(Date.now() / 1000);
-  const payload = base64url(JSON.stringify({
+  const payload = base64url(JSON.stringify(serverSide ? {server: true} : {
     user_id: userId,
     call_cids: channel ? ['default:' + channel] : undefined,
     iat: now,
@@ -171,17 +172,16 @@ async function createStreamSession({channel, accountKey, apiKey, apiSecret, fetc
   if (!apiSecret) throw new Error('STREAM_SECRET_MISSING');
   
   const token = generateStreamToken(key, apiSecret, accountKey, channel);
-  const serverToken = generateStreamToken(key, apiSecret, 'doori_server', channel);
+  const serverToken = generateStreamToken(key, apiSecret, 'doori_server', channel, true);
+  const authHeaders = {'Content-Type':'application/json','Stream-Auth-Type':'jwt',Authorization:serverToken};
+  const userRes = await fetchImpl(`https://video.stream-io-api.com/api/v2/users?api_key=${encodeURIComponent(key)}`, {method:'POST',headers:authHeaders,body:JSON.stringify({users:{[accountKey]:{id:accountKey,role:'user'}}}),signal:AbortSignal.timeout(4500)});
+  if (!userRes.ok) throw new Error('STREAM_USER_FAILED_' + userRes.status);
   
   // Ensure call exists in Stream Video API
   try {
     await fetchImpl(`https://video.stream-io-api.com/api/v2/video/call/default/${encodeURIComponent(channel)}?api_key=${encodeURIComponent(key)}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Stream-Auth-Type': 'jwt',
-        Authorization: serverToken
-      },
+      headers: authHeaders,
       body: JSON.stringify({
         data: {
           created_by_id: accountKey,
@@ -216,7 +216,7 @@ async function resolveTelephonySession({
   fetchImpl = fetch
 }) {
   const config = await getTelephonyConfig(db);
-  const order = Array.isArray(config.telephonyOrder) && config.telephonyOrder.length ? config.telephonyOrder : ['agora', 'daily', 'getstream'];
+  const order = Array.isArray(config.telephonyOrder) && config.telephonyOrder.length ? config.telephonyOrder : ['agora', 'daily', 'getstream', 'webrtc'];
   const month = telephonyMonth();
   const day = telephonyDay();
 
@@ -232,10 +232,11 @@ async function resolveTelephonySession({
 
   for (let i = 0; i < candidates.length; i++) {
     const provider = candidates[i];
-    const role = provider === order[0] ? 'primary' : (provider === order[1] ? 'fallback1' : 'fallback2');
+    const role = provider === order[0] ? 'primary' : (provider === order[1] ? 'fallback1' : (provider === order[2] ? 'fallback2' : 'fallback3'));
 
     // Check monthly quota
     try {
+      if (provider === 'webrtc') throw new Error('QUOTA_NOT_APPLICABLE');
       const budgetDoc = await db.collection('_telephonyBudgets').doc(`${provider}-${month}`).get();
       const budgetData = budgetDoc.data() || {};
       const totalSeconds = Number(budgetData.totalSeconds || 0);
@@ -246,7 +247,11 @@ async function resolveTelephonySession({
         continue;
       }
     } catch (budgetErr) {
+      if (budgetErr.message === 'QUOTA_NOT_APPLICABLE') {
+        // Direct WebRTC has no provider quota.
+      } else {
       console.warn(`Error reading budget for ${provider}:`, budgetErr.message);
+      }
     }
 
     // Try creating session
@@ -275,6 +280,8 @@ async function resolveTelephonySession({
           apiSecret: secrets.streamSecret,
           fetchImpl
         });
+      } else if (provider === 'webrtc') {
+        chosen = {provider:'webrtc',channel};
       }
 
       if (chosen) {
