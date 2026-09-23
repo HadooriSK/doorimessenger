@@ -423,3 +423,32 @@ Die frühere Behauptung, Alias-Schlüssel seien die bestätigte Ursache des geme
 - Das breite Element „Neue Gruppe erstellen“ in der Gruppenliste wird als kompakte Plus-Aktion dargestellt, damit es nicht wie ein zweiter Gruppen-Navigationspunkt wirkt.
 - Das Composer-Plus-Menü wurde gegen Abschneiden durch `overflow` abgesichert. Ein DOM-Test klickt den Plus-Button, prüft das sichtbare Menü und anschließend das Schließen durch einen Außenklick.
 - Der rechte Detailbereich bietet vorhandene Funktionen für geteilte Medien, markierte Nachrichten und Spiele; er löst intern dieselben bestehenden Aktionen aus.
+
+---
+
+## 9. Doori KI-Assistent, Betreiber-Konsole & Audio-Feinabstimmung (2026-09-23)
+
+**Commits:** `d13ad97` bis `e8e1507`  
+**Frontend:** `assistant.js?v=3`, `assistant-language.js?v=1`, `tts.js?v=2`, `operator.html`, `operator.js?v=1`, `operator.css?v=1`  
+**Backend:** `functions/assistant-router.js`, `functions/assistant-language.js`, `functions/index.js`  
+**Teststand:** **49/49 Tests bestanden** (100% grün).  
+**Build-Stand:** **35 allowlistete Dateien** erfolgreich nach `dist/` gebaut und auf Firebase Hosting live veröffentlicht.
+
+### Funktionsübersicht:
+1. **Multi-Provider KI-Routing (`assistant-router.js`):**
+   - Kaskadiertes Routing: **Groq** (`openai/gpt-oss-20b`) $\to$ **Gemini** (`gemini-2.5-flash-lite`) $\to$ **Cloudflare Workers AI** (`@cf/meta/llama-3.2-1b-instruct`).
+   - Abfangen von Timeouts und Kontingentgrenzen; automatische Weiterschaltung zum nächsten Provider ohne Benutzereingriff.
+   - Sprach-Lock (`languageLock`): Erzwingt Antworten strikt in der erkannten Nutzersprache (`de`, `en`, `ar`, `fa`, `tr`).
+2. **Spracherkennung (Speech-to-Text):**
+   - Mehrsprachiges **Groq Whisper Large v3 Turbo** mit Fallback auf **Gemini Audio Transcription**.
+   - Unterstützt MP4/AAC-Aufnahmen auf iOS/Safari und Desktop.
+3. **Betreiber-Konsole (`operator.html`):**
+   - Geschütztes Dashboard mit Login (`operator.js`, `operator.css`).
+   - Anzeige von Tagesnutzung (aktive Nutzer, Textanfragen, Sprachminuten, automatische Providerwechsel) und Provider-Auslastung.
+   - Konfigurierbare zentrale Tageslimits pro Nutzer und Provider.
+4. **Feinabstimmung & Bugfixes (Commit `e8e1507`):**
+   - **Keine ungefragte Sprachausgabe bei getippten Nachrichten:** Die KI liest Antworten nur noch vor, wenn die Eingabe per Sprache (`source: 'voice'`) erfolgte.
+   - **Schutz vor doppelten Audioaufnahmen:** Gleichzeitiges oder mehrfaches Antippen des Mikrofons während der Freigabe wird durch Zustandsflags (`state.starting`, `state.transcribing`, `state.busy`) verhindert.
+   - **Sichtbare Rückmeldung bei Mikrofonverweigerung:** Lehnt der Nutzer den Mikrofonzugriff ab, erscheint eine klare lokalisierte Hinweismeldung (`t().speechUnavailable`) statt eines fehlerhaften Umschaltens auf die unzuverlässige Browser-Erkennung.
+   - **Doppelte Event-Listener unterbunden:** `initialize()` verhindert mehrfache Registrierung von Klick-Listenern via `state.initialized`.
+
