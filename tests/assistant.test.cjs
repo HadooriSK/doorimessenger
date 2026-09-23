@@ -80,6 +80,20 @@ test('language lock recognizes all five languages and rejects confident provider
  assert.equal(events[0].outcome,'language');assert.equal(events[1].outcome,'success');
 });
 
+test('speech dialog keeps detected language, supports deliberate switching and passes voice metadata',async()=>{
+ const html='<button id="assistant-mic-btn"></button><button id="assistant-voice-btn"></button><select id="assistant-voice-select"><option value="female"></option><option value="male"></option></select><div id="current-chat-status"></div><div id="current-chat-avatar"></div>';
+ const dom=new JSDOM(html,{url:'https://doori-messenger.de',runScripts:'outside-only'}),calls=[],spoken=[];const w=dom.window;
+ w.currentLang='de';w.currentUser='tester';w.currentChat={type:'assistant'};w.messages=new Map();w.renderMessages=()=>{};w.renderChatList=()=>{};
+ w.DooriTTS={getGender:()=> 'female',setGender:value=>value,stop(){},speak:(text,options)=>spoken.push({text,options})};
+ w.accountFunctions={httpsCallable:()=>async payload=>{calls.push(payload);return {data:{text:payload.language==='tr'?'Bu Türkçe bir yanıttır.':'Das ist eine deutsche Antwort.',language:payload.language}};}};
+ class Recognition{constructor(){Recognition.last=this;}start(){this.onstart?.();}abort(){}}w.SpeechRecognition=Recognition;
+ w.eval(fs.readFileSync(path.join(root,'assistant-language.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'assistant.js'),'utf8'));w.DooriAssistant.initialize();
+ w.document.getElementById('assistant-mic-btn').click();Recognition.last.onresult({results:[[{transcript:'Warum ist das auf Deutsch?',confidence:.9}]]});await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(calls[0].language,'de');assert.equal(calls[0].source,'voice');assert.ok(calls[0].voiceSeconds>=1);assert.equal(spoken[0].options.language,'de');
+ await w.DooriAssistant.send('Bu neden Türkçe değil?');assert.equal(calls[1].language,'tr');assert.equal(spoken[1].options.language,'tr');
+ dom.window.close();
+});
+
 test('assistant client covers all five languages and secrets stay server-side',()=>{
  const source=fs.readFileSync(path.join(root,'assistant.js'),'utf8');
  for(const language of ['de','en','ar','fa','tr'])assert.match(source,new RegExp(`\\b${language}:\\{`));
