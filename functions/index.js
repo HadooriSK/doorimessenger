@@ -356,10 +356,10 @@ exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_AP
  if(!allowed[mime]||!encoded||encoded.length>8_000_000||!/^[A-Za-z0-9+/=]+$/.test(encoded))throw new HttpsError('invalid-argument','Invalid speech recording.');
  const audio=Buffer.from(encoded,'base64');if(audio.length<128||audio.length>6_000_000)throw new HttpsError('invalid-argument','Invalid speech recording size.');
  const config=await assistantConfig();if(!await reserveDailySpeechSeconds(request.data?.voiceSeconds,config.speechRecognitionSecondsPerDay))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');
- const fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';let transcript,provider='groq';
- try{transcript=validSpeechResult(await transcribeWithGroq(audio,mime,allowed[mime]),fallback);}
- catch(error){console.warn('Whisper speech recognition unavailable or invalid; trying Gemini',error?.status||error?.name||'error');if(!await reserveDailyAssistantBudget('gemini-speech',config.geminiSpeechDailyRequests))throw new HttpsError('resource-exhausted','Free speech recognition limit reached.');try{transcript=validSpeechResult(await transcribeWithGemini(encoded,mime,fallback),fallback);provider='gemini';}catch(secondError){console.error('All cloud speech recognition providers failed',secondError?.status||secondError?.name||'error');throw new HttpsError('unavailable','Speech recognition unavailable.');}}
- const text=transcript.text.slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');return {text,language:transcript.language,providerSwitched:provider!=='groq'};
+ const fallback=['de','en','tr','ar','fa'].includes(request.data?.languageHint)?request.data.languageHint:'en';let transcript,provider='gemini',geminiError;
+ if(await reserveDailyAssistantBudget('gemini-speech',config.geminiSpeechDailyRequests)){try{transcript=validSpeechResult(await transcribeWithGemini(encoded,mime,fallback),fallback);}catch(error){geminiError=error;console.warn('Gemini speech recognition unavailable or invalid; trying Whisper',error?.status||error?.name||'error');}}
+ if(!transcript){provider='groq';try{transcript=validSpeechResult(await transcribeWithGroq(audio,mime,allowed[mime]),fallback);}catch(error){console.error('All cloud speech recognition providers failed',error?.status||error?.name||geminiError?.status||'error');throw new HttpsError('unavailable','Speech recognition unavailable.');}}
+ const text=transcript.text.slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');return {text,language:transcript.language,providerSwitched:provider!=='gemini'};
 });
 
 exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{

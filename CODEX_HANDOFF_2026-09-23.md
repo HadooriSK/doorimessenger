@@ -1,15 +1,15 @@
 # Übergabedokumentation an Codex – Doori Messenger
 
 **Datum:** 23. September 2026  
-**Aktueller Stand:** Commit `cefd574` (*"feat(telephony): multi-provider fallback (Agora -> Daily -> GetStream) and operator console"*)  
+**Aktueller Stand:** Commit `b1bf4de` einschließlich geprüfter Gemini-STT- und Dashboard-Korrektur
 **Vorheriger Ausgangspunkt:** Commit `ea57bad` (*"docs: document Doori AI assistant, operator console and speech fixes"*)  
 **Projektordner:** `C:\Users\hidis\.gemini\antigravity\scratch\web-messenger`  
 **Firebase-Projekt:** `doori-messenger` (Region: `europe-west3`)  
 **Eigene Produktiv-Domain:** `https://www.doori-messenger.de/`  
 **Firebase Hosting URL:** `https://doori-messenger.web.app/`  
 **Aktuelle Frontend-Version:** `agora-calls.js?v=2`, `operator.html`, `operator.js?v=2`, `operator.css?v=2`, `service-worker.js` (Cache: `web-messenger-v112-telephony-fallback`)  
-**Aktueller Test-Status:** **51/51 Tests bestanden** (100% grün, `npm test`)  
-**Aktueller Build-Status:** 35/35 allowlistete Dateien erfolgreich gebaut und per Firebase Hosting live bereitgestellt.
+**Aktueller Test-Status:** **54/54 Tests bestanden** (100% grün, `npm test`)
+**Aktueller Build-Status:** 36 allowlistete Dateien erfolgreich gebaut. Die neuesten Client-Korrekturen sind wegen abgelaufener Firebase-CLI-Anmeldung noch nicht auf Hosting veröffentlicht.
 
 ---
 
@@ -173,3 +173,83 @@ npm.cmd test
    - Aktuell nutzt Doori für Agora das lokale SDK `vendor/agora-rtc-sdk-ng.js` und für Daily/Stream standardkonforme native WebRTC-Peers bzw. REST-Raum-Tokens. Falls gewünscht, kann ein gebündeltes `@daily-co/daily-js` für Call-Objects in die Build-Allowlist aufgenommen werden.
 2. **Live-Verifikation mit echten Daily & Stream API-Keys:**
    - Sobald die echten Secrets via `firebase functions:secrets:set` eingetragen sind, kann ein Testanruf mit simuliertem Agora-Ausfall durchgeführt werden.
+
+---
+
+## 8. Fortsetzung durch Codex nach der Anti-Gravity-Baseline
+
+Dieser Abschnitt ist die verbindliche Übergabe für die nächste Fortsetzung mit Google Anti-Gravity. Der vorhandene Code wurde weitergeführt; nichts wurde neu aufgesetzt.
+
+### 8.1 Telefonie und Video
+
+- Commit `816201c`: Telefonie-Fallbacks und mobile Videoansicht stabilisiert.
+- Reihenfolge bleibt Agora → Daily → GetStream → natives WebRTC.
+- Der frühere iOS-Fehler `ReferenceError: Can't find variable: handleUserOnline` wurde behoben.
+- Eigenes Kamerabild wird als kleine Picture-in-Picture-Kachel dargestellt; lokales und entferntes Bild können getauscht werden.
+- Sprach- und Video-Schaltflächen bleiben prominent im Chat-Header; sekundäre Medien-/Favoritenaktionen sind im Untermenü.
+
+### 8.2 KI-Router, Limits und Betreiber-Konsole
+
+- Commit `3fc06d8`: KI-Reihenfolge auf Gemini → Groq → Cloudflare → lokale KI umgestellt.
+- Nutzerlimits bleiben zentral konfigurierbar: 100 KI-Textnachrichten und 60 Minuten KI-Sprachzeit pro Nutzer und Tag.
+- Cloudflare wird gegen das offizielle Tageskontingent von 10.000 Neurons gerechnet; Tokens werden modellbezogen in geschätzte Neurons umgerechnet.
+- Groq und Gemini liefern dem Backend keine einheitliche kontoweite Restquote. Die bisher sichtbaren Prozentwerte werden daher aus Doori-eigenen Tages-Schutzgrenzen berechnet:
+  - `groqDailyRequests: 100`
+  - `geminiDailyRequests: 50`
+- Die Werte 57 % bei Groq oder 48 % bei Gemini sind folglich **keine Monatsauslastung und keine offizielle Anbieterquote**. Sie bedeuten 57 von 100 bzw. 24 von 50 Doori-internen Requests am aktuellen Tag.
+- Der aktuelle Arbeitsstand kennzeichnet dies direkt pro Tabellenzeile und in allen fünf Sprachen. Auch die Formularfelder heißen nun ausdrücklich „Doori-Schutzlimit/Tag“.
+- Offizielle Anbietergrenzen sind modell-, konto- und tierabhängig und umfassen getrennte RPM/RPD/TPM/TPD-Werte. Für echte Anbieterquoten müssen die jeweiligen Kontoseiten bzw. Rate-Limit-Header ausgewertet werden; sie dürfen nicht aus den internen Doori-Zählern abgeleitet werden.
+- Commit `7e08d8b`: `NaN`-Werte im Admin-Dashboard sanitisiert und Zugriffskontrolle repariert.
+
+### 8.3 Spracherkennung
+
+- Commit `474486d`: Groq Whisper Large v3 Turbo als mehrsprachige Cloud-Erkennung eingebaut, Gemini als Fallback.
+- Commit `1db8e3e`: Whisper-Prompt verschärft. Audio muss wortgetreu in Deutsch, Englisch, Türkisch, Arabisch oder Persisch und in der Originalschrift transkribiert werden; Übersetzung ist untersagt.
+- Chinesische, japanische, koreanische oder kyrillische Fehltranskriptionen werden serverseitig verworfen.
+- Aktueller, getesteter Arbeitsstand nach `1db8e3e`: Wegen weiterhin schwankender iPhone-Erkennung wurde die Reihenfolge auf **Gemini Audio Transcription zuerst, Whisper als Fallback** geändert. Bei Gemini-Limit, Timeout, ungültigem Ergebnis oder Ausfall übernimmt Whisper automatisch.
+- `GEMINI_API_KEY` wurde vom Betreiber als Secret-Version 3 gespeichert. Die betroffenen Functions wurden dabei auf die neue Secret-Version aktualisiert.
+- Die neueste Gemini-zuerst-Routeränderung ist lokal getestet, aber noch nicht deployed.
+
+### 8.4 Sprachausgabe und iPhone
+
+- Primäre TTS: `gemini-2.5-flash-preview-tts` über `synthesizeDooriSpeech`; weiblich `Kore`, männlich `Puck`.
+- System-TTS bleibt kostenloser Client-Fallback. Die Stimme ist von LLM-Wechseln entkoppelt und in `localStorage` gespeichert.
+- Commits `28ee80d`, `164274e` und `7e08d8b` verbesserten mobile Wiedergabe, Mikrofonfreigabe und iOS-Audiohandling.
+- Commit `baf367f` enthält die neueste Safari-Korrektur:
+  - persistentes `<audio>`-Element im Dokument,
+  - `playsinline` und `webkit-playsinline`,
+  - Entsperren innerhalb des Mikrofon-Tipps ohne `muted=true`,
+  - Lautstärke explizit auf 1,
+  - `speechSynthesis.resume()` als iOS-Fallback,
+  - `tts.js?v=6` und Service-Worker-Cache `web-messenger-v119-ios-tts-playback`.
+- Wichtig: Diese Hosting-Korrektur ist noch nicht live. Der Codex-Deploy scheiterte ausschließlich an `Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth`.
+- Der letzte echte iPhone-Test vor Veröffentlichung von `baf367f` ergab: Erkennung teilweise erfolgreich, KI-Antwort nur als Text, kein Ton. Daraus darf nicht geschlossen werden, dass `baf367f` wirkungslos ist; der Build wurde noch nicht auf Hosting übertragen.
+
+### 8.5 Aktuelle Validierung
+
+- `npm.cmd test`: **54/54 bestanden**.
+- Enthalten sind Sicherheits-, Spiele-, Telefonie-, KI-, TTS-, iPhone-, Sprachen-, RTL- und Dashboard-Tests.
+- `npm.cmd run build`: erfolgreich, **36 allowlistete öffentliche Dateien**.
+- Alle neuen sichtbaren Dashboard-Texte sind in `de`, `en`, `ar`, `fa`, `tr` vorhanden. Arabisch und Persisch behalten RTL.
+- Keine API-Schlüssel oder Secret-Werte wurden in Client oder Repository geschrieben.
+
+### 8.6 Unmittelbar nächste Schritte für Anti-Gravity
+
+1. Lokalen Arbeitsstand prüfen und die noch nicht commit­teten Änderungen in `functions/index.js`, `operator.html`, `operator.js`, `tests/assistant.test.cjs` sowie diese Übergabedatei übernehmen. Bereits vorhandene fremde Änderungen, insbesondere in `vendor/telephony-providers.js`, nicht überschreiben.
+2. Firebase CLI neu authentifizieren:
+
+```cmd
+firebase login --reauth
+```
+
+3. Danach aus `C:\Users\hidis\.gemini\antigravity\scratch\web-messenger` veröffentlichen:
+
+```cmd
+firebase deploy --only functions:transcribeDooriSpeech,functions:synthesizeDooriSpeech --project doori-messenger
+firebase deploy --only hosting --project doori-messenger
+```
+
+4. Auf einem echten iPhone Safari/Startbildschirm-App vollständig schließen und neu öffnen, damit Cache v119 aktiv wird. Dann mindestens je zwei kurze und zwei längere Aufnahmen in Deutsch und Persisch testen. Prüfen: sichtbarer Aufnahmezustand, korrekte Schrift/Sprache, Textantwort und hörbare Antwort.
+5. Falls weiterhin kein Audio kommt, unmittelbar nach einem Test die Logs von `synthesizeDooriSpeech` lesen. Zwischen folgenden Ursachen unterscheiden: Gemini HTTP-Fehler, fehlende `audioBase64`-Nutzlast oder Safari-`audio.play()`-Blockade. Nicht weiter raten.
+6. Die Betreiber-Konsole prüfen: Groq/Gemini-Prozentwerte müssen sichtbar als interne tägliche Doori-Schutzlimits bezeichnet sein. Sie dürfen nicht als Monatslimit oder offizielle Anbieter-Restquote dargestellt werden.
+7. Nach der Arbeit diese Datei erneut mit Commit, Deploy-Status, Tests und offenen Punkten ergänzen, damit der nächste Wechsel zurück zu Codex verlustfrei möglich ist.
