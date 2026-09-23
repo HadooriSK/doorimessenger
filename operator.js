@@ -32,6 +32,11 @@ Object.assign(T.en,{geminiTtsLimit:'Gemini voice outputs',cloudflareNeuronLimit:
 Object.assign(T.ar,{geminiTtsLimit:'مخرجات Gemini الصوتية',cloudflareNeuronLimit:'وحدات Neurons لـ Cloudflare لكل يوم UTC',aiMetricNotice:'يعرض Groq وGemini حدود الحماية الداخلية في Doori وليس الحصص المتبقية المبلغ عنها من المزود. تُحوّل رموز Cloudflare إلى Neurons تقديرية، وتُعاد الحصة الرسمية يومياً عند 00:00 UTC.',estimatedNeurons:'Neurons تقديرية',internalRequests:'طلبات داخلية'});
 Object.assign(T.fa,{geminiTtsLimit:'خروجی‌های صوتی Gemini',cloudflareNeuronLimit:'واحدهای Neurons کلادفلر در هر روز UTC',aiMetricNotice:'Groq و Gemini سقف‌های حفاظتی داخلی Doori را نشان می‌دهند، نه سهمیه باقی‌مانده اعلام‌شده از سوی ارائه‌دهنده. توکن‌های Cloudflare به Neurons تخمینی تبدیل می‌شوند و سهمیه رسمی هر روز ساعت ۰۰:۰۰ UTC بازنشانی می‌شود.',estimatedNeurons:'Neurons تخمینی',internalRequests:'درخواست‌های داخلی'});
 Object.assign(T.tr,{geminiTtsLimit:'Gemini sesli yanıtları',cloudflareNeuronLimit:'UTC günü başına Cloudflare Neurons',aiMetricNotice:'Groq ve Gemini, sağlayıcının bildirdiği kalan kotaları değil, Doori iç güvenlik sınırlarını gösterir. Cloudflare tokenları tahmini Neurons değerine dönüştürülür; resmi kota her gün 00:00 UTC’de sıfırlanır.',estimatedNeurons:'tahmini Neurons',internalRequests:'dahili istek'});
+Object.assign(T.de,{loadFailed:'Anmeldung erfolgreich, aber die Verbrauchsdaten konnten nicht geladen werden. Bitte aktualisiere die Seite.'});
+Object.assign(T.en,{loadFailed:'Sign-in succeeded, but usage data could not be loaded. Please refresh the page.'});
+Object.assign(T.ar,{loadFailed:'تم تسجيل الدخول، لكن تعذر تحميل بيانات الاستخدام. يرجى تحديث الصفحة.'});
+Object.assign(T.fa,{loadFailed:'ورود انجام شد، اما داده‌های مصرف بارگذاری نشد. لطفاً صفحه را تازه‌سازی کنید.'});
+Object.assign(T.tr,{loadFailed:'Giriş başarılı, ancak kullanım verileri yüklenemedi. Lütfen sayfayı yenileyin.'});
 
 let lang=localStorage.getItem('doori_operator_lang')||'de';
 const $=id=>document.getElementById(id),copy=()=>T[lang]||T.en;
@@ -115,8 +120,8 @@ async function load(){
   render(data);
   $('login').classList.add('hidden');
   $('dashboard').classList.remove('hidden');
- }catch{
-  $('login-error').textContent=copy().denied;
+ }catch(error){
+  $('login-error').textContent=String(error?.code||'').includes('permission-denied')?copy().denied:copy().loadFailed;
   $('dashboard').classList.add('hidden');
  }
 }

@@ -37,7 +37,11 @@ function telephonyDay(date = new Date()) {
 async function getTelephonyConfig(db) {
   try {
     const doc = await db.collection('_telephonyConfig').doc('global').get();
-    return {...telephonyDefaults, ...(doc.data() || {})};
+    const config = {...telephonyDefaults, ...(doc.data() || {})};
+    for (const key of ['agoraMonthlyMinutes','dailyMonthlyMinutes','getstreamMonthlyMinutes','failoverTimeoutMs']) {
+      if (!Number.isFinite(Number(config[key]))) config[key] = telephonyDefaults[key];
+    }
+    return config;
   } catch {
     return {...telephonyDefaults};
   }
@@ -401,10 +405,13 @@ async function getTelephonyDashboardData(db) {
       status: 'active'
     };
     const metric = metricData.providers?.[name] || {errors: 0, calls: 0};
-    const limitMinutes = Number(config[`${name}MonthlyMinutes`] || (name === 'getstream' ? 66000 : 10000));
-    const totalMinutes = Math.round((budget.totalSeconds || 0) / 60);
-    const audioMinutes = Math.round((budget.audioSeconds || 0) / 60);
-    const videoMinutes = Math.round((budget.videoSeconds || 0) / 60);
+    const fallbackLimit = name === 'getstream' ? 66000 : 10000;
+    const configuredLimit = Number(config[`${name}MonthlyMinutes`]);
+    const limitMinutes = Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : fallbackLimit;
+    const safeSeconds = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+    const totalMinutes = Math.round(safeSeconds(budget.totalSeconds) / 60);
+    const audioMinutes = Math.round(safeSeconds(budget.audioSeconds) / 60);
+    const videoMinutes = Math.round(safeSeconds(budget.videoSeconds) / 60);
     const remainingMinutes = Math.max(0, limitMinutes - totalMinutes);
     const utilization = limitMinutes > 0 ? Math.min(100, Math.round((totalMinutes / limitMinutes) * 100)) : 0;
     
@@ -427,17 +434,17 @@ async function getTelephonyDashboardData(db) {
       monthlyLimit: limitMinutes,
       remainingMinutes,
       utilization,
-      errorsToday: metric.errors || 0,
-      callsToday: metric.calls || 0
+      errorsToday: safeSeconds(metric.errors),
+      callsToday: safeSeconds(metric.calls)
     };
   });
 
   return {
     month,
     day,
-    todayAudioMinutes: Math.round((metricData.audioSeconds || 0) / 60),
-    todayVideoMinutes: Math.round((metricData.videoSeconds || 0) / 60),
-    todaySwitches: metricData.switches || 0,
+    todayAudioMinutes: Math.round((Number.isFinite(Number(metricData.audioSeconds)) ? Number(metricData.audioSeconds) : 0) / 60),
+    todayVideoMinutes: Math.round((Number.isFinite(Number(metricData.videoSeconds)) ? Number(metricData.videoSeconds) : 0) / 60),
+    todaySwitches: Number.isFinite(Number(metricData.switches)) ? Number(metricData.switches) : 0,
     providers: rows,
     config
   };
