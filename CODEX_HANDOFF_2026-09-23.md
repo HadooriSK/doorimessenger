@@ -367,8 +367,20 @@ Echter bidirektionaler Live-Sprachmodus in Echtzeit mit Unterbrechungen (Barge-i
 1. **`doori-live.js` (NEU):** Client-Modul für Gemini Live API, WebSocket-Lifecycle, PCM-Audio, Barge-in, Quota-Handling.
 2. **`functions/index.js`:** Cloud Function `getLiveToken` mit Budget-Prüfung und `v1beta/auth_tokens`-Anbindung.
 3. **`assistant.js`:** Steuerung des Live-Buttons synchron zum Assistenten-Status (`updateControls`, `initialize`).
-4. **`index.html`:** `#doori-live-btn` und `#doori-live-status` im Composer integriert; `doori-live.js?v=1` eingebunden; Versionen gebumpt (`assistant.js?v=9`, `app.js?v=354`).
-5. **`service-worker.js`:** Cache `web-messenger-v121-gemini-live` mit `doori-live.js?v=1`.
+4. **`index.html`:** `#doori-live-btn` und `#doori-live-status` im Composer integriert; `doori-live.js?v=2` eingebunden; Versionen gebumpt (`assistant.js?v=9`, `app.js?v=354`).
+5. **`service-worker.js`:** Cache `web-messenger-v122-gemini-live-fix` mit `doori-live.js?v=2`.
 6. **`scripts/build-hosting.cjs`:** `doori-live.js` zur Allowlist hinzugefügt (37 Dateien).
 7. **`tests/assistant.test.cjs`:** Test für Gemini Live Modus ergänzt (55/55 Tests grün).
+
+### 11.3 Hotfix: Mobiles Audio-Streaming & Sample-Rate-Resampling (Commit `8c7786c`)
+- **Ursache der Stille auf Smartphones:**
+  1. *OverconstrainedError:* iOS Safari verweigerte `getUserMedia` bei expliziter `sampleRate: 16000` Angabe.
+  2. *Fehlendes Resampling:* Die Hardware nahm mit 44,1 kHz / 48 kHz auf, das Audio wurde jedoch unkonvertiert als `audio/pcm;rate=16000` gesendet. Die Sprache war dadurch 3-fach verlangsamt und um 1,6 Oktaven tiefergelegt (unhörbares Sub-Bass-Brummen). Das Gemini Voice Activity Detection (VAD) System konnte keine menschliche Sprache erkennen.
+  3. *Frühes Senden:* Chunks wurden gesendet, bevor der Server `{ "setupComplete": {} }` bestätigt hatte, wodurch frühe Chunks verworfen wurden.
+  4. *WebKit Garbage Collection:* ScriptProcessorNodes wurden auf iOS vorzeitig aufgeräumt.
+- **Behebung:**
+  1. Unbeschränktes `getUserMedia` mit nativer Hardwarerate, gefolgt von einem sauberen linearen Downsampler auf exakt 16.000 Hz PCM vor der Übertragung.
+  2. `state.ready`-Gate: Audiochunks werden erst gestreamt, sobald `{ "setupComplete": {} }` vom Gemini Live Server eingetroffen ist.
+  3. Statusanzeige im Chat-Kopf: `🔴 Live: Ich höre zu …` und `🔴 Live: Doori spricht …`.
+  4. MuteGain-Node und globale Referenz `window._dooriLiveProcessor` gegen iOS-Audio-Feedback und Garbage Collection.
 
