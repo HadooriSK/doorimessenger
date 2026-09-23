@@ -94,7 +94,7 @@
   recognition.onend=()=>{if(!state.busy)setStatus(t().status);};
   recognition.onresult=event=>send(chooseTranscript(event.results?.[0]),{source:'voice',voiceSeconds:Math.max(1,(Date.now()-startedAt)/1000)});recognition.start();
  }
- async function startListening(){if(state.starting||state.transcribing||state.busy)return;state.starting=true;root.DooriTTS?.stop();try{if(!await startRecording())browserRecognition();}finally{state.starting=false;}}
+ async function startListening(){if(state.starting||state.transcribing||state.busy)return;state.starting=true;if(state.recorder?.state!=='recording'){state.voice=true;localStorage.setItem('doori_ai_voice','on');await root.DooriTTS?.unlock?.();}root.DooriTTS?.stop();try{if(!await startRecording())browserRecognition();}finally{state.starting=false;updateControls();}}
  function toggleVoice(){state.voice=!state.voice;localStorage.setItem('doori_ai_voice',state.voice?'on':'off');if(!state.voice)root.DooriTTS?.stop();updateControls();}
  function activate(){sync();setStatus(t().status);updateControls();}
  function initialize(){if(state.initialized)return;state.initialized=true;document.getElementById('assistant-mic-btn')?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);updateControls();}

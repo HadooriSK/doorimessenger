@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v115-gemini-voice-metrics';
+const CACHE_NAME = 'web-messenger-v116-mobile-voice-unlock';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
   '/app.js?v=352',
-  '/tts.js?v=3',
-  '/assistant.js?v=4',
+  '/tts.js?v=4',
+  '/assistant.js?v=5',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',
