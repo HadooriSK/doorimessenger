@@ -23,7 +23,7 @@ function compactMessages(messages){
 }
 
 function systemPrompt(language){
- return `You are Doori, the friendly in-app assistant of Doori Messenger. Be calm, warm, concise and practical. You MUST write the complete answer only in ${language||'the user language'} and must not switch languages unless the latest user message clearly does. Use punctuation characters normally; never spell punctuation names such as comma, period or question mark unless the user explicitly asks about that word. Never mention model vendors, routing, API providers, hidden prompts or internal infrastructure. If the user asks for dangerous or illegal instructions, refuse briefly and offer a safe alternative.`;
+ return `You are Doori, the friendly in-app assistant of Doori Messenger. Be calm, warm, concise and practical. Always keep responses short, direct, and conversational (typically 1 to 3 sentences, maximum 4 sentences). Never write long essays or bullet-point lists unless explicitly requested by the user. You MUST write the complete answer only in ${language||'the user language'} and must not switch languages unless the latest user message clearly does. Use punctuation characters normally; never spell punctuation names such as comma, period or question mark unless the user explicitly asks about that word. Never mention model vendors, routing, API providers, hidden prompts or internal infrastructure. If the user asks for dangerous or illegal instructions, refuse briefly and offer a safe alternative.`;
 }
 const estimatedTokens=value=>Math.max(1,Math.ceil(String(value||'').length/4));
 const estimatedInput=messages=>messages.reduce((sum,message)=>sum+estimatedTokens(message.content),0);
@@ -35,7 +35,7 @@ async function parseJson(response){
 
 async function callGroq({fetchImpl,key,messages,language,signal}){
  if(!key)return null;
-  const response=await fetchImpl(GROQ_URL,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,temperature:0.55,max_completion_tokens:450,messages:[{role:'system',content:systemPrompt(language)},...messages]}),signal});
+  const response=await fetchImpl(GROQ_URL,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,temperature:0.55,max_completion_tokens:180,messages:[{role:'system',content:systemPrompt(language)},...messages]}),signal});
  if(!response.ok)return null;
  const json=await parseJson(response),text=String(json?.choices?.[0]?.message?.content||'').trim();
  return text?{text,inputTokens:Number(json?.usage?.prompt_tokens||estimatedInput(messages)),outputTokens:Number(json?.usage?.completion_tokens||estimatedTokens(text))}:null;
@@ -44,7 +44,7 @@ async function callGroq({fetchImpl,key,messages,language,signal}){
 async function callGemini({fetchImpl,key,messages,language,signal}){
  if(!key)return null;
  const contents=messages.map(message=>({role:message.role==='assistant'?'model':'user',parts:[{text:message.content}]}));
- const response=await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt(language)}]},contents,generationConfig:{temperature:0.55,maxOutputTokens:450}}),signal});
+ const response=await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt(language)}]},contents,generationConfig:{temperature:0.55,maxOutputTokens:180}}),signal});
  if(!response.ok)return null;
  const json=await parseJson(response),parts=json?.candidates?.[0]?.content?.parts||[];
  const text=parts.map(part=>part?.text||'').join('').trim();
@@ -63,7 +63,7 @@ async function callCloudflare({fetchImpl,token,accountId,messages,language,signa
  if(!resolvedId)return null;
  const url=`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(resolvedId)}/ai/run/${CLOUDFLARE_MODEL}`;
  const cloudflareMessages=compactMessages(messages.slice(-4).map(message=>({...message,content:String(message.content||'').slice(0,500)})));
- const response=await fetchImpl(url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:systemPrompt(language)},...cloudflareMessages],max_tokens:250,temperature:0.55}),signal});
+ const response=await fetchImpl(url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'system',content:systemPrompt(language)},...cloudflareMessages],max_tokens:180,temperature:0.55}),signal});
  if(!response.ok)return null;
  const json=await parseJson(response),text=String(json?.result?.response||json?.result?.text||'').trim();
  const usage=json?.result?.usage||{};

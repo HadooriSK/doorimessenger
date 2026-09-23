@@ -123,7 +123,7 @@ function pcmToWavBase64(pcmBase64){
  header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(channels,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(byteRate,28);header.writeUInt16LE(channels*bits/8,32);header.writeUInt16LE(bits,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);return Buffer.concat([header,pcm]).toString('base64');
 }
 async function synthesizeWithGemini(text,language,gender){
- const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(30000)});
+ const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(40000)});
  if(!response.ok)throw Object.assign(new Error('Gemini TTS failed'),{status:response.status});const payload=await response.json(),audio=payload?.candidates?.[0]?.content?.parts?.find(part=>part.inlineData?.data)?.inlineData;if(!audio?.data)throw new Error('Gemini TTS returned no audio');return {audioBase64:pcmToWavBase64(audio.data),mimeType:'audio/wav'};
 }
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
@@ -363,9 +363,11 @@ exports.transcribeDooriSpeech=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_AP
  const text=transcript.text.slice(0,2000);if(!text)throw new HttpsError('invalid-argument','No speech detected.');return {text,language:transcript.language,providerSwitched:provider!=='gemini'};
 });
 
-exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeoutSeconds:45,memory:'512MiB'},async request=>{
- signedIn(request);const text=String(request.data?.text||'').trim(),language=['de','en','tr','ar','fa'].includes(request.data?.language)?request.data.language:'en',gender=request.data?.gender==='male'?'male':'female';
- if(!text||text.length>1200)throw new HttpsError('invalid-argument','Invalid speech text.');const config=await assistantConfig();if(!await reserveDailyAssistantBudget('gemini-tts',config.geminiTtsDailyRequests))throw new HttpsError('resource-exhausted','Free TTS limit reached.');
+exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeoutSeconds:60,memory:'512MiB'},async request=>{
+ signedIn(request);const rawText=String(request.data?.text||'').trim(),language=['de','en','tr','ar','fa'].includes(request.data?.language)?request.data.language:'en',gender=request.data?.gender==='male'?'male':'female';
+ if(!rawText)throw new HttpsError('invalid-argument','Invalid speech text.');
+ const text=rawText.slice(0,360);
+ const config=await assistantConfig();if(!await reserveDailyAssistantBudget('gemini-tts',config.geminiTtsDailyRequests))throw new HttpsError('resource-exhausted','Free TTS limit reached.');
  try{return await synthesizeWithGemini(text,language,gender);}catch(error){console.warn('Gemini TTS unavailable',error?.status||error?.name||'error');throw new HttpsError('unavailable','Speech output unavailable.');}
 });
 

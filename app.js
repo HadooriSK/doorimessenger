@@ -194,6 +194,7 @@ if (doodleBtnGlobal) {
     const unlockAudio = () => {
         if (!globalAudioCtx) globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+        window.DooriTTS?.unlock?.();
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('touchstart', unlockAudio);
     };

@@ -3,7 +3,7 @@
  const STORAGE_KEY='doori_tts_voice_gender',SUPPORTED=['de','en','tr','ar','fa'];
  const FEMALE_HINTS=/\bfemale\b|zira|samantha|victoria|anna|amelie|katja|hedda|layla|salma|dilara|yelda/i;
  const MALE_HINTS=/\bmale\b|david|mark|daniel|stefan|george|khalid|hamza|cem|tolga/i;
- let gender=localStorage.getItem(STORAGE_KEY)==='male'?'male':'female',activeAudio=null,audioUnlocked=false;
+ let gender=localStorage.getItem(STORAGE_KEY)==='male'?'male':'female',activeAudio=null,audioUnlocked=false,audioCtx=null,activeSource=null;
  const locale=language=>root.DooriLanguage?.locale?.(language)||({de:'de-DE',en:'en-US',tr:'tr-TR',ar:'ar-SA',fa:'fa-IR'}[language]||'en-US');
  const shortLanguage=value=>{const code=String(value||'').toLowerCase().split('-')[0];return SUPPORTED.includes(code)?code:'en';};
  function languageOf(text,fallback){return root.DooriLanguage?.detect?.(text,shortLanguage(fallback))?.language||shortLanguage(fallback);}
@@ -17,15 +17,34 @@
   return text.replace(/\s+([,.!?؟،])/g,'$1').replace(/[,.،]{2,}/g,'.').replace(/([!?؟])(?:\s*[,.!?؟،])+/g,'$1').replace(/([,.!?؟،])(?=\p{L})/gu,'$1 ').replace(/\uE000(\d+)\uE001/g,(_,index)=>protectedParts[Number(index)]);
  }
  function systemSpeak(text,language){if(!root.speechSynthesis||!root.SpeechSynthesisUtterance)return false;root.speechSynthesis.cancel();root.speechSynthesis.resume?.();const utterance=new root.SpeechSynthesisUtterance(text);utterance.lang=locale(language);utterance.voice=selectVoice(language);utterance.rate=1;utterance.pitch=gender==='female'?1.04:.96;root.speechSynthesis.speak(utterance);setTimeout(()=>root.speechSynthesis?.resume?.(),80);return true;}
+ function getAudioContext(){if(!audioCtx){const Ctx=root.AudioContext||root.webkitAudioContext;if(Ctx)audioCtx=new Ctx();}return audioCtx;}
  function player(){if(!activeAudio){activeAudio=new Audio();activeAudio.setAttribute?.('playsinline','');activeAudio.setAttribute?.('webkit-playsinline','');activeAudio.preload='auto';activeAudio.style.display='none';document.body?.appendChild(activeAudio);}return activeAudio;}
  function silentWav(){const samples=2400,buffer=new ArrayBuffer(44+samples*2),view=new DataView(buffer),write=(offset,value)=>{for(let i=0;i<value.length;i++)view.setUint8(offset+i,value.charCodeAt(i));};write(0,'RIFF');view.setUint32(4,36+samples*2,true);write(8,'WAVE');write(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,24000,true);view.setUint32(28,48000,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,samples*2,true);return new Blob([buffer],{type:'audio/wav'});}
- async function unlock(){try{const audio=player();if(audioUnlocked)return true;const url=URL.createObjectURL(silentWav());audio.src=url;audio.muted=false;audio.volume=1;await audio.play();audio.pause();audio.currentTime=0;URL.revokeObjectURL(url);audioUnlocked=true;return true;}catch{return false;}}
- async function playBlob(blob){const audio=player(),old=audio.dataset?.objectUrl;if(old)URL.revokeObjectURL(old);const objectUrl=URL.createObjectURL(blob);if(audio.dataset)audio.dataset.objectUrl=objectUrl;audio.src=objectUrl;audio.muted=false;audio.volume=1;audio.load?.();await audio.play();return true;}
+ async function unlock(){try{const ctx=getAudioContext();if(ctx&&ctx.state==='suspended')await ctx.resume();const audio=player();if(audioUnlocked)return true;const url=URL.createObjectURL(silentWav());audio.src=url;audio.muted=false;audio.volume=1;await audio.play();audio.pause();audio.currentTime=0;URL.revokeObjectURL(url);audioUnlocked=true;return true;}catch{return false;}}
+ async function playBlob(blob){
+  const ctx=getAudioContext();
+  if(ctx){
+   try{
+    if(ctx.state==='suspended')await ctx.resume();
+    const arrayBuffer=await blob.arrayBuffer();
+    const audioBuffer=await new Promise((resolve,reject)=>{ctx.decodeAudioData(arrayBuffer,resolve,reject);});
+    if(activeSource){try{activeSource.stop();}catch{}}
+    const source=ctx.createBufferSource();
+    source.buffer=audioBuffer;
+    source.connect(ctx.destination);
+    source.onended=()=>{if(activeSource===source)activeSource=null;};
+    source.start(0);
+    activeSource=source;
+    return true;
+   }catch(err){console.warn('Web Audio decode failed, falling back to Audio element',err);}
+  }
+  const audio=player(),old=audio.dataset?.objectUrl;if(old)URL.revokeObjectURL(old);const objectUrl=URL.createObjectURL(blob);if(audio.dataset)audio.dataset.objectUrl=objectUrl;audio.src=objectUrl;audio.muted=false;audio.volume=1;audio.load?.();await audio.play();return true;
+ }
  async function neuralSpeak(text,language,url){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);try{const response=await fetch(`${url}/synthesize`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,language,gender,model:engineFor(language)}),signal:controller.signal});if(!response.ok)throw new Error('TTS_HTTP');const blob=await response.blob();if(!blob.type.startsWith('audio/'))throw new Error('TTS_AUDIO');return playBlob(blob);}finally{clearTimeout(timer);}}
  function base64Audio(value,type){const binary=atob(value),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:type||'audio/wav'});}
  async function geminiSpeak(text,language){if(!root.accountFunctions?.httpsCallable)throw new Error('TTS_UNAVAILABLE');const result=await root.accountFunctions.httpsCallable('synthesizeDooriSpeech')({text,language,gender}),data=result?.data||{};if(!data.audioBase64)throw new Error('TTS_AUDIO');return playBlob(base64Audio(data.audioBase64,data.mimeType));}
  function speak(value,{language}={}){const expected=shortLanguage(language),text=cleanPunctuationWords(value,expected),url=endpoint();if(!/[\p{L}\p{N}]/u.test(text))return false;const task=url?neuralSpeak(text,expected,url):geminiSpeak(text,expected);return task.catch(error=>{console.warn('Doori neural TTS unavailable; using system fallback.',error?.message||'error');root.dispatchEvent(new CustomEvent('doori-tts-fallback',{detail:{language:expected,model:engineFor(expected)}}));return systemSpeak(text,expected);});}
- function stop(){root.speechSynthesis?.cancel?.();if(activeAudio){activeAudio.pause();activeAudio.currentTime=0;}}
+ function stop(){root.speechSynthesis?.cancel?.();if(activeSource){try{activeSource.stop();}catch{}activeSource=null;}if(activeAudio){activeAudio.pause();activeAudio.currentTime=0;}}
  function setGender(value){gender=value==='male'?'male':'female';localStorage.setItem(STORAGE_KEY,gender);root.dispatchEvent(new CustomEvent('doori-tts-voice-change',{detail:{gender}}));return gender;}
  function getGender(){return gender;}
  root.DooriTTS={speak,stop,unlock,setGender,getGender,languageOf,engineFor,cleanPunctuationWords};

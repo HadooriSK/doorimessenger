@@ -287,3 +287,59 @@ Die Google Generative Language API lehnte diese verdoppelte Zeichenkette folgeri
    - Alle **54/54 Tests** bestanden (`npm.cmd test`).
    - Keine Plaintext-Secrets im Client oder Repository.
 
+---
+
+## 10. Finale Optimierung: iPhone-Sprachwiedergabe (Web Audio API) & Kurze Assistenten-Antworten
+
+### 10.1 Analyse des zweiten iPhone-Tests
+Nach Behebung des 401-Fehlers ergab der Praxistest auf dem iPhone:
+- Die Spracherkennung funktionierte zu 70-80 % und die Textantwort erschien im Chat.
+- Die Antwort kam jedoch weiterhin **ohne hörbaren Ton**.
+- Die Antworten des Assistenten waren zudem **viel zu lang** („Eine kleine Frage und dann kommt eine sehr lange Antwort“).
+
+Ein Blick in die Cloud Functions Logs zeigte die Ursache für den Tonausfall:
+- **Log `synthesizeDooriSpeech`:** `Gemini TTS unavailable TimeoutError`
+- **Ursachenkette:** 
+  1. Weil der Assistent lange Texte generierte, dauerte die Sprachsynthese in `gemini-2.5-flash-preview-tts` länger als 30 Sekunden.
+  2. Nach 30 Sekunden brach der Cloud Functions Fetch mit `TimeoutError` ab.
+  3. Der Client fing den Fehler ab und versuchte `systemSpeak` (`window.speechSynthesis`). Auf iOS Safari ist `speechSynthesis.speak()` nach asynchronen Netzwerkaufrufen jedoch systembedingt stumm/blockiert.
+  4. Zudem blockiert Mobile Safari das Abspielen von dynamischen `<audio>`-Blobs (`audio.src = blobUrl; audio.play()`), wenn zwischen Nutzer-Geste (Mikrofon-Tap) und Audio-Eintreffen mehrere Sekunden vergehen.
+
+### 10.2 Durchgeführte Behebungen
+
+#### A. Deutlich kürzere und prägnante Antworten
+1. **System-Prompt (`functions/assistant-router.js`):**
+   - Strikte Kürze-Instruktion ergänzt:
+     *„Always keep responses short, direct, and conversational (typically 1 to 3 sentences, maximum 4 sentences). Never write long essays or bullet-point lists unless explicitly requested by the user.“*
+2. **Token-Limits drastisch reduziert:**
+   - Groq: `max_completion_tokens: 180` (vorher 450)
+   - Gemini: `maxOutputTokens: 180` (vorher 450)
+   - Cloudflare: `max_tokens: 180` (vorher 250)
+   - Verhindert zuverlässig ausufernde Antworten bei einfachen Fragen.
+
+#### B. Schnelle und fehlertolerante TTS-Synthese
+1. **Text-Begrenzung für TTS (`functions/index.js`):**
+   - `synthesizeDooriSpeech` kappt den zu vertonenden Text defensiv auf maximal 360 Zeichen (`rawText.slice(0, 360)`). Dadurch schließt die Audiosynthese stets in unter 2-4 Sekunden ab.
+2. **Timeouts erhöht:**
+   - Gemini TTS Request-Timeout auf 40 Sekunden erhöht (`AbortSignal.timeout(40000)`).
+   - Cloud Function Timeout auf 60 Sekunden erhöht (`timeoutSeconds: 60`).
+
+#### C. Zuverlässige Audio-Wiedergabe auf iOS (Web Audio API)
+1. **Web Audio API (`AudioContext` / `decodeAudioData`):**
+   - In `tts.js` decodiert und spielt Doori empfangene Audiodaten primär über die Web Audio API (`AudioContext`).
+   - Ein im Benutzerklick/Touch entsperrter `AudioContext` verliert in iOS Safari seine Wiedergabeberechtigung auch nach asynchronen Verzögerungen nicht!
+   - Automatischer Fallback auf `<audio>`-Element vorhanden.
+2. **Frühes Audio-Unlocking:**
+   - Unlocking erfolgt direkt bei `touchstart` auf `#assistant-mic-btn` sowie global beim ersten Benutzer-Touch in `app.js`.
+
+#### D. Versionierung & Cache
+- `tts.js?v=7`
+- `assistant.js?v=8`
+- `app.js?v=353`
+- `service-worker.js` Cache-Name: `web-messenger-v120-ios-audio-brevity`
+
+### 10.3 Test- & Deploy-Status
+- `npm.cmd test`: **54/54 Tests bestanden (100% grün)**.
+- `npm.cmd run build`: **36 allowlistete Dateien erfolgreich gebaut**.
+- Cloud Functions & Hosting erfolgreich aktualisiert.
+

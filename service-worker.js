@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v119-ios-tts-playback';
+const CACHE_NAME = 'web-messenger-v120-ios-audio-brevity';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
-  '/app.js?v=352',
-  '/tts.js?v=6',
-  '/assistant.js?v=7',
+  '/app.js?v=353',
+  '/tts.js?v=7',
+  '/assistant.js?v=8',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',
@@ -18,7 +18,7 @@ const urlsToCache = [
   '/vendor/firebase-functions-compat.js',
   '/firebase-config.js?v=28',
   '/vendor/agora-rtc-sdk-ng.js?v=1',
-  '/agora-calls.js?v=1',
+  '/agora-calls.js?v=3',
   '/doodle.js?v=276',
   '/manifest.json'
 ];
