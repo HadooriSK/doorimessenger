@@ -2089,6 +2089,7 @@ body.light-mode .group-info-sidebar { background:rgba(216,232,240,.98)!important
     border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .assistant-control.recording { background:#e5485d;color:#fff;border-color:#ff8090;animation:assistant-recording-pulse 1.1s ease-in-out infinite;box-shadow:0 0 0 6px rgba(229,72,93,.14); }
+.assistant-control.starting { opacity:.8;animation:assistant-breathe .8s ease-in-out infinite; }
 @keyframes assistant-recording-pulse { 50% { transform:scale(1.08);box-shadow:0 0 0 12px rgba(229,72,93,.06); } }
 body.assistant-recording #message-input { border-color:#e5485d;box-shadow:inset 0 0 0 1px rgba(229,72,93,.35); }
 .composer-tools-row.assistant-mode-hidden { display: none !important; }

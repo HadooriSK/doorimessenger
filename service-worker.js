@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v116-mobile-voice-unlock';
+const CACHE_NAME = 'web-messenger-v117-mobile-mic-start';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
   '/app.js?v=352',
   '/tts.js?v=4',
-  '/assistant.js?v=5',
+  '/assistant.js?v=6',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',
