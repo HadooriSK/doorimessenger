@@ -1,15 +1,15 @@
 # Übergabedokumentation an Codex – Doori Messenger
 
 **Datum:** 23. September 2026  
-**Aktueller Stand:** Commit `b1bf4de` einschließlich geprüfter Gemini-STT- und Dashboard-Korrektur
+**Aktueller Stand:** Commit `d2cdb2a` + nachfolgende Secret-Korrektur & Deployments  
 **Vorheriger Ausgangspunkt:** Commit `ea57bad` (*"docs: document Doori AI assistant, operator console and speech fixes"*)  
 **Projektordner:** `C:\Users\hidis\.gemini\antigravity\scratch\web-messenger`  
 **Firebase-Projekt:** `doori-messenger` (Region: `europe-west3`)  
 **Eigene Produktiv-Domain:** `https://www.doori-messenger.de/`  
 **Firebase Hosting URL:** `https://doori-messenger.web.app/`  
-**Aktuelle Frontend-Version:** `agora-calls.js?v=2`, `operator.html`, `operator.js?v=2`, `operator.css?v=2`, `service-worker.js` (Cache: `web-messenger-v112-telephony-fallback`)  
-**Aktueller Test-Status:** **54/54 Tests bestanden** (100% grün, `npm test`)
-**Aktueller Build-Status:** 36 allowlistete Dateien erfolgreich gebaut. Die neuesten Client-Korrekturen sind wegen abgelaufener Firebase-CLI-Anmeldung noch nicht auf Hosting veröffentlicht.
+**Aktuelle Frontend-Version:** `agora-calls.js?v=2`, `operator.html`, `operator.js?v=2`, `operator.css?v=2`, `tts.js?v=6`, `service-worker.js` (Cache: `web-messenger-v119-ios-tts-playback`)  
+**Aktueller Test-Status:** **54/54 Tests bestanden** (100% grün, `npm test`)  
+**Aktueller Build- und Deploy-Status:** 36 allowlistete Dateien erfolgreich gebaut und live auf Firebase Hosting veröffentlicht. Cloud Functions `synthesizeDooriSpeech`, `transcribeDooriSpeech` und `askDooriAssistant` erfolgreich mit Secret-Version 4 live aktualisiert.
 
 ---
 
@@ -253,3 +253,37 @@ firebase deploy --only hosting --project doori-messenger
 5. Falls weiterhin kein Audio kommt, unmittelbar nach einem Test die Logs von `synthesizeDooriSpeech` lesen. Zwischen folgenden Ursachen unterscheiden: Gemini HTTP-Fehler, fehlende `audioBase64`-Nutzlast oder Safari-`audio.play()`-Blockade. Nicht weiter raten.
 6. Die Betreiber-Konsole prüfen: Groq/Gemini-Prozentwerte müssen sichtbar als interne tägliche Doori-Schutzlimits bezeichnet sein. Sie dürfen nicht als Monatslimit oder offizielle Anbieter-Restquote dargestellt werden.
 7. Nach der Arbeit diese Datei erneut mit Commit, Deploy-Status, Tests und offenen Punkten ergänzen, damit der nächste Wechsel zurück zu Codex verlustfrei möglich ist.
+
+---
+
+## 9. Analyse & Behebung durch Anti-Gravity: Ursache für fehlenden Ton (401), Secret-Korrektur und Deployments
+
+### 9.1 Root-Cause-Analyse der Cloud Functions Logs
+Direkt nach dem ersten Test wurden die Ausführungsprotokolle von `synthesizeDooriSpeech` und `transcribeDooriSpeech` analysiert:
+- **Log `synthesizeDooriSpeech`:** `Gemini TTS unavailable 401`
+- **Log `transcribeDooriSpeech`:** `Gemini speech recognition unavailable or invalid; trying Whisper 401`
+- **Wirkungskette:** 
+  1. Bei der Spracherkennung führte der 401-Fehler von Gemini automatisch zum Fallback auf Whisper (`Groq`). Dadurch funktionierte die Transkription scheinbar noch.
+  2. Bei der Sprachausgabe (`synthesizeDooriSpeech`) schlug `synthesizeWithGemini` mit `HTTP 401 (UNAUTHENTICATED)` fehl.
+  3. Der Client (`tts.js`) versuchte daraufhin den System-Fallback (`systemSpeak`), welcher in iOS Safari außerhalb einer synchronen Benutzerinteraktion stumm geschaltet bzw. blockiert wird.
+
+### 9.2 Ursache des 401-Fehlers
+Eine Überprüfung von `GEMINI_API_KEY` in Google Cloud Secret Manager (Version 3) ergab:
+Der API-Schlüssel war beim Eintragen **versehentlich doppelt hintereinander eingefügt worden**:
+`AQ.Ab8RN6...AQ.Ab8RN6...` (96 Zeichen statt 48 Zeichen, doppelter String).
+Die Google Generative Language API lehnte diese verdoppelte Zeichenkette folgerichtig mit `401 Unauthorized` ab.
+
+### 9.3 Durchgeführte Maßnahmen & Behebung
+1. **Secret-Aktualisierung (Version 4):**
+   - Das Secret `GEMINI_API_KEY` wurde in Google Secret Manager mit dem bereinigten, einfachen 48-Zeichen-Schlüssel als **Version 4** gespeichert.
+   - Ein direkter Funktionstest von `gemini-2.5-flash-preview-tts` mit diesem bereinigten Schlüssel ergab sofort `HTTP 200` und lieferte 164.544 Bytes unkomprimiertes Audiosignal zurück.
+2. **Defensive Absicherung in `functions/index.js` (`getGeminiKey()`):**
+   - Eine Hilfsfunktion erkennt und bereinigt doppelt eingefügte Schlüsselzeichenketten (`v.length % 2 === 0 && v.slice(0, half) === v.slice(half)`) zur Laufzeit automatisch, sodass ein Formatierungsversehen niemals wieder zu einem 401-Ausfall führen kann.
+   - Verwendet in `transcribeWithGemini`, `synthesizeWithGemini` und `askDooriAssistant`.
+3. **Deployment:**
+   - Functions `transcribeDooriSpeech`, `synthesizeDooriSpeech` und `askDooriAssistant` wurden erfolgreich nach `europe-west3` deployt.
+   - Hosting (`dist/`, 36 allowlistete Dateien) wurde mit Service Worker Cache `web-messenger-v119-ios-tts-playback` erfolgreich auf `www.doori-messenger.de` veröffentlicht.
+4. **Validierung:**
+   - Alle **54/54 Tests** bestanden (`npm.cmd test`).
+   - Keine Plaintext-Secrets im Client oder Repository.
+

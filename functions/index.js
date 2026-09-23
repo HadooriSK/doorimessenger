@@ -113,8 +113,9 @@ async function transcribeWithGroq(audio,mime,filename){
  const response=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:`Bearer ${GROQ_API_KEY.value()}`},body:form,signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Object.assign(new Error('Groq speech recognition failed'),{status:response.status});return response.json();
 }
+function getGeminiKey(){const v=String(GEMINI_API_KEY.value()||'').trim();return v.length>=40&&v.length%2===0&&v.slice(0,v.length/2)===v.slice(v.length/2)?v.slice(0,v.length/2):v;}
 async function transcribeWithGemini(encoded,mime,languageHint){
- const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+encodeURIComponent(GEMINI_API_KEY.value()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Perform verbatim speech transcription. Never translate, paraphrase, or change the spoken language. Preserve German as German, English as English, Turkish as Turkish, Arabic in Arabic script, and Persian in Persian script. Detect the language from the recording itself. Return only JSON with text and language, where language is exactly one of de, en, tr, ar, fa. The interface hint ${languageHint} is only a last resort for genuinely ambiguous audio and must never override clearly spoken language.`},{inlineData:{mimeType:mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
+ const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Perform verbatim speech transcription. Never translate, paraphrase, or change the spoken language. Preserve German as German, English as English, Turkish as Turkish, Arabic in Arabic script, and Persian in Persian script. Detect the language from the recording itself. Return only JSON with text and language, where language is exactly one of de, en, tr, ar, fa. The interface hint ${languageHint} is only a last resort for genuinely ambiguous audio and must never override clearly spoken language.`},{inlineData:{mimeType:mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Object.assign(new Error('Gemini speech recognition failed'),{status:response.status});const payload=await response.json(),raw=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'';return JSON.parse(raw);
 }
 function pcmToWavBase64(pcmBase64){
@@ -122,7 +123,7 @@ function pcmToWavBase64(pcmBase64){
  header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(channels,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(byteRate,28);header.writeUInt16LE(channels*bits/8,32);header.writeUInt16LE(bits,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);return Buffer.concat([header,pcm]).toString('base64');
 }
 async function synthesizeWithGemini(text,language,gender){
- const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(GEMINI_API_KEY.value()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(30000)});
+ const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Object.assign(new Error('Gemini TTS failed'),{status:response.status});const payload=await response.json(),audio=payload?.candidates?.[0]?.content?.parts?.find(part=>part.inlineData?.data)?.inlineData;if(!audio?.data)throw new Error('Gemini TTS returned no audio');return {audioBase64:pcmToWavBase64(audio.data),mimeType:'audio/wav'};
 }
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
@@ -328,7 +329,7 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
  const events=[];
  const router=createAssistantRouter({
   groqKey:GROQ_API_KEY.value(),
-  geminiKey:GEMINI_API_KEY.value(),
+  geminiKey:getGeminiKey(),
   cloudflareToken:CLOUDFLARE_API_TOKEN.value(),
   allowGroq:true,
   allowGemini:true,
