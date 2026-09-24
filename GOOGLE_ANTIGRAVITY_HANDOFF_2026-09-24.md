@@ -198,3 +198,11 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Live-Status, Mikrofon, Live-Schalter, Lautsprecher und Stimmenauswahl bleiben auf Mobilgeräten in einer festen Zeile. Lange Statusmeldungen werden gekürzt und verschieben die Stimmenauswahl nicht mehr.
 - Versionen: `web-messenger-v139-live-controls-layout`, `style.css?v=337`; Assistententests `16/16`, Build `38` Dateien.
 
+## Gemeinsame Doori-Erinnerung und TTS-Korrektur
+
+- Normale Text-/Sprach-KI und Gemini Live teilen eine private, UID-gebundene Erinnerung in `_assistantMemory`. Der Kontext ist auf 2.600 Zeichen begrenzt und wird ohne zusätzliche KI-Zusammenfassungsanfragen gepflegt.
+- Live nutzt Google Ein-/Ausgabetranskription und speichert vollständige Gesprächsrunden über die neue Function `rememberDooriExchange`. `clearDooriMemory` löscht die Erinnerung auf Nutzerwunsch; die Kontolöschung entfernt sie ebenfalls.
+- Einstellungsoberfläche und Löschbestätigung sind in allen fünf Pflichtsprachen vorhanden; die Sammlung ist für direkte Clients nicht freigegeben.
+- Die normale Gemini-TTS-Funktion sendet nur noch den eigentlichen Antworttext, sodass technische Stimm-/Sprechanweisungen nicht mehr vorgelesen werden.
+- Versionen: `web-messenger-v140-assistant-memory-tts`, `assistant.js?v=13`, `doori-live.js?v=11`; Tests `71/71`, Build `38` Dateien.
+

@@ -507,3 +507,13 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Cache-/Assetstand: `web-messenger-v139-live-controls-layout`, `style.css?v=337`.
 - Prüfung: Assistententests `16/16`, Build `38` Dateien, Diff-Prüfung erfolgreich.
 
+## 20. Gemeinsame KI-Erinnerung und korrigierte normale TTS-Ausgabe
+
+- Textchat, normale Sprach-KI und Gemini Live nutzen jetzt dieselbe serverseitige private Erinnerung pro Firebase-UID (`_assistantMemory/{uid}`).
+- Gespeichert werden höchstens 24 aktuelle Rollenbeiträge und 40 eindeutige Nutzeraussagen. Pro Anfrage gelangen höchstens 2.600 Zeichen Erinnerung in den Systemkontext; es gibt keine zusätzliche KI-Zusammenfassungsanfrage. Damit bleiben Speicher- und Tokenverbrauch begrenzt.
+- Live fordert den Erinnerungskontext zusammen mit dem flüchtigen Token an. Eingabe- und Ausgabetranskription speichern nach einem abgeschlossenen Live-Turn das Gespräch über `rememberDooriExchange`.
+- In Konto-Einstellungen können Nutzer über `clearDooriMemory` alle Erinnerungen löschen. Die UI-Texte sind in `de`, `en`, `ar`, `fa` und `tr`; beim Löschen des Kontos wird die Erinnerung ebenfalls entfernt. Direkter Clientzugriff auf `_assistantMemory` bleibt durch die Default-Deny-Regeln gesperrt.
+- Gemini TTS erhält nur noch den eigentlichen Antworttext. Die technische Formulierung „Speak this … naturally and warmly“ wurde entfernt, damit sie nicht mehr vorgelesen werden kann; die Stimme bleibt getrennt in `speechConfig` konfiguriert.
+- Versionen: `web-messenger-v140-assistant-memory-tts`, `assistant.js?v=13`, `doori-live.js?v=11`.
+- Verifikation: Assistententests `18/18`, vollständige Suite `71/71`, Build `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
+

@@ -134,7 +134,7 @@ function pcmToWavBase64(pcmBase64){
  header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(channels,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(byteRate,28);header.writeUInt16LE(channels*bits/8,32);header.writeUInt16LE(bits,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);return Buffer.concat([header,pcm]).toString('base64');
 }
 async function synthesizeWithGemini(text,language,gender){
- const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(40000)});
+ const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(40000)});
  if(!response.ok)throw Object.assign(new Error('Gemini TTS failed'),{status:response.status});const payload=await response.json(),audio=payload?.candidates?.[0]?.content?.parts?.find(part=>part.inlineData?.data)?.inlineData;if(!audio?.data)throw new Error('Gemini TTS returned no audio');return {audioBase64:pcmToWavBase64(audio.data),mimeType:'audio/wav'};
 }
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
@@ -309,6 +309,7 @@ exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async
  const key=accountSnap.exists?accountSnap.data().key:null;
  const batch=db.batch();
  batch.delete(tokenRef);
+ batch.delete(db.collection('_assistantMemory').doc(uid));
  if(accountSnap.exists)batch.delete(accountSnap.ref);
  if(key){
   batch.delete(db.collection('users').doc(key));
@@ -324,6 +325,25 @@ exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async
  try{await sendBrevo(email,copy,textContent,htmlContent);}catch(mailErr){console.error('Final deletion email error',mailErr);}
  return {success:true};
 });
+
+function cleanMemoryText(value,max=600){return String(value||'').replace(/\s+/g,' ').trim().slice(0,max);}
+async function assistantMemory(uid){
+ const data=(await db.collection('_assistantMemory').doc(uid).get()).data()||{};
+ const recent=Array.isArray(data.recent)?data.recent.slice(-12):[];
+ const longTerm=Array.isArray(data.longTerm)?data.longTerm.slice(-24):[];
+ return [...longTerm.map(x=>`Remembered user statement: ${cleanMemoryText(x,300)}`),...recent.map(x=>`${x.role==='assistant'?'Doori':'User'}: ${cleanMemoryText(x.text,400)}`)].join('\n').slice(-2600);
+}
+async function rememberAssistantExchange(uid,userText,assistantText,language,source){
+ const ref=db.collection('_assistantMemory').doc(uid),now=Date.now();
+ await db.runTransaction(async tx=>{const snap=await tx.get(ref),old=snap.data()||{},recent=Array.isArray(old.recent)?old.recent:[],longTerm=Array.isArray(old.longTerm)?old.longTerm:[];
+  const user=cleanMemoryText(userText),assistant=cleanMemoryText(assistantText);
+  const nextRecent=[...recent,{role:'user',text:user,language,source,at:now},{role:'assistant',text:assistant,language,source,at:now}].slice(-24);
+  const nextLong=user&&user.length>=12&&!longTerm.includes(user)?[...longTerm,user].slice(-40):longTerm.slice(-40);
+  tx.set(ref,{uid,recent:nextRecent,longTerm:nextLong,updatedAt:Timestamp.now()},{merge:true});});
+}
+
+exports.rememberDooriExchange=onCall(options,async request=>{const uid=signedIn(request),userText=cleanMemoryText(request.data?.userText),assistantText=cleanMemoryText(request.data?.assistantText),language=['de','en','ar','fa','tr'].includes(request.data?.language)?request.data.language:'en';if(!userText||!assistantText)throw new HttpsError('invalid-argument','Invalid memory exchange.');await rememberAssistantExchange(uid,userText,assistantText,language,'live');return {success:true};});
+exports.clearDooriMemory=onCall(options,async request=>{const uid=signedIn(request);await db.collection('_assistantMemory').doc(uid).delete();return {success:true};});
 
 exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KEY,CLOUDFLARE_API_TOKEN]},async request=>{
  const uid=signedIn(request);
@@ -350,7 +370,7 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
   beforeProvider:provider=>provider==='cloudflare'?reserveCloudflareNeurons(CLOUDFLARE_NEURON_RESERVATION,config.cloudflareDailyNeurons):reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
   onProviderEvent:async event=>{events.push(event);if(event.provider==='cloudflare'){const actual=event.outcome==='success'||event.outcome==='language'?Number(event.neurons||0):0;await adjustCloudflareNeuronBudget(actual-CLOUDFLARE_NEURON_RESERVATION).catch(error=>console.error('Cloudflare neuron reconciliation failed',error?.message||error));}}
  });
- try{const result=await router({messages,language});await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
+ try{const memory=await assistantMemory(uid),result=await router({messages,language,memory});await rememberAssistantExchange(uid,latestUser,result.text,language,source);await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
  catch(error){
   await recordAssistantMetrics(events).catch(()=>{});
   if(error instanceof LocalFallbackError||error?.code==='LOCAL_FALLBACK_REQUIRED')return {localFallback:true};
@@ -414,7 +434,7 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
   return true;
  });
  if(!allowed)throw new HttpsError('resource-exhausted','Live token safety limit reached for today.',{reason:'internal-daily'});
- return {token,expiresAt:Date.now()+1800000};
+ return {token,expiresAt:Date.now()+1800000,memoryContext:await assistantMemory(uid)};
 });
 
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{

@@ -84,6 +84,12 @@ test('central Gemini TTS keeps the selected gender and has a system fallback',as
  dom.window.close();
 });
 
+test('Gemini TTS receives only the answer text and never reads technical voice instructions',()=>{
+ const source=fs.readFileSync(path.join(root,'functions/index.js'),'utf8');
+ assert.match(source,/contents:\[\{parts:\[\{text\}\]\}\]/);
+ assert.doesNotMatch(source,/Speak this \$\{language\} text naturally and warmly/);
+});
+
 test('iPhone-compatible recorder sends MP4 audio to multilingual Whisper before chat',async()=>{
  const html='<button id="assistant-mic-btn"></button><button id="assistant-voice-btn"></button><select id="assistant-voice-select"><option value="female"></option><option value="male"></option></select><div id="current-chat-status"></div><div id="current-chat-avatar"></div>';
  const dom=new JSDOM(html,{url:'https://doori-messenger.de',runScripts:'outside-only'}),calls=[];const w=dom.window,track={stopped:false,stop(){this.stopped=true;}},stream={getTracks:()=>[track]};
@@ -213,4 +219,16 @@ test('mobile Live status stays on one row without moving the voice selector',()=
  assert.match(css,/\.assistant-controls-row\s*\{[^}]*flex-wrap:\s*nowrap/s);
  assert.match(css,/\.doori-live-status\s*\{[^}]*flex:\s*1 1 auto[^}]*text-overflow:\s*ellipsis/s);
  assert.match(css,/\.assistant-voice-select\s*\{[^}]*flex:\s*0 0 auto/s);
+});
+
+test('text and Live assistant share a bounded private memory without extra summarization calls',()=>{
+ const functions=fs.readFileSync(path.join(root,'functions/index.js'),'utf8');
+ const router=fs.readFileSync(path.join(root,'functions/assistant-router.js'),'utf8');
+ const live=fs.readFileSync(path.join(root,'doori-live.js'),'utf8');
+ const client=fs.readFileSync(path.join(root,'assistant.js'),'utf8');
+ assert.match(functions,/_assistantMemory/);assert.match(functions,/rememberDooriExchange/);assert.match(functions,/clearDooriMemory/);
+ assert.match(functions,/memoryContext:await assistantMemory\(uid\)/);assert.match(router,/Private memory from earlier conversations/);
+ assert.match(live,/inputAudioTranscription/);assert.match(live,/outputAudioTranscription/);assert.match(live,/rememberDooriExchange/);
+ for(const language of ['de','en','ar','fa','tr'])assert.match(client,new RegExp(`\\b${language}:\\{title:`));
+ assert.match(client,/btn-clear-assistant-memory/);
 });

@@ -150,6 +150,9 @@
     resumeHandle:  '',
     plannedResume: false,
     ignoreInputUntil: 0,
+    memoryContext: '',
+    liveUserText: '',
+    liveAssistantText: '',
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
@@ -505,6 +508,7 @@
     if (!tok) throw new Error('No token');
     state.token = tok;
     state.tokenExpiry = Number(result?.data?.expiresAt || 0) || (Date.now() + 1800000);
+    state.memoryContext = String(result?.data?.memoryContext || '').slice(0, 2600);
     return tok;
   }
 
@@ -544,7 +548,7 @@
 
     ws.onopen = async () => {
       state.ready      = false;
-      const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Wait silently until the user has spoken a complete first utterance. Never greet or start speaking merely because the connection opened, and never repeat a greeting. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the dominant language of the complete user utterance and always reply only in that same language. Support German, English, Arabic, Persian, and Turkish. Once the first language is clear, keep it for the conversation unless the user deliberately switches languages with a complete utterance. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.';
+      const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Wait silently until the user has spoken a complete first utterance. Never greet or start speaking merely because the connection opened, and never repeat a greeting. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the dominant language of the complete user utterance and always reply only in that same language. Support German, English, Arabic, Persian, and Turkish. Once the first language is clear, keep it for the conversation unless the user deliberately switches languages with a complete utterance. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.' + (state.memoryContext ? '\n\nPrivate memory from earlier conversations with this same user. Use it only when relevant:\n' + state.memoryContext : '');
       const setup = {
         setup: {
           model: 'models/gemini-3.8-live',
@@ -560,6 +564,8 @@
             triggerTokens: 25600,
             slidingWindow: { targetTokens: 12800 },
           },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           sessionResumption: state.resumeHandle ? { handle: state.resumeHandle } : {},
           systemInstruction: {
             parts: [{ text: sysPrompt }],
@@ -624,7 +630,16 @@
           }
         }
 
-        if (msg.serverContent?.turnComplete) {
+        const serverContent = msg.serverContent || msg.server_content || {};
+        const inputText = serverContent.inputTranscription?.text || serverContent.input_transcription?.text || '';
+        const outputText = serverContent.outputTranscription?.text || serverContent.output_transcription?.text || '';
+        if (inputText) state.liveUserText += inputText;
+        if (outputText) state.liveAssistantText += outputText;
+
+        if (serverContent.turnComplete || serverContent.turn_complete) {
+          const userText=state.liveUserText.trim(),assistantText=state.liveAssistantText.trim();
+          state.liveUserText='';state.liveAssistantText='';
+          if(userText&&assistantText)root.accountFunctions.httpsCallable('rememberDooriExchange')({userText,assistantText,language:lang()}).catch(()=>{});
           if (!state.playing) setStatus(t().listening);
         }
       } catch (e) {
@@ -700,6 +715,9 @@
     state.resumeHandle = '';
     state.plannedResume = false;
     state.ignoreInputUntil = 0;
+    state.memoryContext = '';
+    state.liveUserText = '';
+    state.liveAssistantText = '';
     state.retryDelay   = RECONNECT_INIT;
     updateBtn();
     root.DooriTTS?.stop?.();
