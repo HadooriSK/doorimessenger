@@ -167,5 +167,6 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.match(functions,/v1beta\/auth_tokens/);
  assert.doesNotMatch(functions,/replace\(\/\^auth_tokens/);
  assert.match(functions,/liveDailySessionsPerUser/);
+ assert.match(functions,/live-v2-\$\{uid\}-\$\{day\}/);
  assert.match(functions,/liveDailyLimit/);
 });

@@ -234,3 +234,13 @@ npm.cmd run dev
 - `npm.cmd test`: 55/55 bestanden.
 - Build: 37 Dateien.
 - `getLiveToken` und Firebase Hosting erfolgreich live bereitgestellt.
+
+### 8.2 Falsch gemeldetes kostenloses Live-Kontingent
+
+**Problem und Ursache:** Fehlgeschlagene Verbindungsversuche wurden bereits vor einer erfolgreichen Gemini-Token-Erzeugung als vollständige Live-Sitzungen gezählt. Die vorangegangenen Fehleranalysen konnten deshalb das interne Limit von 20 Sitzungen erreichen, obwohl kein echtes Live-Gespräch stattgefunden hatte. Die Meldung bezog sich auf Dooris internen Schutzwert, nicht auf das Google-Kontingent.
+
+**Korrektur:**
+- Tageszähler auf die bereinigte Generation `live-v2-{uid}-{day}` umgestellt; die falsch belasteten alten Werte wirken nicht mehr.
+- Zähler wird erst nach erfolgreicher Gemini-Token-Erzeugung atomar erhöht.
+- Syntaxprüfung, 55/55 Tests und Build mit 37 Dateien erfolgreich.
+- `getLiveToken` erfolgreich live deployed.

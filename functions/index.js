@@ -377,15 +377,11 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
  const config=await assistantConfig();
  const liveDailyLimit=Number(config.liveDailySessionsPerUser||20);
  const day=assistantDay();
- const budgetRef=db.collection('_assistantBudgets').doc(`live-${uid}-${day}`);
- const allowed=await db.runTransaction(async tx=>{
-  const snap=await tx.get(budgetRef);
-  const used=Number(snap.data()?.sessions||0);
-  if(used>=liveDailyLimit)return false;
-  tx.set(budgetRef,{sessions:used+1,day,uid,updatedAt:Timestamp.now()});
-  return true;
- });
- if(!allowed)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
+ // v2 starts with a clean counter because the former counter included failed
+ // connection attempts before a usable Gemini token had even been created.
+ const budgetRef=db.collection('_assistantBudgets').doc(`live-v2-${uid}-${day}`);
+ const currentBudget=(await budgetRef.get()).data()||{};
+ if(Number(currentBudget.sessions||0)>=liveDailyLimit)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
  const key=getGeminiKey();
  if(!key)throw new HttpsError('internal','Live AI not configured.');
  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/auth_tokens?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({}),signal:AbortSignal.timeout(10000)});
@@ -398,6 +394,14 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
  const json=await response.json();
  const token=String(json?.name||json?.token||'').trim();
  if(!token)throw new HttpsError('internal','Invalid live token response.');
+ const allowed=await db.runTransaction(async tx=>{
+  const snap=await tx.get(budgetRef);
+  const used=Number(snap.data()?.sessions||0);
+  if(used>=liveDailyLimit)return false;
+  tx.set(budgetRef,{sessions:used+1,day,uid,updatedAt:Timestamp.now()});
+  return true;
+ });
+ if(!allowed)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
  return {token,expiresAt:Date.now()+1800000};
 });
 
