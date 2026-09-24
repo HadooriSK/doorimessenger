@@ -145,3 +145,58 @@ test('Firebase functions export large media endpoints with 30-day lifecycle', ()
     assert.ok(typeof functions.cleanupExpiredLargeMedia === 'function');
 });
 
+test('large media translations cover all five languages and preserve RTL for ar and fa', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const appSource = fs.readFileSync(path.join(__dirname, '../app.js'), 'utf8');
+
+    const requiredKeys = [
+        'msg_uploading_media',
+        'badge_cloud_30d',
+        'badge_cloud_expired',
+        'err_upload_failed',
+        'err_storage_quota',
+        'cloud_retention_info'
+    ];
+
+    const languages = ['de', 'en', 'fa', 'ar', 'tr'];
+    for (const lang of languages) {
+        for (const key of requiredKeys) {
+            assert.match(appSource, new RegExp(`TRANSLATIONS\\.${lang}[\\s\\S]*?${key}:`), `Missing ${key} for ${lang}`);
+        }
+    }
+
+    // Verify Arabic and Persian strings specifically contain RTL characters in their storage blocks
+    const arStorageBlock = appSource.slice(appSource.lastIndexOf('Object.assign(TRANSLATIONS.ar, {'));
+    const arMatch = arStorageBlock.match(/msg_uploading_media:\s*'([^']+)'/);
+    assert.ok(arMatch && /[\u0600-\u06FF]/.test(arMatch[1]), 'Arabic storage translation must contain RTL characters');
+
+    const faStorageBlock = appSource.slice(appSource.lastIndexOf('Object.assign(TRANSLATIONS.fa, {'));
+    const faMatch = faStorageBlock.match(/msg_uploading_media:\s*'([^']+)'/);
+    assert.ok(faMatch && /[\u0600-\u06FF]/.test(faMatch[1]), 'Persian storage translation must contain RTL characters');
+});
+
+test('app.js and index.html support cloud storage pipeline and file attachments', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const appSource = fs.readFileSync(path.join(__dirname, '../app.js'), 'utf8');
+    const htmlSource = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+
+    // Verification of media-upload accepting all files
+    assert.match(htmlSource, /<input type="file" id="media-upload" class="hidden" accept="\*\/\*">/);
+
+    // Verification of uploadMediaFile pipeline
+    assert.match(appSource, /async function uploadMediaFile\(file\)/);
+    assert.match(appSource, /requestLargeMediaUpload/);
+    assert.match(appSource, /confirmLargeMediaUpload/);
+    assert.match(appSource, /cleanupExpiredLargeMedia/);
+
+    // Verification of 30-day retention badge rendering
+    assert.match(appSource, /cloud-retention-badge/);
+    assert.match(appSource, /Math\.ceil\(\(msg\.expires_at - now\) \/ \(1000 \* 60 \* 60 \* 24\)\)/);
+
+    // Verification of file attachment bubble rendering
+    assert.match(appSource, /msg\.mediaType === 'file'/);
+    assert.match(appSource, /class="file-attachment"/);
+});
+

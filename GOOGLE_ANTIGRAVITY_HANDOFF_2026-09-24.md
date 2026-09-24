@@ -2,16 +2,33 @@
 
 Bitte lies zuerst diese Datei und danach `CODEX_HANDOFF_2026-09-24.md` im Projekt-Hauptverzeichnis vollständig. Setze den bestehenden Code exakt auf diesem Stand fort. Nichts neu aufsetzen, keine bestehenden Messenger-, Spiele-, Telefonie-, Konto- oder KI-Funktionen entfernen.
 
-## Aktueller Stand (Update: 24.09.2026, 06:38 Uhr)
+## Aktueller Stand (Update: 24.09.2026, 16:30 Uhr – R2/B2 Storage LIVE)
 
-- Git-Basis: `760cfa3` (bzw. nach aktuellem Push) auf `main`.
+- Git-Basis: `main`, synchron mit `origin/main`.
 - **Deployments:**
-  - Firebase Cloud Functions live: `askDooriAssistant`, `synthesizeDooriSpeech`, `transcribeDooriSpeech`, `getLiveToken` (alle in `europe-west3`).
-  - Firebase Hosting live bereitgestellt: Cache `v130` (`web-messenger-v130-assistant-ui-layout`), `style.css?v=334`, `assistant.js?v=12`, `tts.js?v=9`, `doori-live.js?v=7`. Live auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
+  - Firebase Cloud Functions live: `requestLargeMediaUpload`, `confirmLargeMediaUpload`, `cleanupExpiredLargeMedia`, `askDooriAssistant`, `synthesizeDooriSpeech`, `transcribeDooriSpeech`, `getLiveToken` (alle in `europe-west3`).
+  - Firebase Hosting live bereitgestellt: Cache `v136` (`web-messenger-v136-large-media-storage`), `app.js?v=357`, `style.css?v=335`. Live auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
 - Build: Exakt 37 allowlistete Public-Dateien (`scripts/build-hosting.cjs`).
-- Testsuite: **55/55 Tests bestanden (100% grün)** (`npm.cmd test`).
+- Testsuite: **65/65 Tests bestanden (100% grün)** (`npm.cmd test`).
 - Keine Secrets, API-Schlüssel oder Tokens in Frontend-Code, Git oder Logs exponiert. Firebase Functions Secrets bleiben maßgeblich.
 - Alle sichtbaren Änderungen immer synchron in Deutsch, Englisch, Arabisch, Persisch und Türkisch gepflegt (RTL für ar/fa).
+
+## Update: Große Mediendateien mit Cloudflare R2 & Backblaze B2 (24.09.2026)
+
+- **Anforderung:** Speicherung großer Dateien (Videos, Audio, Fotos, Dokumente bis 500 MB) mit Priorität auf Cloudflare R2 (10 GB kostenlos) und automatischem Kaskaden-Fallback auf Backblaze B2 (10 GB kostenlos) bei Kontingentüberschreitung (9,5 GB Sicherheitslimit). Automatische Löschung aller Dateien nach maximal 30 Tagen.
+- **Live-Verifikation beider Speicheranbieter:**
+  - **Cloudflare R2:** Secret `CLOUDFLARE_R2_CONFIG` (Version 3) live verifiziert. S3 SigV4 PUT (HTTP 200 OK), GET (HTTP 200 OK, Inhalt bytegenau validiert) und DELETE (HTTP 204 No Content) erfolgreich.
+  - **Backblaze B2:** Secret `BACKBLAZE_B2_CONFIG` live verifiziert. S3 SigV4 PUT (HTTP 200 OK) und DELETE (HTTP 200 OK) erfolgreich.
+- **Architektur & Bandbreitenschutz:** Direct-to-Storage Presigned S3 SigV4 URLs (`PUT`, 15 min Gültigkeit) über `functions/large-media-storage.js`. Keine Firebase-Server-Bandbreitenkosten.
+- **Client-Integration (`app.js`, `index.html`):**
+  - Dateiupload (`#media-upload`) akzeptiert alle Dateitypen (`accept="*/*"`).
+  - Dateien < 200 KB verbleiben für sofortige Vorschau als Data-URL; Dateien >= 200 KB oder Dokumente werden über die Cloud-Pipeline hochgeladen.
+  - Upload-Progress-Toast während des Transfers (`msg_uploading_media`).
+  - Anzeige von Dateianhängen (`mediaType === 'file'`) mit Dateiname, Dateigröße und Download-Button.
+  - 30-Tage Retentions-Badge (`⏱️ 30d` bzw. `⏱️ Abgelaufen`) im Chat-Nachrichten-Header.
+  - Automatisches Hintergrund-Pruning von abgelaufenen Medien (`cleanupExpiredLargeMedia`) beim Benutzer-Login.
+- **Mehrsprachigkeit:** Vollständige 5-Sprachen-Unterstützung (`de`, `en`, `ar`, `fa`, `tr`) mit echtem RTL für Arabisch und Persisch.
+- **Testabdeckung:** `tests/storage.test.cjs` prüft SigV4 URLs, Kaskadierung, Quoten, 30-Tage Retention, Übersetzungen und RTL. 65/65 Tests grün.
 
 ## Update: Live-Audio auf verschiedenen iPhones (24.09.2026)
 

@@ -440,6 +440,46 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         btn_save_status: 'Durumu Kaydet', msg_status_updated: 'Durum başarıyla güncellendi!',
         lbl_logged_in_as: 'Olarak giriş yapıldı:'
     });
+    Object.assign(TRANSLATIONS.de, {
+        msg_uploading_media: 'Große Datei wird sicher hochgeladen...',
+        badge_cloud_30d: '30 Tage gültig',
+        badge_cloud_expired: 'Abgelaufen',
+        err_upload_failed: 'Upload fehlgeschlagen. Bitte erneut versuchen.',
+        err_storage_quota: 'Der Cloud-Speicher ist voll.',
+        cloud_retention_info: 'Wird nach maximal 30 Tagen automatisch gelöscht'
+    });
+    Object.assign(TRANSLATIONS.en, {
+        msg_uploading_media: 'Uploading large file securely...',
+        badge_cloud_30d: 'Valid for 30 days',
+        badge_cloud_expired: 'Expired',
+        err_upload_failed: 'Upload failed. Please try again.',
+        err_storage_quota: 'Cloud storage quota is full.',
+        cloud_retention_info: 'Automatically deleted after at most 30 days'
+    });
+    Object.assign(TRANSLATIONS.fa, {
+        msg_uploading_media: 'در حال بارگذاری ایمن فایل بزرگ...',
+        badge_cloud_30d: 'اعتبار ۳۰ روزه',
+        badge_cloud_expired: 'منقضی شده',
+        err_upload_failed: 'بارگذاری ناموفق بود. لطفاً دوباره تلاش کنید.',
+        err_storage_quota: 'فضای ذخیره‌سازی ابری پر است.',
+        cloud_retention_info: 'حداکثر پس از ۳۰ روز به‌صورت خودکار حذف می‌شود'
+    });
+    Object.assign(TRANSLATIONS.ar, {
+        msg_uploading_media: 'جاري رفع الملف الكبير بأمان...',
+        badge_cloud_30d: 'صالح لمدة 30 يومًا',
+        badge_cloud_expired: 'منتهي الصلاحية',
+        err_upload_failed: 'فشل الرفع. يرجى المحاولة مرة أخرى.',
+        err_storage_quota: 'مساحة التخزين السحابي ممتلئة.',
+        cloud_retention_info: 'يتم الحذف تلقائيًا بعد 30 يومًا كحد أقصى'
+    });
+    Object.assign(TRANSLATIONS.tr, {
+        msg_uploading_media: 'Büyük dosya güvenle yükleniyor...',
+        badge_cloud_30d: '30 gün geçerli',
+        badge_cloud_expired: 'Süresi doldu',
+        err_upload_failed: 'Yükleme başarısız. Lütfen tekrar deneyin.',
+        err_storage_quota: 'Bulut depolama alanı doldu.',
+        cloud_retention_info: 'En fazla 30 gün sonra otomatik olarak silinir'
+    });
     function getTranslatedChatName(chat) {
         if (!chat) return '';
         if (chat.type === 'assistant' || window.DooriAssistant?.isAssistant(chat.id)) return window.DooriAssistant.getName();
@@ -1499,6 +1539,18 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             else if (msg.mediaType === 'doodle_reject') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,107,107,0.1); color: #ff6b6b; padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">❌ <b>${t.doodle_msg_rejected || 'Doodle Einladung abgelehnt'}</b></div>`;
             }
+            else if (msg.mediaType === 'file') {
+                const fName = escapeHTML(msg.fileName || msg.text || 'Datei');
+                const fSize = msg.fileSize ? ` (${(msg.fileSize / (1024 * 1024)).toFixed(1)} MB)` : '';
+                contentHtml += `<div class="file-attachment" style="display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.06); padding:10px 14px; border-radius:10px; margin-top:4px;">
+                    <span style="font-size:24px;">📁</span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</div>
+                        <div style="font-size:11px; color:var(--text-secondary);">${fSize}</div>
+                    </div>
+                    <a href="${msg.mediaUrl}" target="_blank" download="${fName}" class="submit-btn" style="padding:6px 12px; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; flex-shrink:0;">⬇️</a>
+                </div>${msg.text && msg.text !== msg.fileName ? `<br>${escapeHTML(msg.text)}` : ''}`;
+            }
             else { 
                 let processedText = escapeHTML(msg.text || '');
                 if (currentChat && currentChat.type === 'room') {
@@ -1527,12 +1579,26 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             }
             
             let ttlHtml = ''; 
-            if (msg.ttl) { if(msg.expires_at) { const remaining = Math.max(0, Math.ceil((msg.expires_at - now)/1000)); ttlHtml = `<span class="ttl-indicator">⏳ ${remaining}s</span>`; } else ttlHtml = `<span class="ttl-indicator">⏳ ${msg.ttl}s</span>`; }
+            if (msg.ttl) {
+                if (msg.expires_at) {
+                    const remaining = Math.max(0, Math.ceil((msg.expires_at - now)/1000));
+                    ttlHtml = `<span class="ttl-indicator">⏳ ${remaining}s</span>`;
+                } else {
+                    ttlHtml = `<span class="ttl-indicator">⏳ ${msg.ttl}s</span>`;
+                }
+            } else if (msg.expires_at && (msg.storage_provider || (msg.expires_at - now > 86400 * 1000))) {
+                const daysLeft = Math.ceil((msg.expires_at - now) / (1000 * 60 * 60 * 24));
+                if (daysLeft > 0) {
+                    ttlHtml = `<span class="cloud-retention-badge" style="font-size:10px; opacity:0.85; margin-right:4px;" title="${t.cloud_retention_info || 'Wird nach maximal 30 Tagen automatisch gelöscht'}">⏱️ ${daysLeft}d</span>`;
+                } else {
+                    ttlHtml = `<span class="cloud-retention-badge expired" style="font-size:10px; opacity:0.85; color:#ff4757; margin-right:4px;">⏱️ ${t.badge_cloud_expired || 'Abgelaufen'}</span>`;
+                }
+            }
             let statusHtml = ''; if(msg.silent) statusHtml += `<span class="status-indicator">🔕</span>`; if(msg.isSecret) statusHtml += `<span class="status-indicator">🔒</span>`;
             const isStarred = window.isMessageStarred ? window.isMessageStarred(msg.id) : false;
             const starHtml = isStarred ? '<span class="msg-star-badge" title="Markiert">⭐</span>' : '';
             
-            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + msg.game_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
+            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + (msg.fileName || '') + (msg.expires_at || '') + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + msg.game_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
             
             let expectedInner = '';
             let className = '';
@@ -2241,7 +2307,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
     // --- Message Sending ---
     window.sendMessage = sendMessage;
-async function sendMessage(text, mediaType = null, mediaUrl = null, silent = false, scheduleTime = null) {
+async function sendMessage(text, mediaType = null, mediaUrl = null, silent = false, scheduleTime = null, extraMedia = null) {
         if (!currentChat || scheduleTime) return false;
         const targetChat = { ...currentChat, members: [...(currentChat.members || [])] };
         const destination = messageDestination(targetChat, currentUser);
@@ -2257,6 +2323,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         }
 
         let ttl = parseInt(ttlSelect.value) || 0; let expiresAt = null; if (ttl > 0 && targetChat.type === 'dm') expiresAt = null; else if(ttl > 0) expiresAt = Date.now() + (ttl * 1000);
+        if (extraMedia && extraMedia.expiresAt) expiresAt = extraMedia.expiresAt;
         let processedText = text; if(targetChat.isSecret && !mediaType && text) processedText = await encryptMessage(text);
 
         const mentions = targetChat.type === 'room' ? collectMentions(processedText, targetChat.members) : [];
@@ -2274,6 +2341,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             fontColor: localStorage.getItem('doori_font_color') || 'default',
             fontSize: localStorage.getItem('doori_font_size') || 'normal'
         };
+
+        if (extraMedia && typeof extraMedia === 'object') {
+            if (extraMedia.fileName) msgObj.fileName = extraMedia.fileName;
+            if (extraMedia.fileSize) msgObj.fileSize = extraMedia.fileSize;
+            if (extraMedia.provider) msgObj.storage_provider = extraMedia.provider;
+            if (extraMedia.fileId) msgObj.fileId = extraMedia.fileId;
+        }
         
         if (replyingToMessage) {
             msgObj.replyTo = replyingToMessage;
@@ -2559,12 +2633,97 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     function cleanupRecording() { clearInterval(recordingInterval); recordingPreview.classList.add('hidden'); messageForm.style.opacity = '1'; recordingTimeEl.textContent = '00:00'; liveVideoPreview.classList.add('hidden'); liveVideoPreview.srcObject = null; }
 
+    // Large Media & Storage Upload (Cloudflare R2 -> Backblaze B2, 30-day retention)
+    async function uploadMediaFile(file) {
+        if (!file) return;
+        const fileName = file.name || 'file';
+        let type = 'file';
+        if (file.type.startsWith('video/')) type = 'video';
+        else if (file.type.startsWith('audio/')) type = 'audio';
+        else if (file.type.startsWith('image/')) type = 'image';
+
+        // Fast inline data-URL for small media under 200 KB
+        if (file.size < 200 * 1024 && type !== 'file') {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                sendMessage('', type, reader.result, false, null, { fileName, fileSize: file.size });
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+
+        const t = (window.TRANSLATIONS && window.TRANSLATIONS[window.currentLang]) || (window.TRANSLATIONS && window.TRANSLATIONS.en) || {};
+        const uploadIndicator = document.createElement('div');
+        uploadIndicator.id = 'large-upload-indicator';
+        uploadIndicator.style.cssText = 'position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 12px 24px; border-radius: 24px; font-weight: bold; z-index: 10000; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; font-size: 14px;';
+        uploadIndicator.innerHTML = `<span>⏳</span> <span>${escapeHTML(t.msg_uploading_media || 'Große Datei wird sicher hochgeladen...')}</span>`;
+        document.body.appendChild(uploadIndicator);
+
+        try {
+            if (!window.accountFunctions) throw new Error('Functions not available');
+            const requestUpload = window.accountFunctions.httpsCallable('requestLargeMediaUpload');
+            const planRes = await requestUpload({
+                fileName: fileName,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                chatId: currentChat ? currentChat.id : 'general'
+            });
+
+            const plan = planRes.data;
+            if (!plan || !plan.uploadUrl) throw new Error('Failed to get upload plan');
+
+            const putRes = await fetch(plan.uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                    'Content-Type': file.type || 'application/octet-stream'
+                }
+            });
+
+            if (!putRes.ok) throw new Error(`Upload error HTTP ${putRes.status}`);
+
+            const confirmUpload = window.accountFunctions.httpsCallable('confirmLargeMediaUpload');
+            await confirmUpload({
+                fileId: plan.fileId,
+                provider: plan.provider,
+                storageKey: plan.storageKey,
+                fileName: fileName,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                chatId: currentChat ? currentChat.id : 'general',
+                expiresAt: plan.expiresAt
+            });
+
+            await sendMessage('', type, plan.downloadUrl, false, null, {
+                fileName: fileName,
+                fileSize: file.size,
+                expiresAt: plan.expiresAt,
+                provider: plan.provider,
+                fileId: plan.fileId
+            });
+        } catch (err) {
+            console.error('Large media upload error:', err);
+            const errMsg = err.message && err.message.includes('STORAGE_QUOTA_EXCEEDED')
+                ? (t.err_storage_quota || 'Der Cloud-Speicher ist voll.')
+                : (t.err_upload_failed || 'Upload fehlgeschlagen. Bitte erneut versuchen.');
+            alert(errMsg);
+        } finally {
+            if (uploadIndicator && uploadIndicator.parentNode) {
+                uploadIndicator.parentNode.removeChild(uploadIndicator);
+            }
+        }
+    }
+
     // Media Upload
-    document.getElementById('media-upload').addEventListener('change', (e) => {
-        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-        reader.onloadend = () => { const type = file.type.startsWith('video') ? 'video' : (file.type.startsWith('audio') || file.type === 'application/octet-stream') ? 'audio' : 'image'; sendMessage('', type, reader.result); };
-        reader.readAsDataURL(file); e.target.value = '';
-    });
+    const mediaUploadInput = document.getElementById('media-upload');
+    if (mediaUploadInput) {
+        mediaUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            uploadMediaFile(file);
+            e.target.value = '';
+        });
+    }
 
 
 
@@ -4449,6 +4608,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         screens.chat.classList.add('active');
         loadUserData();
         loadCallHistory(username);
+        if(window.accountFunctions) {
+            window.accountFunctions.httpsCallable('cleanupExpiredLargeMedia')().catch(()=>{});
+        }
     }
     
     let callHistoryUnsubscribe = null;

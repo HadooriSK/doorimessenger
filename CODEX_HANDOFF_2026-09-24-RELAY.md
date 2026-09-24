@@ -42,19 +42,25 @@ Der Betreiber prüft Cloudflare R2 als Speicher für späteres Versenden großer
 - Bei 480p und Löschen nach drei Tagen ist Speicher meist sehr günstig: 1.000 Nutzer mit durchschnittlich 30 Minuten hochgeladenem Video je Monat entsprechen grob $0.19 R2-Speicher; eine Stunde je Nutzer grob $0.53. Das sind Schätzungen, wenn 480p auch wirklich erzwungen wird.
 - Firebase Storage ist für Medien nicht pauschal ersetzen: Es ist weiterhin sinnvoll für kleine bestehende Assets, während R2 für häufig wiedergegebene große Medien wirtschaftlicher ist.
 
-## Umsetzung: Große Mediendateien via Cloudflare R2 & Backblaze B2 (Stand: 24.09.2026)
+## Umsetzung: Große Mediendateien via Cloudflare R2 & Backblaze B2 (Stand: 24.09.2026 – VOLLSTÄNDIG LIVE)
 
-Der Betreiber hat die Accounts für Cloudflare R2 (10 GB kostenlos) und Backblaze B2 (10 GB kostenlos) eingerichtet und den Start beauftragt:
-- **Kaskadierung:** Primär wird Cloudflare R2 genutzt (bis 9,5 GB). Bei Erreichen des Kontingents oder temporärem Ausfall schaltet das System automatisch auf Backblaze B2 um.
-- **S3 SigV4 Architektur:** Beide Anbieter unterstützen S3-kompatible SigV4-APIs. Die Cloud Function `requestLargeMediaUpload` generiert kurzlebige signierte `PUT`-URLs (15 min), sodass Uploads clientseitig direkt in den Objektspeicher erfolgen, ohne Firebase-Bandbreite zu belasten.
-- **30-Tage automatische Löschung:**
-  1. *Speicherebene (nativ):* Lifecycle Rules in Cloudflare R2 („Delete object after 30 days“) und Backblaze B2 („Delete files after 30 days“).
-  2. *Anwendungsebene:* Firestore `large_media` speichert `expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000`. Die Funktion `cleanupExpiredLargeMedia` führt serverseitige Bereinigungen durch.
-- **Secrets-Verwaltung:**
-  - `firebase functions:secrets:set CLOUDFLARE_R2_CONFIG` (JSON mit `accountId`, `accessKeyId`, `secretAccessKey`, `bucketName`, `publicUrl`)
-  - `firebase functions:secrets:set BACKBLAZE_B2_CONFIG` (JSON mit `keyId`, `applicationKey`, `bucketName`, `endpoint`, `publicUrl`)
-  - Alternativ werden auch Einzelsecrets unterstützt. Keine Secrets im Code oder Git.
-- **Testabdeckung:** `tests/storage.test.cjs` validiert SigV4-Presigning, R2->B2 Kaskadierung, Quota-Grenzen und 30-Tage-Fristen. Gesamte Testsuite: **63/63 Tests bestanden (100% grün)**.
+Der Betreiber hat die Accounts für Cloudflare R2 (10 GB kostenlos) und Backblaze B2 (10 GB kostenlos) eingerichtet. Die Implementierung, Live-Verifikation und das Deployment sind vollständig abgeschlossen:
+- **Live-Verifikation beider Speicheranbieter:**
+  1. **Cloudflare R2:** Secret `CLOUDFLARE_R2_CONFIG` (Version 3) live getestet. SigV4 Presigned `PUT` Upload (HTTP 200 OK), SigV4 `GET` (HTTP 200 OK, Inhalt 100% verifiziert) und SigV4 `DELETE` (HTTP 204 No Content) erfolgreich.
+  2. **Backblaze B2:** Secret `BACKBLAZE_B2_CONFIG` live getestet. SigV4 Presigned `PUT` Upload (HTTP 200 OK) und SigV4 `DELETE` (HTTP 200 OK) erfolgreich.
+- **Kaskadierung:** Primär wird Cloudflare R2 genutzt (bis 9,5 GB Sicherheitslimit). Bei Erreichen des Kontingents oder temporärem Ausfall schaltet das System automatisch auf Backblaze B2 um.
+- **Cloud Functions:**
+  - `requestLargeMediaUpload`, `confirmLargeMediaUpload` und `cleanupExpiredLargeMedia` erfolgreich in `europe-west3` mit Zugriff auf `CLOUDFLARE_R2_CONFIG` und `BACKBLAZE_B2_CONFIG` deployt.
+  - Direct Client-to-Storage Upload per Presigned S3 `PUT` URL (15 min) ohne Belastung der Firebase-Bandbreite.
+- **Client-Integration (`app.js`, `index.html`):**
+  - Upload-Pipeline `uploadMediaFile(file)` für Dateien aller Typen (`accept="*/*"`), inklusive Fortschritts-Toast.
+  - Chat-Darstellung von Datei-Anhängen (`mediaType === 'file'`) mit Download-Button und 30-Tage Gültigkeits-Badge (`⏱️ 30d` bzw. `⏱️ Abgelaufen`).
+  - Automatisches Hintergrund-Pruning von abgelaufenen Medien (`cleanupExpiredLargeMedia`) beim Benutzer-Login.
+  - Alle Texte synchron in 5 Sprachen (`de`, `en`, `ar`, `fa`, `tr`), RTL für `ar` und `fa` gewahrt.
+- **Testabdeckung & Hosting-Deploy:**
+  - Testsuite: **65/65 Tests bestanden (100% grün)** (`npm.cmd test`).
+  - Build: **Exakt 37 allowlistete Public-Dateien** (`scripts/build-hosting.cjs`).
+  - Firebase Hosting: Live auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/` (Cache `web-messenger-v136-large-media-storage`, `app.js?v=357`).
 
 ## Dokumentationspflicht
 

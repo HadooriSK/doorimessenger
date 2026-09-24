@@ -1,7 +1,31 @@
 # CODEX_HANDOFF_2026-09-24.md
 # Vollständige Übergabedokumentation: Doori Messenger (Stand: 24. September 2026)
 
-## Neuester Nachtrag: Live-Sperrmeldungen und Wiederverbindungen
+## Neuester Nachtrag: Große Mediendateien via Cloudflare R2 & Backblaze B2 (LIVE)
+
+### Große Mediendateien mit Cloudflare R2 & Backblaze B2 (24.09.2026)
+
+- **Betreiberanforderung:** Nutzung des 10 GB kostenlosen Speichers von Cloudflare R2 und 10 GB kostenlosen Speichers von Backblaze B2 für große Dateien (Videos, Audio, Fotos, Dokumente bis 500 MB). Priorität auf Cloudflare R2; nach Erreichen des 10 GB Kontingents (Sicherheitsgrenze 9,5 GB) automatische Umschaltung auf Backblaze B2. Alle Dateien auf beiden Speichern müssen nach maximal 30 Tagen automatisch gelöscht werden.
+- **Live-Verifikation beider Speicheranbieter:**
+  1. **Cloudflare R2:** Secret `CLOUDFLARE_R2_CONFIG` (Version 3) ausgelesen und live getestet. Presigned S3 SigV4 PUT (HTTP 200 OK), GET (HTTP 200 OK, Inhalt 100% verifiziert) und DELETE (HTTP 204 No Content) erfolgreich.
+  2. **Backblaze B2:** Secret `BACKBLAZE_B2_CONFIG` ausgelesen und live getestet. Presigned S3 SigV4 PUT (HTTP 200 OK) und DELETE (HTTP 200 OK) erfolgreich.
+- **Backend-Architektur (`functions/large-media-storage.js` & `functions/index.js`):**
+  - Reine Node.js-Standardbibliothek (`node:crypto`) für AWS S3 SigV4 Signatur-Generierung (`requestLargeMediaUpload`).
+  - Direct Client-to-Storage Presigned PUT URLs (15 Minuten Upload-Fenster). Firebase Cloud Functions übertragen keine Dateibytes und verursachen keine Server-Bandbreitenkosten.
+  - Quotenüberwachung via Firestore `system_stats/storage` (`r2_bytes`, `b2_bytes`). Automatische Kaskadierung von R2 zu B2 bei >= 9,5 GB.
+  - 30-Tage Retention (`expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000`).
+  - Cleanup-Funktion `cleanupExpiredLargeMedia`: Löscht abgelaufene Objekte via S3 SigV4 DELETE, bereinigt Firestore-Einträge und dekrementiert Speicherstatistiken.
+- **Frontend-Integration (`app.js`, `index.html`):**
+  - Dateiauswahl `#media-upload` unterstützt alle Dateitypen (`accept="*/*"`).
+  - Pipeline `uploadMediaFile(file)` routet Dateien >= 200 KB oder Dokumente über R2/B2; kleine Dateien < 200 KB verbleiben für sofortige Vorschau als Data-URL.
+  - Upload-Progress-Toast während des Uploads (`msg_uploading_media`).
+  - Chat-Darstellung von Dateianhängen (`mediaType === 'file'`) mit Dateiname, Dateigröße und Download-Button.
+  - 30-Tage Retentions-Badge (`⏱️ 30d` bzw. `⏱️ Abgelaufen`) im Chat-Nachrichten-Header.
+  - Automatisches Hintergrund-Pruning von abgelaufenen Medien (`cleanupExpiredLargeMedia`) beim Benutzer-Login.
+- **Mehrsprachigkeit:** Vollständige 5-Sprachen-Unterstützung (`de`, `en`, `ar`, `fa`, `tr`) mit echtem RTL für Arabisch und Persisch.
+- **Validierung:** 65/65 Tests bestanden (`tests/storage.test.cjs`, `tests/security.test.cjs`, `tests/games.test.cjs`, `tests/calls.test.cjs`, `tests/assistant.test.cjs`). Build mit exakt 37 allowlisteten Public-Dateien. Cloud Functions und Firebase Hosting live deployed (`https://doori-messenger.web.app` und `https://www.doori-messenger.de/`, Service Worker Cache `web-messenger-v136-large-media-storage`, `app.js?v=357`).
+
+## Früherer Nachtrag: Live-Sperrmeldungen und Wiederverbindungen
 
 ### Live-Audio auf unterschiedlichen iPhones (24.09.2026)
 
