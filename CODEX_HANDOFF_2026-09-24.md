@@ -1,6 +1,13 @@
 # CODEX_HANDOFF_2026-09-24.md
 # Vollständige Übergabedokumentation: Doori Messenger (Stand: 24. September 2026)
 
+## Neuester Nachtrag: Live-Sperrmeldungen und Wiederverbindungen
+
+Die bisherigen Aussagen, der komplette Live-Dialog sei nachweislich repariert, waren zu weitgehend. Die 55 Tests enthalten vor allem Struktur- und Mock-Prüfungen; sie belegen keinen echten Gemini-Audioaustausch auf iPhone. Auch der Zähler live-v2 zählt ausgestellte Tokens, keine erfolgreich geführten Gespräche. Nicht erneut pauschal Kontingente zurücksetzen.
+
+Aktuelle Änderung: getLiveToken unterscheidet connection-rate (10 Token-Anfragen/15 Minuten), internal-daily (internes Tageslimit) und provider-rate (Google HTTP 429). Der Client zeigt passende Meldungen in allen fünf Sprachen, stoppt die automatische Quoten-Retry-Schleife und begrenzt sonstige Wiederverbindungen auf zwei. Permanente WebSocket-Protokollfehler stoppen sofort. Nach erfolgreichem Reconnect wird das zuvor gestoppte Mikrofon neu gestartet. Cache v126, doori-live.js?v=6. Bestehende 55 Tests bestanden, Build 37 Dateien. End-to-End-Live-Audio noch nicht bestätigt. Die zuletzt gelesenen Function-Logs zeigten authentifizierte Aufrufe, aber keinen eindeutigen Ablehnungsgrund.
+
+
 ---
 
 ## 1. Executive Summary & Git-Status
@@ -244,3 +251,75 @@ npm.cmd run dev
 - Zähler wird erst nach erfolgreicher Gemini-Token-Erzeugung atomar erhöht.
 - Syntaxprüfung, 55/55 Tests und Build mit 37 Dateien erfolgreich.
 - `getLiveToken` erfolgreich live deployed.
+
+### Nachgewiesene Live-Ursache und Korrektur (24.09.)
+- Direkter Google-Handshake mit dem bestehenden Secret (nur im Prozessspeicher, keine Audio-/Inferenzanfrage): Token HTTP 200; alter Client wurde mit Close 1007 abgewiesen: Unknown name responseModalities at setup.
+- Korrektur: responseModalities und speechConfig in setup.generationConfig verschoben. Danach echter Server: setupComplete, sauberer Close 1000. Somit ist der Protokollfehler nachgewiesen und behoben; kein Nachweis fuer Audio auf einem echten iPhone.
+- Regressionstest wertet das reale Setup-Objekt aus und prueft die Verschachtelung. 55/55 Tests bestanden, Build 37 Dateien. Cache v127, Live-Skript v7.
+- scripts/check-live-handshake.cjs reproduziert ausschliesslich den Handshake ohne Audio. Secret bleibt im Speicher; niemals rohe Credentials protokollieren.
+- getLiveToken mit differenzierten Fehlergruenden wurde erfolgreich deployed. Tageszaehler bleibt ein Token-Schutzlimit, kein offizielles Google-Kontingent. Keine pauschale Zuruecksetzung der Limits vorgenommen.
+
+### Normaler Sprachdialog: iPhone-Wiedergabe (24.09.)
+- tts.js: AudioContext.resume und HTMLAudio.play werden beim Unlock ohne vorheriges await gestartet. Doppelter Unlock durch touchstart plus click entfernt. Nicht laufender AudioContext wird nicht mehr als erfolgreiche Wiedergabe gewertet, Resume/HTMLAudio-Start haben begrenzte Wartezeit.
+- Bei blockierter Cloud-Audiowiedergabe wird der Blob zum erneuten Abspielen gespeichert; keine zweite Synthese notwendig. System-TTS wartet auf onstart/onerror, statt allein den Aufruf als Erfolg zu melden. Bei Fehlschlag bleibt der Text zum erneuten Start vorhanden.
+- assistant.js: Hinweis zum Tippen auf den Lautsprecher in de/en/ar/fa/tr; Lautsprecher spielt ausstehende Antwort ab. Historien-Eintraege vor Callable auf 2000 Zeichen begrenzt, damit alte lange Antworten nicht die Validierung der ganzen Anfrage scheitern lassen.
+- functions/assistant-router.js: Provider-HTTP-Fehler protokollieren nur Anbieter/Status/Fehlertyp, keine Schluessel oder Chattexte. Bisherige Logs enthielten keine konkrete Ursache fuer gelegentlich fehlende KI-Antworten. Gemini -> Groq -> Cloudflare unveraendert; keine Limits angehoben.
+- 55/55 Tests bestanden, einschliesslich System-TTS-Fehler und erfolgreichem erneutem Start; Build 37 Dateien, Cache v128. Keine Tests auf einem physischen iPhone erfolgt. Keine Behauptung, dass alle Audio-/Providerprobleme abschliessend geloest sind.
+
+---
+
+## 9. Nachtrag (24.09.2026, 06:18 Uhr): Behebung „Kein KI-Dienst verfügbar“ & Model-Deprecation
+
+### 9.1 Problem & Nachgewiesene Ursache
+Der Nutzer meldete: *„Es kommt immer beim Chatten und beim Sprechen der Fehler: Es ist kein KI Dienst verfügbar bitte später versuchen... Ich hab gar nicht so viel mehr genutzt...“*
+
+Eine gezielte Abfrage der Cloud Function Logs und der Firestore-Zähler ergab:
+1. Der Nutzer hatte sein Kontingent **nicht** überschritten (am 24.09. waren in `_assistantBudgets` lediglich 8 von 200 Anfragen gezählt).
+2. **Google Model Deprecation (HTTP 404):**
+   - In `functions/assistant-router.js` war `GEMINI_MODEL = 'gemini-2.5-flash-lite'`.
+   - In `functions/index.js` war für Transkription `models/gemini-2.0-flash`.
+   - Google AI Studio wies beide Modelle serverseitig mit HTTP 404 Not Found ab (*„This model is no longer available to new users. Please update your code to use models/gemini-3.5-flash-lite for the latest features and improvements“*).
+   - In `synthesizeDooriSpeech` lieferte das veraltete `gemini-2.5-flash-preview-tts` HTTP 429 Quota Exceeded (10 RPM Free Tier Limit).
+   - Bei jedem Aufruf scheiterte Gemini sofort mit 404. Groq (`openai/gpt-oss-20b`) stieß mit `max_completion_tokens: 180` teilweise an Token-Limits durch `reasoning_tokens`. Wenn Groq scheiterte, versagte Cloudflare (API-Token hat keine Account-ID). Dadurch trat der `LocalFallbackError` auf und der Nutzer erhielt die Meldung: *„Im Moment ist kein kostenloser KI-Dienst verfügbar...“*.
+
+### 9.2 Durchgeführte Korrekturen
+1. **Modelle auf die aktuellen, offiziellen Google-Versionen aktualisiert:**
+   - Textassistenz (`functions/assistant-router.js`): `GEMINI_MODEL = 'gemini-3.5-flash-lite'` (getestet: HTTP 200 OK, Latenz ~600ms).
+   - Sprachtranskription (`functions/index.js`): `gemini-3.5-flash-lite` mit Inline-Audio (getestet: HTTP 200 OK); Fallback bleibt Groq Whisper (`whisper-large-v3-turbo`).
+   - Sprachsynthese (`functions/index.js` & `tts.js`): `gemini-3.8-flash-tts` (getestet: HTTP 200 OK, generiert vollständige 24kHz WAV-Audiodaten).
+   - `pcmToWavBase64`: Erkennt bereits vorhandene RIFF/WAVE-Header und verhindert Doppel-Header.
+2. **Groq Token-Puffer:** `max_completion_tokens` von 180 auf 360 angehoben, damit `reasoning_tokens` die 1-3 Sätze Doori-Antwort nicht kappen.
+3. **Provider-Kaskade (`createAssistantRouter`):**
+   - Unterstützt optionales `providerOrder` (Standard: `['gemini', 'groq', 'cloudflare']`).
+   - Der Wunsch des Nutzers („Gemini an 1. Stelle, Groq als direkter Fallback“) wird nativ erfüllt: Gemini antwortet als 1. Wahl; bei temporärem Fehler oder Limit springt sofort Groq ein.
+
+---
+
+## 10. iPhone Audio Keep-Alive & Autoplay-Härtung
+
+### 10.1 Ursache der Stummschaltung
+Auf iOS Safari verfällt das Autoplay-Berechtigungsfenster nach der asynchronen Wartezeit (Transkription + LLM-Generierung + TTS = ~5-8s). Zudem suspendiert iOS den `AudioContext`, sobald das Mikrofon (`stream.getTracks().forEach(t => t.stop())`) gestoppt wird und kein Ton aktiv gerendert wird. Gleichzeitig schaltet der physische Hardware-Stummschalter Web Audio standardmäßig stumm.
+
+### 10.2 Lösung in `tts.js` & `assistant.js`
+1. `startKeepAlive()` startet beim Mikrofon-Klick (`unlock()`):
+   - Einen inaudiblen `BufferSourceNode` über `GainNode(0.00001)` auf `AudioContext.destination` (hält `ctx.state === 'running'`).
+   - Einen Endlos-Loop einer 100ms-Stille-WAV auf `player()` (`audio.loop = true; audio.play()`).
+2. Das `<audio>`-Element bleibt während der gesamten Aufnahme und Cloud-Wartezeit im Status `playing`.
+3. Beim Eintreffen des TTS-Blobs wird `audio.loop = false; audio.src = objectUrl; audio.play()` aufgerufen. Da das Element bereits lief, blockiert WebKit die Wiedergabe nicht!
+4. Da `<audio playsinline>` in der iOS-Session-Kategorie `Playback` läuft, wird die Doori-Stimme auch bei aktiviertem physischen Lautlosschalter über die Lautsprecher ausgegeben.
+5. Web Audio dient als sofortiger zweiter Fallback; der Lautsprecher `#assistant-voice-btn` bleibt manueller Replay-Fallback.
+
+---
+
+## 11. Validierung & Live-Deployment
+
+1. `npm.cmd test`: **55/55 Tests bestanden (100% grün)**.
+2. `npm.cmd run build`: **37 allowlistete Public-Dateien**.
+3. **Cloud Functions Deployment:**
+   - `askDooriAssistant(europe-west3)`: Erfolgreich aktualisiert.
+   - `transcribeDooriSpeech(europe-west3)`: Erfolgreich aktualisiert.
+   - `synthesizeDooriSpeech(europe-west3)`: Erfolgreich aktualisiert.
+4. **Hosting Deployment:**
+   - Bereitgestellt auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
+   - Cache-Name: `web-messenger-v129-tts-model-upgrade`, `tts.js?v=9`, `assistant.js?v=11`.
+

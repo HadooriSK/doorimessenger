@@ -82,6 +82,20 @@
   };
 
   const LIVE_WS = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained';
+  const LIMIT_TEXT = {
+    de: {rate:'Zu viele Verbindungsversuche. Bitte in 15 Minuten erneut starten.',daily:'Das interne tägliche Live-Schutzlimit ist erreicht.',provider:'Der Sprachdienst begrenzt gerade die Anfragen. Bitte später erneut starten.'},
+    en: {rate:'Too many connection attempts. Please try again in 15 minutes.',daily:'The internal daily Live safety limit has been reached.',provider:'The voice service is temporarily limiting requests. Please try again later.'},
+    ar: {rate:'محاولات اتصال كثيرة. يرجى المحاولة بعد 15 دقيقة.',daily:'تم بلوغ حد الحماية اليومي الداخلي للوضع المباشر.',provider:'خدمة الصوت تحد الطلبات مؤقتاً. يرجى المحاولة لاحقاً.'},
+    fa: {rate:'تلاش‌های اتصال بیش از حد است. لطفاً ۱۵ دقیقه دیگر امتحان کنید.',daily:'سقف حفاظتی روزانه داخلی حالت زنده رسیده است.',provider:'سرویس صوتی فعلاً درخواست‌ها را محدود می‌کند. لطفاً بعداً امتحان کنید.'},
+    tr: {rate:'Çok fazla bağlantı denemesi. Lütfen 15 dakika sonra yeniden deneyin.',daily:'Dahili günlük Canlı güvenlik sınırına ulaşıldı.',provider:'Ses hizmeti şu anda istekleri sınırlıyor. Lütfen daha sonra deneyin.'}
+  };
+  let reconnectAttempts = 0;
+  function failConnection(message) {
+    stopSession(false);
+    state.quotaBlocked = false;
+    updateBtn();
+    setStatus(message);
+  }
   const RECONNECT_INIT = 1500;
   const RECONNECT_MAX  = 60000;
 
@@ -455,10 +469,9 @@
     } catch (err) {
       const code = err?.code || '';
       if (code === 'functions/resource-exhausted') {
-        state.quotaBlocked = true;
-        setStatus(t().quota);
-        updateBtn();
-        scheduleQuotaRetry();
+        const reason=err?.details?.reason;
+        const copy=LIMIT_TEXT[lang()];
+        failConnection(reason==='connection-rate'?copy.rate:reason==='internal-daily'?copy.daily:reason==='provider-rate'?copy.provider:t().error);
         return;
       }
       console.warn('[DooriLive] token error', err);
@@ -479,16 +492,17 @@
     }, 12000);
 
     ws.onopen = async () => {
-      state.retryDelay = RECONNECT_INIT;
       state.ready      = false;
       const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the language of the user and always reply in the same language. Support German, English, Arabic, Persian, and Turkish. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.';
       const setup = {
         setup: {
           model: 'models/gemini-3.8-live',
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Aoede' },
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Aoede' },
+              },
             },
           },
           systemInstruction: {
@@ -510,6 +524,9 @@
           clearTimeout(state.connectTimer);
           state.connectTimer = null;
           state.ready = true;
+          reconnectAttempts = 0;
+          state.retryDelay = RECONNECT_INIT;
+          if (!state.micStream && !await startMic()) { failConnection(t().error); return; }
           setStatus(t().listening);
           return;
         }
@@ -546,6 +563,9 @@
     };
 
     ws.onclose = (event) => {
+      if (state.ws !== ws) return;
+      state.ready = false;
+      console.warn('[DooriLive] connection closed', event.code);
       clearTimeout(state.connectTimer);
       state.connectTimer = null;
       state.token = null;
@@ -554,12 +574,10 @@
       stopPlayback();
       if (!state.active) return;
       if (event.reason?.includes('429') || event.reason?.includes('RESOURCE_EXHAUSTED')) {
-        state.quotaBlocked = true;
-        setStatus(t().quota);
-        updateBtn();
-        scheduleQuotaRetry();
+        failConnection(LIMIT_TEXT[lang()].provider);
         return;
       }
+      if (event.code===1008 || event.code===1007) { failConnection(t().error); return; }
       setStatus(t().retrying);
       scheduleReconnect();
     };
@@ -567,6 +585,7 @@
 
   function scheduleReconnect() {
     if (!state.active) return;
+    if (++reconnectAttempts > 2) { failConnection(t().error); return; }
     clearTimeout(state.retryTimer);
     state.retryTimer = setTimeout(async () => {
       if (!state.active) return;
@@ -594,6 +613,7 @@
   /* ── Session Start / Stop ─────────────────────────────────────────── */
   async function startSession() {
     if (state.active) return;
+    reconnectAttempts = 0;
     if (!root.WebSocket) {
       setStatus(t().unsupported);
       return;
@@ -619,6 +639,8 @@
   function stopSession(updateUi = true) {
     state.active = false;
     state.ready  = false;
+    state.token = null;
+    state.tokenExpiry = 0;
     clearTimeout(state.retryTimer);
     clearTimeout(state.connectTimer);
     state.retryTimer = null;

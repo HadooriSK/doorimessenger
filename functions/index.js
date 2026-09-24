@@ -115,15 +115,17 @@ async function transcribeWithGroq(audio,mime,filename){
 }
 function getGeminiKey(){const v=String(GEMINI_API_KEY.value()||'').trim();return v.length>=40&&v.length%2===0&&v.slice(0,v.length/2)===v.slice(v.length/2)?v.slice(0,v.length/2):v;}
 async function transcribeWithGemini(encoded,mime,languageHint){
- const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Perform verbatim speech transcription. Never translate, paraphrase, or change the spoken language. Preserve German as German, English as English, Turkish as Turkish, Arabic in Arabic script, and Persian in Persian script. Detect the language from the recording itself. Return only JSON with text and language, where language is exactly one of de, en, tr, ar, fa. The interface hint ${languageHint} is only a last resort for genuinely ambiguous audio and must never override clearly spoken language.`},{inlineData:{mimeType:mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
+ const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Perform verbatim speech transcription. Never translate, paraphrase, or change the spoken language. Preserve German as German, English as English, Turkish as Turkish, Arabic in Arabic script, and Persian in Persian script. Detect the language from the recording itself. Return only JSON with text and language, where language is exactly one of de, en, tr, ar, fa. The interface hint ${languageHint} is only a last resort for genuinely ambiguous audio and must never override clearly spoken language.`},{inlineData:{mimeType:mime,data:encoded}}]}],generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{text:{type:'STRING'},language:{type:'STRING',enum:['de','en','tr','ar','fa']}},required:['text','language']}}}),signal:AbortSignal.timeout(30000)});
  if(!response.ok)throw Object.assign(new Error('Gemini speech recognition failed'),{status:response.status});const payload=await response.json(),raw=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||'').join('')||'';return JSON.parse(raw);
 }
 function pcmToWavBase64(pcmBase64){
- const pcm=Buffer.from(pcmBase64,'base64'),header=Buffer.alloc(44),rate=24000,channels=1,bits=16,byteRate=rate*channels*bits/8;
+ const pcm=Buffer.from(pcmBase64,'base64');
+ if(pcm.length>=12&&pcm.slice(0,4).toString('ascii')==='RIFF'&&pcm.slice(8,12).toString('ascii')==='WAVE')return pcmBase64;
+ const header=Buffer.alloc(44),rate=24000,channels=1,bits=16,byteRate=rate*channels*bits/8;
  header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(channels,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(byteRate,28);header.writeUInt16LE(channels*bits/8,32);header.writeUInt16LE(bits,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);return Buffer.concat([header,pcm]).toString('base64');
 }
 async function synthesizeWithGemini(text,language,gender){
- const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(40000)});
+ const voice=gender==='male'?'Puck':'Kore',response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-tts:generateContent?key='+encodeURIComponent(getGeminiKey()),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Speak this ${language} text naturally and warmly. Treat punctuation only as pauses and intonation. Do not say punctuation names unless they are explicitly discussed as words. Text: ${text}`}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}}),signal:AbortSignal.timeout(40000)});
  if(!response.ok)throw Object.assign(new Error('Gemini TTS failed'),{status:response.status});const payload=await response.json(),audio=payload?.candidates?.[0]?.content?.parts?.find(part=>part.inlineData?.data)?.inlineData;if(!audio?.data)throw new Error('Gemini TTS returned no audio');return {audioBase64:pcmToWavBase64(audio.data),mimeType:'audio/wav'};
 }
 async function reserveUserAssistantUsage(uid,source,voiceSeconds,config){
@@ -335,6 +337,7 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
   allowGemini:true,
   allowCloudflare:true,
   providerTimeoutMs:config.providerTimeoutMs,
+  providerOrder:config.providerOrder?config.providerOrder.split(',').map(s=>s.trim()).filter(Boolean):['gemini','groq','cloudflare'],
   beforeProvider:provider=>provider==='cloudflare'?reserveCloudflareNeurons(CLOUDFLARE_NEURON_RESERVATION,config.cloudflareDailyNeurons):reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
   onProviderEvent:async event=>{events.push(event);if(event.provider==='cloudflare'){const actual=event.outcome==='success'||event.outcome==='language'?Number(event.neurons||0):0;await adjustCloudflareNeuronBudget(actual-CLOUDFLARE_NEURON_RESERVATION).catch(error=>console.error('Cloudflare neuron reconciliation failed',error?.message||error));}}
  });
@@ -373,7 +376,7 @@ exports.synthesizeDooriSpeech=onCall({...options,secrets:[GEMINI_API_KEY],timeou
 
 exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=>{
  const uid=signedIn(request);
- await limit(request,'live-token:'+uid,10);
+ try{await limit(request,'live-token:'+uid,10);}catch(error){if(error.code==='resource-exhausted')throw new HttpsError('resource-exhausted','Live connection requests temporarily limited.',{reason:'connection-rate',retryAfterSeconds:900});throw error;}
  const config=await assistantConfig();
  const liveDailyLimit=Number(config.liveDailySessionsPerUser||20);
  const day=assistantDay();
@@ -381,13 +384,13 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
  // connection attempts before a usable Gemini token had even been created.
  const budgetRef=db.collection('_assistantBudgets').doc(`live-v2-${uid}-${day}`);
  const currentBudget=(await budgetRef.get()).data()||{};
- if(Number(currentBudget.sessions||0)>=liveDailyLimit)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
+ if(Number(currentBudget.sessions||0)>=liveDailyLimit)throw new HttpsError('resource-exhausted','Live token safety limit reached for today.',{reason:'internal-daily'});
  const key=getGeminiKey();
  if(!key)throw new HttpsError('internal','Live AI not configured.');
  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/auth_tokens?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({}),signal:AbortSignal.timeout(10000)});
  if(!response.ok){
   const errBody=await response.json().catch(()=>({}));
-  if(response.status===429)throw new HttpsError('resource-exhausted','Live quota reached.');
+  if(response.status===429)throw new HttpsError('resource-exhausted','Live provider temporarily limited.',{reason:'provider-rate'});
   console.error('getLiveToken: Gemini error',response.status,errBody?.error?.message||'');
   throw new HttpsError('unavailable','Live token unavailable.');
  }
@@ -401,7 +404,7 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
   tx.set(budgetRef,{sessions:used+1,day,uid,updatedAt:Timestamp.now()});
   return true;
  });
- if(!allowed)throw new HttpsError('resource-exhausted','Live session limit reached for today.');
+ if(!allowed)throw new HttpsError('resource-exhausted','Live token safety limit reached for today.',{reason:'internal-daily'});
  return {token,expiresAt:Date.now()+1800000};
 });
 

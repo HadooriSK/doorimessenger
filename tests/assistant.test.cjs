@@ -32,7 +32,11 @@ test('router follows Gemini then Groq then Cloudflare',async()=>{
  assert.deepEqual(await route({messages:[{role:'user',content:'مرحبا'}],language:'ar'}),{text:'مرحبا',language:'ar'});
  assert.equal(calls.length,3);
  assert.match(calls[0],/googleapis/);assert.match(calls[1],/groq/);assert.match(calls[2],/cloudflare/);
- assert.equal(GEMINI_MODEL,'gemini-2.5-flash-lite');
+ assert.equal(GEMINI_MODEL,'gemini-3.5-flash-lite');
+ const groqFirstCalls=[];
+ const groqFirstRoute=createAssistantRouter({groqKey:'g',geminiKey:'m',cloudflareToken:'c',cloudflareAccountId:'public-account',providerOrder:['groq','gemini','cloudflare'],fetchImpl:async url=>{groqFirstCalls.push(url);return response(true,{choices:[{message:{content:'Groq First'}}]});}});
+ assert.deepEqual(await groqFirstRoute({messages:[{role:'user',content:'Hi'}]}),{text:'Groq First'});
+ assert.equal(groqFirstCalls.length,1);assert.match(groqFirstCalls[0],/groq/);
 });
 
 test('quota guard skips exhausted providers without calling them',async()=>{
@@ -59,18 +63,24 @@ test('simultaneous provider failures request local fallback without retries',asy
 test('central Gemini TTS keeps the selected gender and has a system fallback',async()=>{
  const dom=new JSDOM('',{url:'https://doori-messenger.de',runScripts:'outside-only'}),spoken=[];
  dom.window.SpeechSynthesisUtterance=function(text){this.text=text;};
- dom.window.speechSynthesis={cancel(){},getVoices:()=>[{name:'Anna',lang:'de-DE'},{name:'Daniel',lang:'de-DE'}],speak:value=>spoken.push(value)};
+ dom.window.speechSynthesis={cancel(){},getVoices:()=>[{name:'Anna',lang:'de-DE'},{name:'Daniel',lang:'de-DE'}],speak:value=>{spoken.push(value);value.onstart?.();}};
  dom.window.accountFunctions={httpsCallable:()=>async()=>{throw new Error('offline');}};
  dom.window.eval(fs.readFileSync(path.join(root,'tts.js'),'utf8'));
  assert.equal(dom.window.DooriTTS.setGender('male'),'male');
  assert.equal(dom.window.localStorage.getItem('doori_tts_voice_gender'),'male');
  await dom.window.DooriTTS.speak('Hallo',{language:'de-DE'});
  assert.equal(spoken[0].voice.name,'Daniel');assert.equal(spoken[0].pitch,0.96);
- assert.equal(dom.window.DooriTTS.engineFor('fa'),'gemini-2.5-flash-preview-tts');assert.equal(dom.window.DooriTTS.engineFor('de'),'gemini-2.5-flash-preview-tts');
+ assert.equal(dom.window.DooriTTS.engineFor('fa'),'gemini-3.8-flash-tts');assert.equal(dom.window.DooriTTS.engineFor('de'),'gemini-3.8-flash-tts');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Hallo Komma wie geht es Fragezeichen','de'),'Hallo, wie geht es?');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Das Wort „Komma“ wird ausgesprochen.','de'),'Das Wort „Komma“ wird ausgesprochen.');
  assert.equal(dom.window.DooriTTS.cleanPunctuationWords('Punkt Punkt Komma Punkt Komma','de'),'.');
  const source=fs.readFileSync(path.join(root,'tts.js'),'utf8');assert.match(source,/synthesizeDooriSpeech/);assert.match(source,/webkit-playsinline/);assert.match(source,/audio\.muted=false/);assert.match(source,/appendChild\(activeAudio\)/);assert.match(source,/speechSynthesis\.resume/);
+ dom.window.speechSynthesis.speak=value=>value.onerror?.();
+ assert.equal(await dom.window.DooriTTS.speak('Hallo',{language:'de'}),false);
+ assert.equal(dom.window.DooriTTS.hasPending(),true);
+ dom.window.speechSynthesis.speak=value=>value.onstart?.();
+ assert.equal(await dom.window.DooriTTS.replay(),true);
+ assert.equal(dom.window.DooriTTS.hasPending(),false);
  dom.window.close();
 });
 
@@ -133,7 +143,7 @@ test('per-user AI limits and protected operator dashboard are server enforced',(
  assert.match(functions,/validSpeechResult/);assert.match(functions,/Script=Han/);assert.match(functions,/transcript=validSpeechResult\(await transcribeWithGemini/);assert.match(functions,/Gemini speech recognition unavailable or invalid; trying Whisper/);
  assert.match(functions,/exports\.getAssistantAdminDashboard=onCall/);assert.match(functions,/exports\.updateAssistantAdminConfig=onCall/);
  assert.match(functions,/cloudflareDailyNeurons:10000/);assert.match(functions,/cloudflare-neurons-/);assert.doesNotMatch(functions,/cloudflareDailyRequests:3/);
- assert.match(functions,/exports\.synthesizeDooriSpeech=onCall/);assert.match(functions,/gemini-2\.5-flash-preview-tts/);assert.match(functions,/geminiTtsDailyRequests:100/);
+ assert.match(functions,/exports\.synthesizeDooriSpeech=onCall/);assert.match(functions,/gemini-3\.8-flash-tts/);assert.match(functions,/geminiTtsDailyRequests:100/);
  assert.match(functions,/requireAdmin\(request\)\{signedIn\(request,true\)/);assert.match(functions,/actual!==allowed/);assert.match(functions,/recordAssistantMetrics/);
  const html=fs.readFileSync(path.join(root,'operator.html'),'utf8'),client=fs.readFileSync(path.join(root,'operator.js'),'utf8');
  for(const language of ['de','en','ar','fa','tr'])assert.match(client,new RegExp(`\\b${language}:\\{`));
@@ -151,6 +161,12 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.match(liveClient,/realtimeInput:\s*\{\s*audio:/);
  assert.match(liveClient,/mimeType:\s*'audio\/pcm;rate=16000'/);
  assert.match(liveClient,/responseModalities:\s*\['AUDIO'\]/);
+ const setupSource=liveClient.match(/const setup = (\{[\s\S]*?\n      \s*\});/)[1];
+ const wire=JSON.parse(JSON.stringify(Function('sysPrompt','return ('+setupSource+')')('test')));
+ assert.deepEqual(wire.setup.generationConfig.responseModalities,['AUDIO']);
+ assert.equal(wire.setup.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,'Aoede');
+ assert.equal(wire.setup.responseModalities,undefined,'modalities must not be sent directly in setup');
+ assert.equal(wire.setup.speechConfig,undefined,'speech config belongs inside generationConfig');
  assert.match(liveClient,/captureBuffer\.length < 1600/);
  assert.doesNotMatch(liveClient,/media_chunks|generation_config|response_modalities/);
  assert.doesNotMatch(liveClient,/AIza|AQ\.[A-Za-z0-9]|GROQ_API_KEY|CLOUDFLARE_API_TOKEN/);

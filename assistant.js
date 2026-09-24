@@ -59,7 +59,7 @@
   const clean=String(text||'').trim().slice(0,2000);if(!clean||state.busy)return false;root.DooriTTS?.stop();
   const suppliedLanguage=root.DooriLanguage?.supported?.includes(meta.language)?meta.language:null,expectedLanguage=suppliedLanguage||stableLanguage(clean);if(suppliedLanguage){state.lastLanguage=suppliedLanguage;localStorage.setItem('doori_ai_last_language',suppliedLanguage);}state.busy=true;document.body.classList.add('assistant-thinking');add('user',clean);setStatus(t().thinking);updateControls();
   try{
-   const compact=history().slice(-10).map(item=>({role:item.sender_username===CHAT_ID?'assistant':'user',content:item.text}));
+   const compact=history().slice(-10).map(item=>({role:item.sender_username===CHAT_ID?'assistant':'user',content:String(item.text||'').slice(0,2000)})).filter(item=>item.content.trim());
    const result=await root.accountFunctions.httpsCallable('askDooriAssistant')({messages:compact,language:expectedLanguage,source:meta.source==='voice'?'voice':'text',voiceSeconds:meta.voiceSeconds||0});
    let answer=String(result?.data?.text||'').trim();
    if(!answer&&result?.data?.localFallback)answer=await localReply(clean);
@@ -96,8 +96,9 @@
   recognition.onresult=event=>send(chooseTranscript(event.results?.[0]),{source:'voice',voiceSeconds:Math.max(1,(Date.now()-startedAt)/1000)});recognition.start();
  }
  async function startListening(){if(state.starting||state.transcribing||state.busy)return;state.starting=true;updateControls();setStatus(t().starting);root.DooriTTS?.stop();state.voice=true;localStorage.setItem('doori_ai_voice','on');root.DooriTTS?.unlock?.();try{if(!await startRecording())browserRecognition();}finally{state.starting=false;updateControls();}}
- function toggleVoice(){state.voice=!state.voice;localStorage.setItem('doori_ai_voice',state.voice?'on':'off');if(!state.voice)root.DooriTTS?.stop();else root.DooriTTS?.unlock?.();updateControls();}
+ function toggleVoice(){if(root.DooriTTS?.hasPending?.()){root.DooriTTS.replay().then(played=>{if(played)setStatus(t().status);});return;}state.voice=!state.voice;localStorage.setItem('doori_ai_voice',state.voice?'on':'off');if(!state.voice)root.DooriTTS?.stop();else root.DooriTTS?.unlock?.();updateControls();}
+ root.addEventListener('doori-tts-blocked',()=>setStatus(({de:'Tippe auf den Lautsprecher, um die Antwort abzuspielen.',en:'Tap the speaker to play the reply.',ar:'اضغط على مكبر الصوت لتشغيل الرد.',fa:'برای پخش پاسخ روی بلندگو بزنید.',tr:'Yanıtı dinlemek için hoparlöre dokun.'})[lang()]));
  function activate(){sync();setStatus(t().status);updateControls();root.dispatchEvent(new Event('doori-assistant-activated'));}
- function initialize(){if(state.initialized)return;state.initialized=true;const micBtn=document.getElementById('assistant-mic-btn');micBtn?.addEventListener('touchstart',()=>{root.DooriTTS?.unlock?.();},{passive:true});micBtn?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);root.DooriLive?.initialize?.();updateControls();}
+ function initialize(){if(state.initialized)return;state.initialized=true;const micBtn=document.getElementById('assistant-mic-btn');micBtn?.addEventListener('click',startListening);document.getElementById('assistant-voice-btn')?.addEventListener('click',toggleVoice);document.getElementById('assistant-voice-select')?.addEventListener('change',event=>{root.DooriTTS?.setGender(event.target.value);updateAvatar();});root.addEventListener('doori-tts-voice-change',updateAvatar);root.DooriLive?.initialize?.();updateControls();}
  root.DooriAssistant={CHAT_ID,TEXT,isAssistant:id=>id===CHAT_ID,getName:()=>t().name,getStatus:()=>t().status,getAvatar,send,activate,initialize,updateControls,sync,chooseTranscript};
 })(window);
