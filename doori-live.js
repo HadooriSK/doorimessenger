@@ -147,10 +147,13 @@
     playbackSources: new Set(),
     playbackGeneration: 0,
     micFailure:    '',
+    resumeHandle:  '',
+    plannedResume: false,
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
   const t    = () => TEXT[lang()] || TEXT.en;
+  const liveVoice = () => root.DooriTTS?.getGender?.() === 'male' ? 'Puck' : 'Kore';
 
   function btn()    { return document.getElementById('doori-live-btn'); }
   function status() { return document.getElementById('doori-live-status'); }
@@ -538,10 +541,15 @@
             responseModalities: ['AUDIO'],
             speechConfig: {
               voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: 'Aoede' },
+                prebuiltVoiceConfig: { voiceName: liveVoice() },
               },
             },
           },
+          contextWindowCompression: {
+            triggerTokens: 25600,
+            slidingWindow: { targetTokens: 12800 },
+          },
+          sessionResumption: state.resumeHandle ? { handle: state.resumeHandle } : {},
           systemInstruction: {
             parts: [{ text: sysPrompt }],
           },
@@ -566,6 +574,21 @@
           state.retryDelay = RECONNECT_INIT;
           if (!state.micStream && !await startMic()) { failConnection(t().error); return; }
           setStatus(t().listening);
+          return;
+        }
+
+        const resumption = msg.sessionResumptionUpdate || msg.session_resumption_update;
+        const newHandle = resumption?.newHandle || resumption?.new_handle;
+        if (resumption?.resumable !== false && newHandle) state.resumeHandle = newHandle;
+
+        if (msg.goAway || msg.go_away) {
+          if (!state.plannedResume) {
+            state.plannedResume = true;
+            setStatus(t().retrying);
+            state.token = null;
+            state.tokenExpiry = 0;
+            try { ws.close(4001, 'session_resume'); } catch (_) {}
+          }
           return;
         }
 
@@ -608,6 +631,7 @@
       state.connectTimer = null;
       state.token = null;
       state.tokenExpiry = 0;
+      state.plannedResume = false;
       stopMic();
       stopPlayback();
       if (!state.active) return;
@@ -660,6 +684,8 @@
     state.active       = true;
     state.quotaBlocked = false;
     state.ready        = false;
+    state.resumeHandle = '';
+    state.plannedResume = false;
     state.retryDelay   = RECONNECT_INIT;
     updateBtn();
     root.DooriTTS?.stop?.();
@@ -679,6 +705,8 @@
     state.ready  = false;
     state.token = null;
     state.tokenExpiry = 0;
+    state.resumeHandle = '';
+    state.plannedResume = false;
     clearTimeout(state.retryTimer);
     clearTimeout(state.connectTimer);
     state.retryTimer = null;
@@ -699,6 +727,21 @@
   function toggle() {
     if (state.active) stopSession();
     else startSession();
+  }
+
+  async function restartForVoice() {
+    if (!state.active) return;
+    const oldWs = state.ws;
+    state.ws = null;
+    state.ready = false;
+    state.token = null;
+    state.tokenExpiry = 0;
+    state.resumeHandle = '';
+    state.plannedResume = false;
+    stopPlayback();
+    try { oldWs?.close(1000, 'voice_changed'); } catch (_) {}
+    setStatus(t().connecting);
+    await connect();
   }
 
   /* ── Button Injection & Wiring ────────────────────────────────────── */
@@ -741,6 +784,7 @@
       showControls(false);
       if (state.active) stopSession(false);
     });
+    root.addEventListener('doori-tts-voice-change', restartForVoice);
   }
 
   /* ── CSS injection ───────────────────────────────────────────────── */
@@ -766,6 +810,6 @@
   })();
 
   /* ── Public API ──────────────────────────────────────────────────── */
-  root.DooriLive = { initialize, showControls, toggle, stopSession, updateBtn, unlockAudio };
+  root.DooriLive = { initialize, showControls, toggle, stopSession, updateBtn, unlockAudio, restartForVoice };
 
 })(window);

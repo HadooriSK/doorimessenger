@@ -13,6 +13,15 @@
 - Frontend `doori-live.js?v=8`, Service Worker `web-messenger-v131-live-mobile-audio`.
 - Syntaxprüfung, 55/55 Tests und Build mit 37 Dateien bestanden. Physischer Mehrgeräte-Test bleibt erforderlich.
 
+### Live-Stimmenwahl, Kontextkomprimierung und Sitzungswiederaufnahme (24.09.2026)
+
+- Live nutzt jetzt dieselbe persistierte Geschlechtsauswahl wie normale TTS: `Kore` weiblich, `Puck` männlich. Die bisher fest eingestellte Stimme `Aoede` wurde entfernt.
+- `doori-tts-voice-change` startet eine aktive Live-Verbindung kontrolliert mit der neu gewählten Stimme neu.
+- `contextWindowCompression` aktiviert: Trigger 25.600 Tokens, Sliding-Window-Ziel 12.800 Tokens.
+- `sessionResumption` aktiviert: Handle aus `sessionResumptionUpdate` speichern; bei `goAway` mit neuem Token automatisch fortsetzen.
+- Echter Google-Handshake der vollständigen Konfiguration: HTTP-Token 200, `setupComplete`, Close 1000; keine Audio-/Inferenzdaten gesendet.
+- `doori-live.js?v=9`, Service Worker `web-messenger-v132-live-voice-resume`; 55/55 Tests und Build 37 Dateien bestanden.
+
 Die bisherigen Aussagen, der komplette Live-Dialog sei nachweislich repariert, waren zu weitgehend. Die 55 Tests enthalten vor allem Struktur- und Mock-Prüfungen; sie belegen keinen echten Gemini-Audioaustausch auf iPhone. Auch der Zähler live-v2 zählt ausgestellte Tokens, keine erfolgreich geführten Gespräche. Nicht erneut pauschal Kontingente zurücksetzen.
 
 Aktuelle Änderung: getLiveToken unterscheidet connection-rate (10 Token-Anfragen/15 Minuten), internal-daily (internes Tageslimit) und provider-rate (Google HTTP 429). Der Client zeigt passende Meldungen in allen fünf Sprachen, stoppt die automatische Quoten-Retry-Schleife und begrenzt sonstige Wiederverbindungen auf zwei. Permanente WebSocket-Protokollfehler stoppen sofort. Nach erfolgreichem Reconnect wird das zuvor gestoppte Mikrofon neu gestartet. Cache v126, doori-live.js?v=6. Bestehende 55 Tests bestanden, Build 37 Dateien. End-to-End-Live-Audio noch nicht bestätigt. Die zuletzt gelesenen Function-Logs zeigten authentifizierte Aufrufe, aber keinen eindeutigen Ablehnungsgrund.

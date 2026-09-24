@@ -162,9 +162,16 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.match(liveClient,/mimeType:\s*'audio\/pcm;rate=16000'/);
  assert.match(liveClient,/responseModalities:\s*\['AUDIO'\]/);
  const setupSource=liveClient.match(/const setup = (\{[\s\S]*?\n      \s*\});/)[1];
- const wire=JSON.parse(JSON.stringify(Function('sysPrompt','return ('+setupSource+')')('test')));
+ const wire=JSON.parse(JSON.stringify(Function('sysPrompt','liveVoice','state','return ('+setupSource+')')('test',()=> 'Kore',{resumeHandle:''})));
  assert.deepEqual(wire.setup.generationConfig.responseModalities,['AUDIO']);
- assert.equal(wire.setup.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,'Aoede');
+ assert.equal(wire.setup.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,'Kore');
+ assert.deepEqual(wire.setup.contextWindowCompression,{triggerTokens:25600,slidingWindow:{targetTokens:12800}});
+ assert.deepEqual(wire.setup.sessionResumption,{});
+ assert.match(liveClient,/DooriTTS\?\.getGender\?\.\(\) === 'male' \? 'Puck' : 'Kore'/);
+ assert.match(liveClient,/sessionResumptionUpdate/);
+ assert.match(liveClient,/newHandle/);
+ assert.match(liveClient,/msg\.goAway/);
+ assert.match(liveClient,/doori-tts-voice-change', restartForVoice/);
  assert.equal(wire.setup.responseModalities,undefined,'modalities must not be sent directly in setup');
  assert.equal(wire.setup.speechConfig,undefined,'speech config belongs inside generationConfig');
  assert.match(liveClient,/captureBuffer\.length < 1600/);

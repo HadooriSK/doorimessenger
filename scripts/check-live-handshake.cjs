@@ -10,7 +10,7 @@ const path=require('node:path');
  if(!response.ok){console.log('Provider status:',body.error?.status);return;}
  const source=require('node:fs').readFileSync(path.join(__dirname,'../doori-live.js'),'utf8');
  const setupSource=source.match(/const setup = (\{[\s\S]*?\n      \s*\});/)[1];
- const setup=Function('sysPrompt','return ('+setupSource+')')('Reply briefly.');
+ const setup=Function('sysPrompt','liveVoice','state','return ('+setupSource+')')('Reply briefly.',()=> 'Kore',{resumeHandle:''});
  await new Promise(resolve=>{
  const ws=new WebSocket('wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token='+encodeURIComponent(body.name));
  const timer=setTimeout(()=>{console.log('Handshake timeout');ws.close();resolve();},15000);

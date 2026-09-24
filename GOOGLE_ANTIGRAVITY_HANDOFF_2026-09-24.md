@@ -26,6 +26,17 @@ Bitte lies zuerst diese Datei und danach `CODEX_HANDOFF_2026-09-24.md` im Projek
 - Validierung: Syntaxprüfung bestanden, 55/55 Tests grün, Build exakt 37 Dateien. Tests prüfen Quellenbereinigung, aktiven iOS-Audiographen, entfernte lokale Echo-Unterbrechung und fünfsprachige Fehlermeldungen.
 - Grenze: Es wurde kein physisches zweites iPhone automatisiert gesteuert. Nach dem Deployment müssen beide iPhones die Seite vollständig schließen/neu öffnen, Mikrofonberechtigung erlauben und praktisch testen. Keine Zusage für buchstäblich jedes alte Gerät oder jeden eingebetteten Browser.
 
+## Update: Gemeinsame Stimmenwahl und lange Live-Sitzungen (24.09.2026)
+
+- Die gespeicherte Auswahl `doori_tts_voice_gender` steuert nun beide Sprachwege: normale TTS und Gemini Live.
+- Weiblich nutzt in beiden Gemini-Pfaden `Kore`, männlich `Puck`. Live hatte vorher unabhängig von der Auswahl fest `Aoede` verwendet.
+- Wenn die Stimme während eines aktiven Live-Gesprächs gewechselt wird, baut der Client die Live-Verbindung kontrolliert mit der neuen Stimme neu auf. Die normale Sprach-KI übernimmt die Auswahl wie bisher sofort.
+- Gemini-Live-Setup enthält `contextWindowCompression` mit Sliding Window (Trigger 25.600, Ziel 12.800 Tokens), damit lange Gespräche nicht am vollen Kontextfenster abbrechen.
+- `sessionResumption` ist aktiviert. Der Client speichert `sessionResumptionUpdate.newHandle`; bei `goAway` verbindet er sich automatisch mit diesem Handle und einem neuen Ephemeral Token wieder.
+- Ein echter Handshake mit der erweiterten Konfiguration wurde von Google mit `setupComplete` bestätigt und sauber mit Code 1000 geschlossen. Es wurden dabei keine Audio- oder Gesprächsdaten gesendet.
+- Frontend: `doori-live.js?v=9`, Cache `web-messenger-v132-live-voice-resume`.
+- Validierung: 55/55 Tests bestanden; Build exakt 37 Dateien. Kontextkomprimierung und Wiederaufnahme verlängern Sitzungen, können aber Netzwerkausfälle oder Anbieter-/Kontingentgrenzen nicht unbegrenzt überbrücken.
+
 ## UI-Umstrukturierung: KI-Assistent Chatleiste & Symbole
 
 Auf ausdrücklichen Nutzerwunsch (*„In dem KI-Assistant-Chat soll die Chatleiste alleine stehen und die Symbole zum Chatten da drüber sein. Also zuerst die Symbole und da drunter die Chatleiste soll sein.“*):
