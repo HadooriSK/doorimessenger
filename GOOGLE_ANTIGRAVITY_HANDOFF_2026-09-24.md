@@ -2,16 +2,32 @@
 
 Bitte lies zuerst diese Datei und danach `CODEX_HANDOFF_2026-09-24.md` im Projekt-Hauptverzeichnis vollständig. Setze den bestehenden Code exakt auf diesem Stand fort. Nichts neu aufsetzen, keine bestehenden Messenger-, Spiele-, Telefonie-, Konto- oder KI-Funktionen entfernen.
 
-## Aktueller Stand (Update: 24.09.2026, 06:18 Uhr)
+## Aktueller Stand (Update: 24.09.2026, 06:38 Uhr)
 
-- Git-Basis: `9e4d65b` auf `main`.
+- Git-Basis: `760cfa3` (bzw. nach aktuellem Push) auf `main`.
 - **Deployments:**
-  - Firebase Cloud Functions live aktualisiert: `askDooriAssistant`, `synthesizeDooriSpeech`, `transcribeDooriSpeech` (sowie zuvor `getLiveToken`).
-  - Firebase Hosting live bereitgestellt: Cache `v129`, `tts.js?v=9`, `assistant.js?v=11`. Live auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
+  - Firebase Cloud Functions live: `askDooriAssistant`, `synthesizeDooriSpeech`, `transcribeDooriSpeech`, `getLiveToken` (alle in `europe-west3`).
+  - Firebase Hosting live bereitgestellt: Cache `v130` (`web-messenger-v130-assistant-ui-layout`), `style.css?v=334`, `assistant.js?v=12`, `tts.js?v=9`, `doori-live.js?v=7`. Live auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
 - Build: Exakt 37 allowlistete Public-Dateien (`scripts/build-hosting.cjs`).
 - Testsuite: **55/55 Tests bestanden (100% grün)** (`npm.cmd test`).
 - Keine Secrets, API-Schlüssel oder Tokens in Frontend-Code, Git oder Logs exponiert. Firebase Functions Secrets bleiben maßgeblich.
 - Alle sichtbaren Änderungen immer synchron in Deutsch, Englisch, Arabisch, Persisch und Türkisch gepflegt (RTL für ar/fa).
+
+## UI-Umstrukturierung: KI-Assistent Chatleiste & Symbole
+
+Auf ausdrücklichen Nutzerwunsch (*„In dem KI-Assistant-Chat soll die Chatleiste alleine stehen und die Symbole zum Chatten da drüber sein. Also zuerst die Symbole und da drunter die Chatleiste soll sein.“*):
+1. **Zweistufiger Composer im Assistenten-Chat (`#assistant-controls-row`):**
+   - **Obere Zeile (drüber):** Eigener kompakter Container `#assistant-controls-row` für die Steuer- und Interaktionssymbole:
+     - `#assistant-mic-btn` (🎙️ - Normaler Sprachdialog mit automatischer Whisper-Erkennung)
+     - `#doori-live-btn` (Live - Echtzeit-Audiomodus)
+     - `#doori-live-status` (Status-Meldungen des Live-Modus)
+     - `#assistant-voice-btn` (🔊 / 🔇 - Sprachausgabe-Umschalter / Replay)
+     - `#assistant-voice-select` (Stimmenauswahl: weiblich / männlich)
+   - **Untere Zeile (drunter, steht alleine):** Die Chatleiste `.composer-main-row` enthält ausschließlich das Eingabefeld (`#message-input`) und den Sende-Button (`#send-btn`). Sie erstreckt sich nun über die volle Breite ohne störende Icons in der Zeile.
+2. **Sichtbarkeits- und Layout-Steuerung:**
+   - In `assistant.js`: `updateControls()` blendet `#assistant-controls-row` ein (`classList.remove('hidden')`), sobald der Assistent aktiv ist (`isActive()`), und blendet sie in normalen Chats aus (`hidden`).
+   - In `style.css`: `body:not(.assistant-chat-open) #assistant-controls-row { display: none !important; }` stellt zusätzlich rein per CSS sicher, dass normale Chats (DMs, Räume, Kanäle) zu 100% ihre Standardansicht behalten.
+   - Vollständige RTL-Unterstützung für Arabisch und Persisch sowie Responsivität auf Mobilgeräten (`@media (max-width: 600px)`).
 
 ## Ursachenanalyse & Behebung: „Kein KI-Dienst verfügbar“
 
@@ -53,11 +69,13 @@ Die Log- und API-Diagnose zeigte die eindeutige Ursache:
 
 ## Betroffene & verifizierte Dateien
 
+- `index.html` (`#assistant-controls-row`, `style.css?v=334`, `assistant.js?v=12`)
+- `assistant.js` (`updateControls` steuert `#assistant-controls-row`, Keep-Alive Trigger)
+- `style.css` (Styling für `.assistant-controls-row`, `.assistant-control.live-btn`, `.doori-live-status`, RTL)
+- `service-worker.js` (Cache `web-messenger-v130-assistant-ui-layout`)
 - `functions/assistant-router.js` (`gemini-3.5-flash-lite`, `max_completion_tokens: 360`, `providerOrder`)
 - `functions/index.js` (`gemini-3.5-flash-lite` Transkription, `gemini-3.8-flash-tts` TTS, RIFF-Guard)
 - `tts.js` (Keep-Alive Loop, `gemini-3.8-flash-tts`, unterbrechungsfreie iOS-Wiedergabe)
-- `assistant.js` (Keep-Alive Trigger beim Start und Stopp der Aufnahme)
 - `tests/assistant.test.cjs` (55/55 Tests grün, Modell- und Routing-Prüfungen aktualisiert)
-- `index.html` (Cache-Buster `tts.js?v=9`, `assistant.js?v=11`)
-- `service-worker.js` (Cache `web-messenger-v129-tts-model-upgrade`)
 - `CODEX_HANDOFF_2026-09-24.md` & `GOOGLE_ANTIGRAVITY_HANDOFF_2026-09-24.md`
+

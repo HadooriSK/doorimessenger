@@ -28,6 +28,8 @@
  function updateAvatar(){const avatar=document.getElementById('current-chat-avatar');if(avatar&&isActive())avatar.textContent=getAvatar();root.renderChatList?.();}
  function updateControls(){
   const mic=document.getElementById('assistant-mic-btn'),voice=document.getElementById('assistant-voice-btn'),selector=document.getElementById('assistant-voice-select');
+  const row=document.getElementById('assistant-controls-row');
+  if(row)row.classList.toggle('hidden',!isActive());
   if(mic){const recording=state.recorder?.state==='recording';mic.classList.toggle('hidden',!isActive());mic.classList.toggle('starting',state.starting&&!recording);mic.textContent=recording?'⏹':state.starting?'…':'🎙️';mic.title=recording?t().stop:state.starting?t().starting:t().mic;mic.setAttribute('aria-label',mic.title);mic.setAttribute('aria-pressed',recording?'true':'false');}
   if(voice){voice.classList.toggle('hidden',!isActive());voice.textContent=state.voice?'🔊':'🔇';voice.title=state.voice?t().voiceOn:t().voiceOff;voice.setAttribute('aria-label',voice.title);}
   if(selector){selector.classList.toggle('hidden',!isActive());selector.value=root.DooriTTS?.getGender?.()||'female';selector.options[0].textContent=t().female;selector.options[1].textContent=t().male;selector.setAttribute('aria-label',`${t().female} / ${t().male}`);}

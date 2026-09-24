@@ -1,12 +1,12 @@
-const CACHE_NAME = 'web-messenger-v129-tts-model-upgrade';
+const CACHE_NAME = 'web-messenger-v130-assistant-ui-layout';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=333',
+  '/style.css?v=334',
   '/app.js?v=354',
   '/tts.js?v=9',
   '/doori-live.js?v=7',
-  '/assistant.js?v=11',
+  '/assistant.js?v=12',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
   '/security.js?v=1',

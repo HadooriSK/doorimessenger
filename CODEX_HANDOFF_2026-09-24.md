@@ -321,5 +321,34 @@ Auf iOS Safari verfällt das Autoplay-Berechtigungsfenster nach der asynchronen 
    - `synthesizeDooriSpeech(europe-west3)`: Erfolgreich aktualisiert.
 4. **Hosting Deployment:**
    - Bereitgestellt auf `https://www.doori-messenger.de/` und `https://doori-messenger.web.app/`.
-   - Cache-Name: `web-messenger-v129-tts-model-upgrade`, `tts.js?v=9`, `assistant.js?v=11`.
+   - Cache-Name: `web-messenger-v130-assistant-ui-layout`, `style.css?v=334`, `assistant.js?v=12`, `tts.js?v=9`, `doori-live.js?v=7`.
+
+---
+
+## 12. UI-Umstrukturierung: KI-Assistent Chatleiste & Symbole (Stand: 24.09.2026, 06:38 Uhr)
+
+### 12.1 Anforderung
+*„In dem KI-Assistant-Chat soll die Chatleiste alleine stehen und die Symbole zum Chatten da drüber sein. Also zuerst die Symbole und da drunter die Chatleiste soll sein. Bitte so umändern.“*
+
+### 12.2 Umsetzung
+1. **Dedizierter Steuerungs-Container (`#assistant-controls-row`):**
+   - In `index.html` wurde vor `.composer-main-row` ein neuer Container `<div id="assistant-controls-row" class="assistant-controls-row hidden">` eingefügt.
+   - Darin befinden sich alle KI-Chat-Symbole:
+     - `#assistant-mic-btn` (🎙️ - Normaler Sprachdialog)
+     - `#doori-live-btn` (Live - Gemini Live Modus)
+     - `#doori-live-status` (Live Status Indikator)
+     - `#assistant-voice-btn` (🔊/🔇 - Sprachausgabe An/Aus & Replay)
+     - `#assistant-voice-select` (Stimmenauswahl: weiblich / männlich)
+2. **Freistehende Chatleiste (`.composer-main-row`):**
+   - Die Chatleiste enthält nun ausschließlich `#message-input` und `#send-btn`. Sie steht alleine über die volle Breite.
+3. **Synchronisation & Isolation:**
+   - `assistant.js` (`updateControls`): `#assistant-controls-row` wird per `classList.toggle('hidden', !isActive())` nur im Assistenten-Chat eingeblendet.
+   - `style.css`: Zusätzliche Absicherung via `body:not(.assistant-chat-open) #assistant-controls-row { display: none !important; }`. Normale Benutzer- und Gruppenchats bleiben unverändert.
+   - Volle RTL-Unterstützung für Arabisch und Persisch sowie Responsivität auf Mobilgeräten (`@media (max-width: 600px)`).
+4. **Tests & Build:**
+   - Testsuite: 55/55 Tests grün (`npm.cmd test`).
+   - Build: 37 allowlistete Public-Dateien (`npm.cmd run build`).
+   - Live deployed auf Firebase Hosting (`v130`).
+
+
 
