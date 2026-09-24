@@ -51,9 +51,10 @@
       });
       if (duplicate) return alert(tr().media_lounge_pending_exists);
       ref = window.db.collection('liveMediaSessions').doc();
+      const messageId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
       const now = Date.now();
-      await ref.set({creator,participants:[creator,peer],status:'pending',items:[],currentIndex:0,playback:{playing:false,position:0,updatedAt:now,changedBy:creator},createdAt:now,updatedAt:now,expiresAt:now+SESSION_MS});
-      const sent = await window.sendMessage('', 'live_media_invite', JSON.stringify({id:ref.id}));
+      await ref.set({creator,participants:[creator,peer],inviteMessageId:messageId,status:'pending',items:[],currentIndex:0,playback:{playing:false,position:0,updatedAt:now,changedBy:creator},createdAt:now,updatedAt:now,expiresAt:now+SESSION_MS});
+      const sent = await window.sendMessage('', 'live_media_invite', JSON.stringify({id:ref.id}), false, null, {messageId});
       if (!sent) { await ref.delete().catch(()=>{}); return; }
       openSession(ref.id);
     } catch (error) {
@@ -177,14 +178,23 @@
     } catch(error){console.error('Media Lounge upload failed',error);alert(tr().media_lounge_upload_error);} finally {addButton.disabled=false;addButton.innerHTML=old;uploadInput.value='';}
   }
 
-  async function endSession(){if(!currentSession)return;await sessionRef(currentSession.id).update({status:'ended',endedBy:me(),updatedAt:Date.now()}).catch(console.error);closeLocal();}
+  async function endSession(){
+    if(!currentSession)return;
+    const endedSession=currentSession;
+    try {
+      await sessionRef(endedSession.id).update({status:'ended',endedBy:me(),updatedAt:Date.now()});
+      if(endedSession.inviteMessageId) await window.db.collection('messages').doc(endedSession.inviteMessageId).update({live_media_status:'ended'});
+    } catch(error) { console.error('Media Lounge end failed',error); }
+    closeLocal();
+  }
 
   function renderInvite(message){
     let data={};try{data=JSON.parse(message.mediaUrl||'{}');}catch(_){ }
     const status=message.live_media_status||'pending';
     const mine=String(message.sender_username||'').toLowerCase()===me();
-    const state=status==='accepted'?tr().media_lounge_accepted:status==='declined'?tr().media_lounge_rejected:'';
-    const actions=!mine&&status==='pending'?`<div class="live-media-invite-actions"><button class="live-media-accept" onclick="acceptLiveMediaInvite('${esc(data.id)}','${esc(message.id)}')">${esc(tr().media_lounge_accept)}</button><button class="live-media-reject" onclick="rejectLiveMediaInvite('${esc(data.id)}','${esc(message.id)}')">${esc(tr().media_lounge_reject)}</button></div>`:status==='accepted'?`<div class="live-media-invite-actions"><button class="live-media-accept" onclick="openLiveMediaSession('${esc(data.id)}')">${esc(tr().media_lounge_title)}</button></div>`:'';
+    const state=status==='accepted'?tr().media_lounge_accepted:status==='declined'?tr().media_lounge_rejected:status==='ended'?tr().media_lounge_ended:'';
+    const attrs=window.actionAttrs||(()=> '');
+    const actions=!mine&&status==='pending'?`<div class="live-media-invite-actions"><button class="live-media-accept" ${attrs('acceptLiveMediaInvite',data.id,message.id)}>${esc(tr().media_lounge_accept)}</button><button class="live-media-reject" ${attrs('rejectLiveMediaInvite',data.id,message.id)}>${esc(tr().media_lounge_reject)}</button></div>`:status==='accepted'?`<div class="live-media-invite-actions"><button class="live-media-accept" ${attrs('openLiveMediaSession',data.id)}>${esc(tr().media_lounge_title)}</button></div>`:'';
     return `<div class="live-media-invite-card"><div class="live-media-invite-top"><span class="live-media-invite-icon">◉</span><strong>${esc(tr().media_lounge_invite_title)}</strong></div><p>${state?esc(state):`${esc(message.sender_username)} ${esc(tr().media_lounge_invite_text)}`}</p>${actions}</div>`;
   }
 

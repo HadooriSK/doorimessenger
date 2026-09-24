@@ -167,6 +167,10 @@ test('Media Lounge UI includes invitation, synchronization hooks, five languages
     assert.match(html, /id="media-lounge-btn"/);
     assert.match(source, /liveMediaSessions/);
     assert.match(source, /live_media_invite/);
+    assert.match(source, /actionAttrs/);
+    assert.doesNotMatch(source, /onclick="(?:accept|reject|open)LiveMedia/);
+    assert.match(source, /inviteMessageId/);
+    assert.match(source, /live_media_status:'ended'/);
     assert.match(source, /syncPlayback/);
     assert.match(source, /24 \* 60 \* 60 \* 1000/);
     assert.match(rules, /match \/liveMediaSessions\/\{sessionId\}/);

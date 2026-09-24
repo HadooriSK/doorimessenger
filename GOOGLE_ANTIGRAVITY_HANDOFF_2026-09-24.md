@@ -213,3 +213,10 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Published the previously missing `liveMediaSessions` Firestore rules and the `requestLargeMediaUpload` / `confirmLargeMediaUpload` callable functions in `europe-west3`.
 - Bumped the client asset to `live-media.js?v=2` and service-worker cache to `web-messenger-v141-media-lounge-fix`.
 - Verification: 71/71 tests passed; build produced exactly 38 allowlisted files; Firestore rules compiled and deployed; both functions updated successfully; live assets returned `LIVE_MEDIA_LOUNGE_FIX_OK`.
+
+## Media Lounge invitation lifecycle repair (2026-09-24)
+- Replaced stripped inline handlers with the central allowlisted `data-doori-action` dispatcher, restoring Accept, Decline and Open actions on iPhone and other clients.
+- Each new session stores its deterministic `inviteMessageId`; accepting/declining updates the original chat card for both participants, and ending the lounge writes the durable `ended` state to that same card.
+- Firestore rules permit only the recipient to accept/decline and either participant to mark an invitation ended; the session/message relationship is immutable.
+- Cache bumped to `web-messenger-v142-media-lounge-status`, `live-media.js?v=3`.
+- Verification: 71/71 tests passed, build exactly 38 files, Firestore rules compiled/deployed, hosting deployed, live assets returned `LIVE_MEDIA_STATUS_OK`.

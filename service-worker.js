@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-messenger-v141-media-lounge-fix';
+const CACHE_NAME = 'web-messenger-v142-media-lounge-status';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -9,7 +9,7 @@ const urlsToCache = [
   '/assistant.js?v=13',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
-  '/live-media.js?v=2',
+  '/live-media.js?v=3',
   '/security.js?v=1',
   '/auth-translations.js?v=9',
   '/account-client.js?v=1',

@@ -83,9 +83,10 @@ service cloud.firestore {
     (resource.data.get('mediaType', '') == 'game_invite' && resource.data.recipient_username.lower() == key() &&
      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['game_status']) &&
      request.resource.data.game_status in ['accepted', 'declined']) ||
-    (resource.data.get('mediaType', '') == 'live_media_invite' && resource.data.recipient_username.lower() == key() &&
+    (resource.data.get('mediaType', '') == 'live_media_invite' &&
      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['live_media_status']) &&
-     request.resource.data.live_media_status in ['accepted', 'declined']) ||
+     ((request.resource.data.live_media_status in ['accepted', 'declined'] && resource.data.recipient_username.lower() == key()) ||
+      (request.resource.data.live_media_status == 'ended' && key() in resource.data.participants))) ||
     (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor']) &&
      request.resource.data.deletedFor.toSet().hasAll(resource.data.get('deletedFor', []).toSet()) &&
      request.resource.data.deletedFor.toSet().difference(resource.data.get('deletedFor', []).toSet()).hasOnly([name()])) ||
@@ -128,6 +129,7 @@ service cloud.firestore {
     request.resource.data.expiresAt <= request.time.toMillis() + 24 * 60 * 60 * 1000;
    allow update: if participant() &&
     request.resource.data.creator == resource.data.creator &&
+    request.resource.data.get('inviteMessageId', '') == resource.data.get('inviteMessageId', '') &&
     request.resource.data.participants == resource.data.participants &&
     request.resource.data.createdAt == resource.data.createdAt &&
     request.resource.data.expiresAt == resource.data.expiresAt &&

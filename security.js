@@ -40,7 +40,8 @@
         const allowed = new Set(['acceptGroupInvite', 'declineGroupInvite', 'showUserProfileModal',
             'toggleGroupAdmin', 'toggleMuteMember', 'removeGroupMember', 'unblockUser',
             'acceptDoodleInvite', 'rejectDoodleInvite', 'openDooriGame',
-            'acceptDooriGame', 'declineDooriGame']);
+            'acceptDooriGame', 'declineDooriGame', 'openLiveMediaSession',
+            'acceptLiveMediaInvite', 'rejectLiveMediaInvite']);
         const action = button.dataset.dooriAction;
         if (!allowed.has(action) || typeof root[action] !== 'function') return;
         try { root[action](...JSON.parse(button.dataset.dooriArgs || '[]')); }

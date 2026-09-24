@@ -2344,6 +2344,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         };
 
         if (extraMedia && typeof extraMedia === 'object') {
+            if (extraMedia.messageId) msgObj.id = String(extraMedia.messageId);
             if (extraMedia.fileName) msgObj.fileName = extraMedia.fileName;
             if (extraMedia.fileSize) msgObj.fileSize = extraMedia.fileSize;
             if (extraMedia.provider) msgObj.storage_provider = extraMedia.provider;
