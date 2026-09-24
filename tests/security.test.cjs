@@ -68,6 +68,18 @@ test('action arguments cannot break out of HTML attributes or become code', () =
  assert.equal(btn.hasAttribute('onmouseover'),false);
  dom.window.close();
 });
+
+test('collaborative Doodle is private-chat only and has synchronized modern tools', () => {
+ const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+ const doodle=fs.readFileSync(path.join(root,'doodle.js'),'utf8');
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ assert.match(app,/doodleBtnGlobal\.style\.display = type === 'dm' \? 'flex' : 'none'/);
+ assert.match(app,/currentChat\.type !== 'dm'/);
+ for (const id of ['doodle-color-presets','doodle-background-select','doodle-download-btn']) assert.match(html,new RegExp(`id="${id}"`));
+ assert.match(doodle,/action: 'background'/);
+ assert.match(doodle,/collection\('strokes'\)/);
+ assert.match(doodle,/where\('receiver', '==', window\.currentUser\.toLowerCase\(\)\)/);
+});
 test('authentication additions cover five languages', () => {
  const dom=new JSDOM('',{runScripts:'outside-only'});
  dom.window.eval(fs.readFileSync(path.join(root,'auth-translations.js'),'utf8'));

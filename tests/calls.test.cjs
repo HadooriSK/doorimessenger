@@ -37,6 +37,17 @@ test('voice and video call UI has modern controls without duplicate ids', () => 
   dom.window.close();
 });
 
+test('group spaces expose calls, administration and responsive member tools', () => {
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
+  for (const id of ['group-audio-call-btn','group-video-call-btn','group-quick-invite-btn','group-quick-media-btn','group-member-filter-input','group-members-badge','group-readonly-toggle']) {
+    assert.equal(document.querySelectorAll(`#${id}`).length, 1, `missing or duplicate #${id}`);
+  }
+  assert.match(source, /window\.startGroupCall=async/);
+  assert.match(source, /collection\('call_participants'\)/);
+  dom.window.close();
+});
+
 test('call UI and runtime messages cover all five languages', () => {
   const translations = readCallTranslations();
   const languages = ['de', 'en', 'ar', 'fa', 'tr'];

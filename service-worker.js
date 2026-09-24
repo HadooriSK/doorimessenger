@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v132-live-voice-resume';
+const CACHE_NAME = 'web-messenger-v133-modern-groups-doodle';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=334',
-  '/app.js?v=354',
+  '/style.css?v=335',
+  '/app.js?v=355',
   '/tts.js?v=9',
   '/doori-live.js?v=9',
   '/assistant.js?v=12',
@@ -20,7 +20,7 @@ const urlsToCache = [
   '/firebase-config.js?v=28',
   '/vendor/agora-rtc-sdk-ng.js?v=1',
   '/agora-calls.js?v=3',
-  '/doodle.js?v=276',
+  '/doodle.js?v=277',
   '/manifest.json'
 ];
 

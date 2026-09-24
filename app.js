@@ -173,8 +173,11 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
 const doodleBtnGlobal = document.getElementById('doodle-btn');
 if (doodleBtnGlobal) {
     doodleBtnGlobal.addEventListener('click', () => {
-        if (window.initDoodleInvite && currentChat) {
-            window.initDoodleInvite('@' + currentChat.id);
+        const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+        if (currentChat && currentChat.type !== 'dm') {
+            alert(t.err_doodle_private_only || 'Doodle is only available in private chats.');
+        } else if (window.initDoodleInvite && currentChat) {
+            window.initDoodleInvite(currentChat.id);
         } else if (!currentChat) {
             alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).err_select_chat || 'Bitte wähle zuerst einen Chat aus.');
         } else {
@@ -296,6 +299,17 @@ if (doodleBtnGlobal) {
     Object.assign(TRANSLATIONS.tr, { lbl_font_group: 'Yazı (Kendi Metniniz)', ph_bio_placeholder: 'Ben burada yeniyim...', lbl_font_preview: 'Önizleme', ph_preview_text: 'Merhaba, Doori kullanıyorum!', lbl_bio: 'Hakkımda / Bilgi', lbl_font_color: 'Renk', lbl_font_size: 'Boyut', opt_font_inter: 'Standart (Inter)', opt_font_courier: 'Daktilo', opt_font_georgia: 'Zarif (Serif)', opt_font_comic: 'Gündelik (Comic)', btn_custom_wallpaper: 'Özel...', opt_color_pink: 'Açık Pembe', opt_color_green: 'Açık Yeşil', opt_color_blue: 'Açık Mavi', opt_color_default: 'Varsayılan (Beyaz)', lbl_font_family: 'Yazı Tipi', lbl_wallpaper: 'Sohbet Duvar Kağıdı', btn_change_wallpaper: 'Resim Seç', btn_remove_wallpaper: 'Kaldır', opt_font_small: 'Küçük', opt_font_normal: 'Normal', opt_font_large: 'Büyük',  tab_design: "Tasarım", lbl_font_size: "Yazı Tipi Boyutu", lbl_emoji: "Emojiler", lbl_gif: "GIF", lbl_doodle: "Doodle Çiz", lbl_file: "Dosya Gönder", lbl_location: "Konum Paylaş", msg_location: "Konumu Görüntüle",  ph_search_content: "İçerik ara...", ph_id: "ID", ph_search: "Ara...", ph_search_user: "Kullanıcı ara (@name)...",  lbl_remember_me: "Beni hatırla",  err_select_chat: "Lütfen önce bir sohbet seçin.", err_group_not_found: "Bu grup mevcut değil veya silinmiş.", err_join_group: "Gruba katılırken hata oluştu.", msg_copied_clipboard: "Metin panoya kopyalandı!", err_send_msg: "Mesaj gönderilemedi (Çevrimdışı?).", err_feature_update: "Bu özellik bir sonraki güncellemede kullanıma sunulacak.", err_group_username_req: "Lütfen grup için bir kullanıcı adı girin (örn. @mygroup).", err_username_invalid: "Kullanıcı adı boşluk içeremez ve en az 2 karakter uzunluğunda olmalıdır.", err_username_taken: "Bu kullanıcı adı zaten başka bir kullanıcı tarafından alınmış.", err_group_username_taken: "Bu grup kullanıcı adı zaten alınmış. Lütfen başka bir tane seçin.", err_create_group: "Grup oluşturulurken hata oluştu.", err_search_self: "Bu sensin!", err_user_not_found_privacy: "Kullanıcı adı bulunamadı (Gizlilik).", msg_added_contact: " kişilerinize eklendi!", err_already_contact: " zaten bir kişi.", err_user_not_found2: "Kullanıcı adı bulunamadı.", err_search: "Arama başarısız.", msg_group_deleted: "Grup artık mevcut değil.", prompt_new_group_name: "Yeni grup adı:", prompt_new_desc: "Yeni açıklama:",  lbl_group_call: 'Grup Araması', lbl_incoming_invite: 'Yeni Grup Daveti...', lbl_add_members: 'Üye Ekle', sec_group_info: 'Grup Bilgisi', sec_members: 'Üyeler', btn_add_member: 'Üye ekle', lbl_group_name: 'Grup adı', msg_invited_you: 'seni gruba davet etti:', btn_accept: 'Kabul Et', btn_decline: 'Reddet', msg_invite_accepted: 'Davet kabul edildi', msg_invite_declined: 'Davet reddedildi', sys_user_joined: 'gruba katıldı', sys_user_left: 'gruptan ayrıldı', sys_user_removed: 'gruptan çıkarıldı', btn_leave_group: 'Gruptan Ayrıl', lbl_admin_options: 'Yönetici Seçenekleri', btn_copy_invite_link: '🔗 Davet Bağlantısını Kopyala', lbl_admins_only: 'Sadece Yöneticiler mesaj gönderebilir', msg_admin_kicked: 'Yönetici sizi gruptan çıkardı.', msg_link_copied: 'Davet bağlantısı kopyalandı!', msg_muted_in_group: 'Bu grupta sessize alındınız.', msg_readonly_group: 'Bu grupta sadece yöneticiler mesaj gönderebilir.', ctx_select: 'Seç', ctx_forward: 'İlet', ctx_pin: 'Sabitle', ctx_unpin: 'Sabitlemeyi Kaldır', msg_forwarded: 'İletildi', msg_pinned: 'Sabitlenmiş Mesaj', modal_forward: 'Şuna ilet...', btn_send_doodle: 'Resim olarak gönder', lbl_doodle_invite: 'Doodle Daveti', msg_clear_doodle: 'Her şeyi silmek istediğinize emin misiniz?', err_doodle_private_only: 'Doodle şu anda sadece özel sohbetlerde kullanılabilir.', msg_doodle_rejected: 'Davet reddedildi.', doodle_title: 'Doodle Daveti', doodle_btn_accept: 'Katıl', doodle_btn_reject: 'Reddet', doodle_msg_accepted: 'Doodle Daveti kabul edildi', doodle_msg_closed: 'Doodle kapatıldı', doodle_msg_rejected: 'Doodle Daveti reddedildi', doodle_waiting: 'Bekleniyor...', doodle_connecting: 'Bağlanıyor...', doodle_rejected: 'Reddedildi', title_minimize: 'Küçült', title_maximize: 'Büyüt', title_close: 'Kapat', title_color: 'Renk Seç', title_size: 'Kalem Boyutu', title_eraser: 'Silgi', title_clear: 'Tümünü Sil', doodle_session_with: 'Doodle Oturumu:', doodle_connected: 'Bağlandı', doodle_wants_to_draw: ' seninle çizim yapmak istiyor!' });
 
     
+Object.assign(TRANSLATIONS.de, { group_voice_call:'Audio', group_video_call:'Video', btn_invite_member:'Einladen', group_members_short:'Mitglieder', group_no_description:'Noch keine Gruppenbeschreibung', ph_search_members:'Mitglieder suchen', confirm_leave_group:'Möchtest du diese Gruppe wirklich verlassen?', confirm_delete_group:'Möchtest du diese Gruppe endgültig löschen?', msg_invite_already_pending:'Für diesen Nutzer ist bereits eine Einladung offen.', invite_from:'von', doodle_background:'Hintergrund', doodle_bg_white:'Weiß', doodle_bg_warm:'Warm', doodle_bg_blue:'Hellblau', doodle_bg_dark:'Dunkel', doodle_download:'Zeichnung speichern' });
+Object.assign(TRANSLATIONS.en, { group_voice_call:'Audio', group_video_call:'Video', btn_invite_member:'Invite', group_members_short:'members', group_no_description:'No group description yet', ph_search_members:'Search members', confirm_leave_group:'Do you really want to leave this group?', confirm_delete_group:'Do you want to permanently delete this group?', msg_invite_already_pending:'An invitation for this user is already pending.', invite_from:'from', doodle_background:'Background', doodle_bg_white:'White', doodle_bg_warm:'Warm', doodle_bg_blue:'Light blue', doodle_bg_dark:'Dark', doodle_download:'Save drawing' });
+Object.assign(TRANSLATIONS.ar, { group_voice_call:'صوت', group_video_call:'فيديو', btn_invite_member:'دعوة', group_members_short:'أعضاء', group_no_description:'لا يوجد وصف للمجموعة بعد', ph_search_members:'البحث عن أعضاء', confirm_leave_group:'هل تريد حقًا مغادرة هذه المجموعة؟', confirm_delete_group:'هل تريد حذف هذه المجموعة نهائيًا؟', msg_invite_already_pending:'توجد دعوة معلّقة بالفعل لهذا المستخدم.', invite_from:'من', doodle_background:'الخلفية', doodle_bg_white:'أبيض', doodle_bg_warm:'دافئ', doodle_bg_blue:'أزرق فاتح', doodle_bg_dark:'داكن', doodle_download:'حفظ الرسم' });
+Object.assign(TRANSLATIONS.fa, { group_voice_call:'صوتی', group_video_call:'ویدیو', btn_invite_member:'دعوت', group_members_short:'عضو', group_no_description:'هنوز توضیحی برای گروه وجود ندارد', ph_search_members:'جستجوی اعضا', confirm_leave_group:'آیا واقعاً می‌خواهید گروه را ترک کنید؟', confirm_delete_group:'آیا می‌خواهید این گروه را برای همیشه حذف کنید؟', msg_invite_already_pending:'دعوت‌نامه‌ای برای این کاربر در انتظار پاسخ است.', invite_from:'از طرف', doodle_background:'پس‌زمینه', doodle_bg_white:'سفید', doodle_bg_warm:'گرم', doodle_bg_blue:'آبی روشن', doodle_bg_dark:'تیره', doodle_download:'ذخیره نقاشی' });
+Object.assign(TRANSLATIONS.tr, { group_voice_call:'Ses', group_video_call:'Video', btn_invite_member:'Davet et', group_members_short:'üye', group_no_description:'Henüz grup açıklaması yok', ph_search_members:'Üyelerde ara', confirm_leave_group:'Bu gruptan gerçekten ayrılmak istiyor musunuz?', confirm_delete_group:'Bu grubu kalıcı olarak silmek istiyor musunuz?', msg_invite_already_pending:'Bu kullanıcı için zaten bekleyen bir davet var.', invite_from:'gönderen', doodle_background:'Arka plan', doodle_bg_white:'Beyaz', doodle_bg_warm:'Sıcak', doodle_bg_blue:'Açık mavi', doodle_bg_dark:'Koyu', doodle_download:'Çizimi kaydet' });
+Object.assign(TRANSLATIONS.de, { msg_group_invitation:'Gruppeneinladung', msg_invite_waiting:'Wartet auf Antwort …', group_participants_short:'Teilnehmer' });
+Object.assign(TRANSLATIONS.en, { msg_group_invitation:'Group invitation', msg_invite_waiting:'Waiting for an answer …', group_participants_short:'participants' });
+Object.assign(TRANSLATIONS.ar, { msg_group_invitation:'دعوة مجموعة', msg_invite_waiting:'بانتظار الرد …', group_participants_short:'مشاركون' });
+Object.assign(TRANSLATIONS.fa, { msg_group_invitation:'دعوت گروه', msg_invite_waiting:'در انتظار پاسخ …', group_participants_short:'شرکت‌کننده' });
+Object.assign(TRANSLATIONS.tr, { msg_group_invitation:'Grup daveti', msg_invite_waiting:'Yanıt bekleniyor …', group_participants_short:'katılımcı' });
+
 Object.assign(TRANSLATIONS.de, { tab_login: 'Login', tab_register: 'Registrieren', ph_username: '@benutzername', ph_email: 'deine@email.com', ph_password: 'Passwort', lnk_forgot_pwd: 'Passwort vergessen?', lnk_forgot_user_id: 'Benutzername / ID vergessen?', lnk_resend_verify: 'Bestätigungs-E-Mail erneut senden', prompt_email_id: 'Bitte gib deine E-Mail ein, um deine ID-Nummer zu erhalten:', prompt_email_verify: 'Bitte gib deine E-Mail-Adresse ein:', msg_id_sent: 'Eine E-Mail mit deiner ID-Nummer wurde gesendet.', msg_verify_sent: 'Ein Bestätigungslink wurde gesendet.', msg_verify_resent: 'Bestätigungs-E-Mail wurde erneut gesendet.', err_send: 'Fehler beim Senden: ', msg_spam_warn: 'Wichtig: Bitte überprüfe auch deinen Spam-Ordner!', prompt_email_pwd: 'Bitte gib deine E-Mail ein, um dein Passwort zurückzusetzen:', prompt_email_user: 'Bitte gib deine registrierte E-Mail-Adresse ein:', err_no_account: 'Kein Benutzerkonto gefunden.', msg_your_usernames: 'Dein(e) Benutzername(n):', msg_pwd_reset_sent: 'Eine E-Mail zum Zurücksetzen deines Passworts wurde versendet.', msg_legacy_acc: 'Dein Account nutzt noch das alte System. Bitte wechsle auf Registrieren.', msg_email_not_ver: 'Bitte bestätige zuerst deine E-Mail-Adresse über den gesendeten Link.', msg_wrong_pwd: 'Falsches Passwort oder E-Mail.', msg_user_taken: 'Dieser Benutzername ist bereits vergeben.', msg_email_taken: 'Diese E-Mail ist bereits registriert.', msg_weak_pwd: 'Das Passwort ist zu schwach.', err_user_not_found: 'Benutzername nicht gefunden.', err_invalid_id: 'Die eingegebene 6-stellige ID ist falsch.', err_login_failed: 'Fehler beim Login: ', err_unexpected: 'Ein unerwarteter Fehler ist aufgetreten: ', msg_acc_details_sent: 'Eine E-Mail mit deinen Daten wurde gesendet.', err_search_failed: 'Fehler beim Suchen: ' });
 Object.assign(TRANSLATIONS.en, { tab_login: 'Login', tab_register: 'Register', ph_username: '@username', ph_email: 'your@email.com', ph_password: 'Password', lnk_forgot_pwd: 'Forgot password?', lnk_forgot_user_id: 'Forgot username / ID?', lnk_resend_verify: 'Resend verification email', prompt_email_id: 'Enter your email to receive your ID number:', prompt_email_verify: 'Please enter your email address:', msg_id_sent: 'An email with your ID number has been sent.', msg_verify_sent: 'A verification link has been sent.', msg_verify_resent: 'Verification email has been resent.', err_send: 'Error sending: ', msg_spam_warn: 'Important: Please also check your spam folder!', prompt_email_pwd: 'Enter your email to reset your password:', prompt_email_user: 'Enter your registered email address:', err_no_account: 'No account found.', msg_your_usernames: 'Your username(s):', msg_pwd_reset_sent: 'A password reset email has been sent.', msg_legacy_acc: 'Your account uses the old system. Please switch to Register.', msg_email_not_ver: 'Please verify your email first using the link sent.', msg_wrong_pwd: 'Wrong password or email.', msg_user_taken: 'This username is already taken.', msg_email_taken: 'This email is already registered.', msg_weak_pwd: 'The password is too weak.', err_user_not_found: 'Username not found.', err_invalid_id: 'The entered 6-digit ID is incorrect.', err_login_failed: 'Login failed: ', err_unexpected: 'An unexpected error occurred: ', msg_acc_details_sent: 'An email with your account details has been sent.', err_search_failed: 'Search failed: ' });
 Object.assign(TRANSLATIONS.fa, { tab_login: 'ورود', tab_register: 'ثبت نام', ph_username: '@نام_کاربری', ph_email: 'your@email.com', ph_password: 'رمز عبور', lnk_forgot_pwd: 'رمز عبور را فراموش کرده‌اید؟', lnk_forgot_user_id: 'نام کاربری / شناسه را فراموش کرده‌اید؟', lnk_resend_verify: 'ارسال مجدد ایمیل تایید', prompt_email_id: 'ایمیل خود را برای دریافت شماره شناسایی وارد کنید:', prompt_email_verify: 'لطفاً آدرس ایمیل خود را وارد کنید:', msg_id_sent: 'ایمیلی حاوی شماره شناسایی شما ارسال شد.', msg_verify_sent: 'لینک تأیید ارسال شد.', msg_verify_resent: 'ایمیل تایید مجدداً ارسال شد.', err_send: 'خطا در ارسال: ', msg_spam_warn: 'مهم: لطفاً پوشه اسپم خود را نیز بررسی کنید!', prompt_email_pwd: 'ایمیل خود را برای بازنشانی رمز عبور وارد کنید:', prompt_email_user: 'ایمیل ثبت نامی خود را وارد کنید:', err_no_account: 'هیچ حسابی یافت نشد.', msg_your_usernames: 'نام(های) کاربری شما:', msg_pwd_reset_sent: 'ایمیل بازنشانی رمز عبور ارسال شد.', msg_legacy_acc: 'حساب شما از سیستم قدیمی استفاده می‌کند. لطفاً ثبت نام کنید.', msg_email_not_ver: 'لطفاً ابتدا ایمیل خود را تأیید کنید.', msg_wrong_pwd: 'رمز عبور یا ایمیل اشتباه است.', msg_user_taken: 'این نام کاربری از قبل گرفته شده است.', msg_email_taken: 'این ایمیل قبلاً ثبت شده است.', msg_weak_pwd: 'رمز عبور بسیار ضعیف است.', err_user_not_found: 'نام کاربری یافت نشد.', err_invalid_id: 'شناسه ۶ رقمی وارد شده اشتباه است.', err_login_failed: 'خطا در ورود: ', err_unexpected: 'خطای غیرمنتظره‌ای رخ داد: ', msg_acc_details_sent: 'ایمیلی حاوی اطلاعات حساب شما ارسال شد.', err_search_failed: 'خطا در جستجو: ' });
@@ -1522,7 +1536,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
 
             if (msg.type === 'group_invite') {
                 className = msg.sender_username === currentUser ? 'message sent' : 'message received';
-                let inviteText = `💌 Einladung zur Gruppe: <b>${escapeHTML(msg.invite_group_name)}</b>`;
+                let inviteText = `💌 ${(t.msg_group_invitation || 'Group invitation')}: <b>${escapeHTML(msg.invite_group_name)}</b>`;
                 let btnHtml = '';
                 if (msg.invite_status === 'pending') {
                     if (msg.sender_username !== currentUser) {
@@ -1531,7 +1545,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                             <button class="danger-btn" style="padding:5px 10px; font-size:12px;" ${actionAttrs("declineGroupInvite", msg.invite_group_id, msg.id, msg.sender_username, msg.invite_group_name)}>${t.btn_decline || 'Ablehnen'}</button>
                         </div>`;
                     } else {
-                        inviteText += `<br><span style="font-size:11px; color:#aaa;">(Wartet auf Antwort...)</span>`;
+                        inviteText += `<br><span style="font-size:11px; color:#aaa;">(${t.msg_invite_waiting || 'Waiting for an answer...'})</span>`;
                     }
                 } else if (msg.invite_status === 'accepted') {
                     inviteText += `<br><span style="font-size:12px; color:var(--accent);">${t.msg_invite_accepted || 'Einladung angenommen'}</span>`;
@@ -2632,7 +2646,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (type === 'assistant') currentChatAvatar.textContent = window.DooriAssistant?.getAvatar?.() || '👩‍💻';
         else if (type === 'saved') currentChatAvatar.textContent = '💾';
         else if (type === 'room' || type === 'channel') {
-            currentChatAvatar.textContent = '#';
+            const groupAvatar = chat.avatar || chat.avatarUrl;
+            if (groupAvatar) currentChatAvatar.innerHTML = safeHTML(`<img src="${escapeHTML(groupAvatar)}" class="avatar-img" alt="">`);
+            else currentChatAvatar.textContent = '#';
         }
         else {
             const profile = users.get(chat.name);
@@ -2670,25 +2686,42 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (bBtn) bBtn.style.display = 'flex';
             if (iBtn) iBtn.style.display = 'none';
         }
+        if (doodleBtnGlobal) doodleBtnGlobal.style.display = type === 'dm' ? 'flex' : 'none';
         if (type === 'assistant') window.DooriAssistant?.activate();
         else window.DooriAssistant?.updateControls();
 
         if (window.currentGroupListener) { window.currentGroupListener(); window.currentGroupListener = null; }
+        if (window.currentGroupCallParticipantsListener) { window.currentGroupCallParticipantsListener(); window.currentGroupCallParticipantsListener = null; }
         if (window.currentChatStatusListener) { window.currentChatStatusListener(); window.currentChatStatusListener = null; }
         if (window.currentChatStatusUpdateInterval) { clearInterval(window.currentChatStatusUpdateInterval); window.currentChatStatusUpdateInterval = null; }
         if (type === 'room') {
             window.currentGroupListener = window.db.collection('groups').doc(id).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
-                    currentChat.pinnedMessage = data.pinnedMessage;
-                    currentChat.inviteToken = data.inviteToken;
-                    currentChat.isReadOnly = data.isReadOnly;
+                    Object.assign(currentChat, data);
+                    const room = chatData.rooms.find(item => item.id === id);
+                    if (room) Object.assign(room, data);
                     window.renderPinnedMessage();
+                    if (typeof window.renderGroupInfo === 'function' && !document.getElementById('group-info-sidebar')?.classList.contains('hidden')) window.renderGroupInfo();
+                    const groupCallBanner = document.getElementById('group-call-banner');
+                    const groupCallIcon = document.getElementById('group-call-banner-icon');
+                    if (groupCallBanner) groupCallBanner.classList.toggle('hidden', !data.activeCall?.initiator);
+                    if (groupCallIcon && data.activeCall?.type) groupCallIcon.textContent = data.activeCall.type === 'video' ? '📹' : '📞';
                 }
             });
+            window.currentGroupCallParticipantsListener = window.db.collection('groups').doc(id).collection('call_participants').onSnapshot(snapshot => {
+                const count = snapshot.size;
+                const countEl = document.getElementById('group-call-participants-count');
+                const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+                if (countEl) {
+                    countEl.dataset.count = String(count);
+                    countEl.textContent = `${count} ${t.group_participants_short || 'participants'}`;
+                }
+            }, () => {});
         } else {
             const banner = document.getElementById('pinned-message-banner');
             if(banner) banner.classList.add('hidden');
+            document.getElementById('group-call-banner')?.classList.add('hidden');
         }
 
         const videoBtn = document.getElementById('video-call-btn');
@@ -2773,6 +2806,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 console.error("Status Listener Error:", err);
                 currentChatStatus.textContent = '';
             });
+        } else if (type === 'room' && id !== 'general') {
+            currentChatStatus.style.display = 'inline-block';
+            currentChatStatus.textContent = `${(currentChat.members || []).length} ${(window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en).group_members_short || 'Mitglieder'}`;
+            if (callBtn) callBtn.style.display = 'flex';
+            if (videoBtn) videoBtn.style.display = 'flex';
+            if (callContainer) callContainer.style.display = 'flex';
         } else {
             if (callBtn) callBtn.style.display = 'none';
             if (videoBtn) videoBtn.style.display = 'none';
@@ -4670,10 +4709,22 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     const groupInfoActions = document.getElementById('group-info-actions');
     const addMemberBtn = document.getElementById('add-member-btn');
     const leaveGroupBtn = document.getElementById('leave-group-btn');
+    const groupMemberFilterInput = document.getElementById('group-member-filter-input');
+    const groupAudioCallBtn = document.getElementById('group-audio-call-btn');
+    const groupVideoCallBtn = document.getElementById('group-video-call-btn');
+    const groupQuickInviteBtn = document.getElementById('group-quick-invite-btn');
+    const groupQuickMediaBtn = document.getElementById('group-quick-media-btn');
+
+    groupAudioCallBtn?.addEventListener('click', () => currentChat?.type === 'room' && window.startGroupCall?.(currentChat, 'audio'));
+    groupVideoCallBtn?.addEventListener('click', () => currentChat?.type === 'room' && window.startGroupCall?.(currentChat, 'video'));
+    groupQuickInviteBtn?.addEventListener('click', () => addMemberBtn?.click());
+    groupQuickMediaBtn?.addEventListener('click', () => document.getElementById('chat-media-btn')?.click());
+    groupMemberFilterInput?.addEventListener('input', () => window.renderGroupInfo?.());
 
     if (leaveGroupBtn) {
         leaveGroupBtn.addEventListener('click', async () => {
-            if (confirm((window.TRANSLATIONS[window.currentLang] || {}).btn_leave_group + '?')) {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            if (confirm(t.confirm_leave_group || `${t.btn_leave_group}?`)) {
                 await window.removeGroupMember(currentUser);
                 groupInfoSidebar.classList.add('hidden');
                 selectChat('general', 'room');
@@ -4696,7 +4747,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     const deleteGroupBtn = document.getElementById('delete-group-btn');
     if (deleteGroupBtn) {
         deleteGroupBtn.addEventListener('click', async () => {
-            if (confirm("Möchtest du diese Gruppe wirklich löschen?")) {
+            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+            if (confirm(t.confirm_delete_group || 'Delete this group permanently?')) {
                 try {
                     await window.db.collection('groups').doc(currentChat.id).delete();
                     groupInfoSidebar.classList.add('hidden');
@@ -4759,7 +4811,22 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (!currentChat || currentChat.type !== 'room' || !groupInfoSidebar) return;
         
         groupInfoName.textContent = currentChat.name;
-        groupInfoAvatar.textContent = currentChat.name.charAt(0).toUpperCase();
+        const avatarUrl = currentChat.avatar || currentChat.avatarUrl;
+        groupInfoAvatar.innerHTML = avatarUrl ? safeHTML(`<img src="${escapeHTML(avatarUrl)}" alt="">`) : safeHTML(escapeHTML((currentChat.name || '#').charAt(0).toUpperCase()));
+        const description = document.getElementById('group-info-description');
+        if (description) {
+            description.textContent = currentChat.description || ((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en).group_no_description || 'No description');
+            description.classList.toggle('is-empty', !currentChat.description);
+        }
+        const memberCount = (currentChat.members || []).length;
+        const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+        const memberLabel = `${memberCount} ${t.group_members_short || 'members'}`;
+        const memberCountEl = document.getElementById('group-info-member-count');
+        const membersBadge = document.getElementById('group-members-badge');
+        if (memberCountEl) memberCountEl.textContent = `👥 ${memberLabel}`;
+        if (membersBadge) membersBadge.textContent = String(memberCount);
+        const privacyEl = document.getElementById('group-info-privacy');
+        if (privacyEl) privacyEl.textContent = currentChat.privacy === 'private' ? `🔒 ${t.lbl_privacy_private || 'Private'}` : `🌐 ${t.lbl_privacy_public || 'Public'}`;
         
         groupMembersList.innerHTML = safeHTML('');
         
@@ -4767,6 +4834,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const isAdmin = isMeOwner || (currentChat.admins && currentChat.admins.includes(currentUser));
         
         groupInfoActions.style.display = isAdmin ? 'flex' : 'none';
+        if (groupQuickInviteBtn) groupQuickInviteBtn.style.display = isAdmin ? 'flex' : 'none';
         if (leaveGroupBtn) leaveGroupBtn.style.display = 'block';
         
         const deleteGroupBtn = document.getElementById('delete-group-btn');
@@ -4790,7 +4858,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         }
         
         if (currentChat.members) {
-            const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en'];
+            const query = (groupMemberFilterInput?.value || '').trim().toLocaleLowerCase();
             
             // Sort so owner is first, then admins, then members
             const sortedMembers = [...currentChat.members].sort((a, b) => {
@@ -4803,7 +4871,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 return a.localeCompare(b);
             });
 
-            sortedMembers.forEach(member => {
+            sortedMembers.filter(member => !query || member.toLocaleLowerCase().includes(query)).forEach(member => {
                 const isMemberAdmin = currentChat.admins && currentChat.admins.includes(member);
                 const isCreator = currentChat.creator === member;
                 
@@ -4833,8 +4901,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 
                 div.innerHTML = safeHTML(`
                     <div class="member-item-info">
-                        <div class="avatar">${member.charAt(0).toUpperCase()}</div>
-                        <span>${member} ${badges}</span>
+                        <div class="avatar">${escapeHTML(member.replace(/^@/, '').charAt(0).toUpperCase())}</div>
+                        <span class="group-member-name">${escapeHTML(member)} <span class="group-member-badges">${badges}</span></span>
                     </div>
                     <div style="display:flex;">${actions}</div>
                 `);
@@ -4986,8 +5054,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                             alert('Benutzer ist bereits in der Gruppe.');
                             return;
                         }
-                        window.sendGroupInvite(currentChat.id, currentChat.name, targetUser);
-                        alert((window.TRANSLATIONS[window.currentLang] || {}).msg_invite_sent || "Einladung gesendet.");
+                        const result = await window.sendGroupInvite(currentChat.id, currentChat.name, targetUser);
+                        const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+                        alert(result?.reason === 'pending' ? t.msg_invite_already_pending : (t.msg_invite_sent || 'Invitation sent.'));
                         addMemberModal.classList.add('hidden');
                         addMemberSearchInput.value = '';
                     } else {
@@ -5012,7 +5081,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         
         document.getElementById('invite-avatar').textContent = msg.sender_username.charAt(1).toUpperCase();
         document.getElementById('invite-group-name').textContent = msg.invite_group_name;
-        document.getElementById('invite-sender').textContent = 'von ' + msg.sender_username;
+        const inviteT = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en;
+        document.getElementById('invite-sender').textContent = `${inviteT.invite_from || 'from'} ${msg.sender_username}`;
         
         document.getElementById('accept-invite-btn').onclick = () => {
             window.acceptGroupInvite(msg.invite_group_id, msg.id, msg.sender_username, msg.invite_group_name);
@@ -5059,13 +5129,12 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 .where('recipient_username', '==', inviteeUsername.toLowerCase())
                 .where('participants', 'array-contains', currentUser.toLowerCase()).where('isPublic', '==', false)
                 .get();
-            const batch = window.db.batch();
+            let alreadyPending = false;
             invitesQuery.forEach(doc => {
-                if (doc.data().sender_username === currentUser && doc.data().invite_status === 'pending') {
-                    batch.delete(doc.ref);
-                }
+                const data = doc.data();
+                if (data.sender_username === currentUser && data.invite_group_id === groupId && data.invite_status === 'pending') alreadyPending = true;
             });
-            await batch.commit();
+            if (alreadyPending) return { sent: false, reason: 'pending' };
         } catch(e) { console.error('Error clearing old invites', e); }
         const msgRef = window.db.collection('messages').doc();
         const msg = {
@@ -5083,6 +5152,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             invite_group_name: groupName
         };
         await msgRef.set(msg);
+        return { sent: true };
     };
 
     window.showGlobalInvitePopup = showGlobalInvitePopup;

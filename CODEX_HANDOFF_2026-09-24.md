@@ -378,3 +378,35 @@ Auf iOS Safari verfällt das Autoplay-Berechtigungsfenster nach der asynchronen 
 
 
 
+## 13. Moderne Gruppen und gemeinsames Doodle
+
+Ausgangspunkt für diesen Abschnitt war Commit `b55dfa9` auf `main`.
+
+### Gruppen und Gruppenchat
+
+- Die vorhandene Gruppenarchitektur wurde erweitert, ohne Telefonie, Spiele, KI-Assistent oder bestehende Chats zu entfernen.
+- Sprach- und Videoanrufe sind jetzt in Gruppenchats sichtbar erreichbar: im Chat-Kopf sowie als Schnellaktionen in der Gruppeninfo. Die vorhandene Agora-Gruppentelefonie und ihre serverseitige Mitgliedschaftsprüfung bleiben bestehen.
+- Ein moderner Live-Anruf-Banner zeigt Anruftyp, laufenden Anruf und Teilnehmerzahl und erlaubt den direkten Beitritt.
+- Die Gruppeninfo wurde vollständig modernisiert: Gruppenbild, Beschreibung, Mitgliederzahl, Privatsphäre, Mitgliedersuche, Rollenkennzeichnung, Einladungslink, Nur-Lesen-Modus, Medienzugriff sowie Aktionen zum Verlassen und administrativen Löschen.
+- Admin- und Mitgliederrechte bleiben über die vorhandenen Firestore-Regeln geschützt. Administrative Bedienelemente werden nur berechtigten Nutzern angezeigt.
+- Gruppeneinladungen behalten ihren Status `pending`, `accepted` oder `declined`. Solange eine Einladung unbeantwortet ist, kann dieselbe Person für dieselbe Gruppe nicht erneut eingeladen werden. Annahme und Ablehnung bleiben für beide Seiten nachvollziehbar.
+- Die neue Gruppenoberfläche ist responsiv für Desktop, Tablet und Mobilgeräte und besitzt passende Hell-/Dunkelvarianten sowie RTL-Layout für Arabisch und Persisch.
+
+### Doodle in privaten Chats
+
+- Das vorhandene gemeinsame Doodle ist wieder ausschließlich in privaten Direktchats sichtbar; in Gruppen, Kanälen und dem KI-Assistenten bleibt es ausgeblendet.
+- Die fehlerhafte doppelte `@`-Aufbereitung der Teilnehmerkennung wurde entfernt. Beide Chatpartner verwenden nun zuverlässig dieselbe aus den sortierten Benutzernamen gebildete Sitzung.
+- Einladung, Annahme/Ablehnung und die vorhandene Firestore-Echtzeitsynchronisation für Striche bleiben erhalten.
+- Ergänzt wurden moderne Farbvorgaben, frei wählbare Farbe, größere Strichstärken, Radierer, vier Zeichenflächen-Hintergründe und lokaler PNG-Download.
+- Zeichenkoordinaten bleiben normalisiert, damit die gemeinsame Zeichnung auf unterschiedlich großen Geräten synchron dargestellt wird.
+- Die Doodle-Oberfläche wurde als responsives Glas-Panel für Desktop und Mobilgeräte neu gestaltet.
+
+### Sprachen, Dateien und Qualitätssicherung
+
+- Alle neuen sichtbaren Texte wurden gleichzeitig in `de`, `en`, `ar`, `fa` und `tr` ergänzt. RTL bleibt für `ar` und `fa` erhalten.
+- Geänderte Dateien: `index.html`, `app.js`, `doodle.js`, `style.css`, `service-worker.js`, `tests/calls.test.cjs`, `tests/security.test.cjs` sowie beide Übergabedateien.
+- Cache-/Asset-Versionen: `web-messenger-v133-modern-groups-doodle`, `style.css?v=335`, `app.js?v=355`, `doodle.js?v=277`.
+- Syntaxprüfung für `app.js`, `doodle.js` und `agora-calls.js`: erfolgreich.
+- Tests: `57/57` bestanden.
+- Build: exakt `37` erlaubte Dateien in `dist/` erzeugt.
+- Lokale Asset-Prüfung: alle drei aktualisierten Assets wurden mit HTTP 200 ausgeliefert.

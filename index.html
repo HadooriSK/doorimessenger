@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=334">
+    <link rel="stylesheet" href="style.css?v=335">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -263,14 +263,21 @@
                             <canvas id="doodle-canvas" style="flex: 1; cursor: crosshair; touch-action: none; background: #fff; display: block;"></canvas>
                         </div>
 
-                        <div class="doodle-bottom-bar" id="doodle-bottom-bar" style="padding: 10px 15px; display: flex; gap: 12px; align-items: center; justify-content: space-between; background: var(--panel-bg); border-top: 1px solid var(--panel-border);">
-                            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                                <input type="color" id="doodle-color-picker" value="#000000" title="Farbe wählen" data-i18n-title="title_color" style="width: 32px; height: 32px; padding: 0; border: none; cursor: pointer; border-radius: 6px;">
-                                <input type="range" id="doodle-size-slider" min="1" max="20" value="3" title="Stiftdicke" data-i18n-title="title_size" style="flex: 1; cursor: pointer;">
+                        <div class="doodle-bottom-bar" id="doodle-bottom-bar">
+                            <div class="doodle-tool-primary">
+                                <input type="color" id="doodle-color-picker" value="#172b3a" title="Farbe wählen" data-i18n-title="title_color">
+                                <div id="doodle-color-presets" class="doodle-color-presets" aria-label="Farben">
+                                    <button type="button" data-color="#172b3a" style="--swatch:#172b3a"></button><button type="button" data-color="#238ccc" style="--swatch:#238ccc"></button><button type="button" data-color="#7858d8" style="--swatch:#7858d8"></button><button type="button" data-color="#e1536f" style="--swatch:#e1536f"></button><button type="button" data-color="#e59c25" style="--swatch:#e59c25"></button><button type="button" data-color="#32a678" style="--swatch:#32a678"></button>
+                                </div>
+                                <input type="range" id="doodle-size-slider" min="1" max="28" value="3" title="Stiftdicke" data-i18n-title="title_size">
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button id="doodle-eraser-btn" class="icon-btn" title="Radiergummi" data-i18n-title="title_eraser" style="font-size: 18px; padding: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">🧽</button>
-                                <button id="doodle-clear-btn" class="icon-btn danger" title="Alles löschen" data-i18n-title="title_clear" style="font-size: 18px; padding: 6px; background: rgba(255,71,87,0.1); color: #ff4757; display: flex; align-items: center; justify-content: center;">🗑️</button>
+                            <div class="doodle-tool-secondary">
+                                <select id="doodle-background-select" data-i18n-title="doodle_background" title="Hintergrund">
+                                    <option value="#ffffff" data-i18n="doodle_bg_white">Weiß</option><option value="#fff7e6" data-i18n="doodle_bg_warm">Warm</option><option value="#eaf7fb" data-i18n="doodle_bg_blue">Blau</option><option value="#192c3a" data-i18n="doodle_bg_dark">Dunkel</option>
+                                </select>
+                                <button id="doodle-eraser-btn" class="icon-btn" title="Radiergummi" data-i18n-title="title_eraser">🧽</button>
+                                <button id="doodle-download-btn" class="icon-btn" title="Zeichnung speichern" data-i18n-title="doodle_download">⇩</button>
+                                <button id="doodle-clear-btn" class="icon-btn danger" title="Alles löschen" data-i18n-title="title_clear">🗑️</button>
                             </div>
                         </div>
                         <div class="doodle-resizer" id="doodle-resizer"></div>
@@ -283,15 +290,15 @@
                         </div>
                         <button id="unpin-btn" class="icon-btn" title="Loslösen" style="font-size: 14px; width: 30px; height: 30px;">✖</button>
                     </div>
-                    <div id="group-call-banner" class="hidden" style="background: rgba(46, 213, 115, 0.2); border-bottom: 1px solid rgba(46, 213, 115, 0.4); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 20px; color: #2ed573;">📞</span>
+                    <div id="group-call-banner" class="group-call-banner hidden">
+                        <div class="group-call-banner-main">
+                            <span id="group-call-banner-icon" class="group-call-banner-icon">📞</span>
                             <div>
-                                <strong style="display: block; font-size: 14px;" data-i18n="lbl_group_call_active">Gruppenanruf läuft</strong>
-                                <span id="group-call-participants-count" style="font-size: 12px; color: #ccc;">0 Teilnehmer</span>
+                                <strong data-i18n="lbl_group_call_active">Gruppenanruf läuft</strong>
+                                <span id="group-call-participants-count">0 Teilnehmer</span>
                             </div>
                         </div>
-                        <button id="join-group-call-btn" class="submit-btn" style="background: #2ed573; color: #000; padding: 6px 15px; border-radius: 20px; font-weight: bold;" data-i18n="btn_join_call">Beitreten</button>
+                        <button id="join-group-call-btn" class="group-call-join-btn" data-i18n="btn_join_call">Beitreten</button>
                     </div>
 
                     <div class="messages-container" id="messages-container">
@@ -349,7 +356,7 @@
                                     <div id="plus-menu-dropdown" class="popup-menu hidden">
                                         <div class="popup-item" id="emoji-btn" style="display: flex; gap: 10px; padding: 12px 15px;">😀 <span data-i18n="lbl_emoji">Smilies</span></div>
                                         <div class="popup-item" id="gif-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎞️ <span data-i18n="lbl_gif">GIF</span></div>
-                                        <div class="popup-item" id="doodle-btn" style="display: flex; gap: 10px; padding: 12px 15px; display: none;">🖍️ <span data-i18n="lbl_doodle">Doodle</span></div>
+                                        <div class="popup-item" id="doodle-btn" style="display:none; gap:10px; padding:12px 15px;">🖍️ <span data-i18n="lbl_doodle">Doodle</span></div>
                                         <div class="popup-item" onclick="document.getElementById('media-upload').click()" style="display: flex; gap: 10px; padding: 12px 15px;">📁 <span data-i18n="lbl_file">Datei senden</span></div>
                                         <div class="popup-item" id="menu-location-btn" style="display: flex; gap: 10px; padding: 12px 15px;">📍 <span data-i18n="lbl_location">Standort teilen</span></div>
                                         <div class="popup-item" id="games-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎮 <span data-i18n="games_menu">Spiele</span></div>
@@ -430,30 +437,37 @@
 
                 <!-- Group Info Sidebar -->
                 <div class="group-info-sidebar hidden" id="group-info-sidebar">
-                    <div class="sidebar-header">
+                    <div class="sidebar-header group-info-header">
                         <h2 data-i18n="sec_group_info">Gruppeninfo</h2>
-                        <button id="close-group-info-btn" class="icon-btn">✖</button>
+                        <button id="close-group-info-btn" class="icon-btn" data-i18n-title="title_close" aria-label="Schließen">✖</button>
                     </div>
                     <div class="group-info-content">
                         <div class="group-info-details">
                             <div class="avatar-large" id="group-info-avatar">#</div>
                             <h3 id="group-info-name">Name</h3>
-                            
-                            <div style="display:flex; flex-direction:column; gap:10px; margin-top: 15px; width: 100%;">
-                                
-                                <button id="clear-chat-btn" class="action-btn text-btn" data-i18n="btn_clear_chat" style="background: rgba(255,255,255,0.05); color: #ff6b6b;">Chat leeren</button>
+                            <p id="group-info-description" class="group-info-description"></p>
+                            <div class="group-info-meta">
+                                <span id="group-info-member-count"></span>
+                                <span id="group-info-privacy"></span>
                             </div>
 
-                            <div id="group-info-actions" class="group-actions" style="display:none; flex-direction:column; gap:10px; margin-top: 15px;">
-                                <button id="add-member-btn" class="action-btn text-btn" data-i18n="btn_add_member">Mitglied hinzufügen</button>
-                                <button id="edit-group-btn" class="action-btn text-btn" style="display:none;" data-i18n="btn_edit_group">✏️ Gruppe bearbeiten</button>
+                            <div class="group-quick-actions">
+                                <button id="group-audio-call-btn" class="group-quick-action" type="button"><span>📞</span><small data-i18n="group_voice_call">Audio</small></button>
+                                <button id="group-video-call-btn" class="group-quick-action" type="button"><span>📹</span><small data-i18n="group_video_call">Video</small></button>
+                                <button id="group-quick-invite-btn" class="group-quick-action admin-only-action" type="button"><span>👤＋</span><small data-i18n="btn_invite_member">Einladen</small></button>
+                                <button id="group-quick-media-btn" class="group-quick-action" type="button"><span>🖼️</span><small data-i18n="btn_shared_media">Medien</small></button>
+                            </div>
+
+                            <div id="group-info-actions" class="group-actions" style="display:none;">
+                                <button id="add-member-btn" class="group-settings-row" data-i18n="btn_add_member">👤 Mitglied einladen</button>
+                                <button id="edit-group-btn" class="group-settings-row" style="display:none;" data-i18n="btn_edit_group">✏️ Gruppe bearbeiten</button>
                             </div>
                         </div>
-                        <div id="group-admin-actions" class="hidden" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 15px; color: var(--accent-color);" data-i18n="lbl_admin_options">Admin Optionen</h4>
-                            <button id="copy-group-link-btn" class="action-btn text-btn" style="width: 100%; margin-bottom: 15px; background:rgba(0,210,211,0.1); color:var(--primary-color); border:1px solid var(--primary-color);" data-i18n="btn_invite_link">🔗 Einladungs-Link & QR-Code</button>
-                            <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
-                                <label style="font-size: 0.9em;" data-i18n="lbl_admins_only">Nur Admins dürfen schreiben</label>
+                        <div id="group-admin-actions" class="group-admin-card hidden">
+                            <div class="group-section-title"><span>🛡️</span><h4 data-i18n="lbl_admin_options">Admin Optionen</h4></div>
+                            <button id="copy-group-link-btn" class="group-settings-row" data-i18n="btn_invite_link">🔗 Einladungs-Link & QR-Code</button>
+                            <div class="group-settings-row group-setting-toggle">
+                                <label for="group-readonly-toggle" data-i18n="lbl_admins_only">Nur Admins dürfen schreiben</label>
                                 <label class="switch">
                                     <input type="checkbox" id="group-readonly-toggle">
                                     <span class="slider round"></span>
@@ -462,10 +476,14 @@
                         </div>
 
                         <div class="group-members-section">
-                            <h4 data-i18n="sec_members">Mitglieder</h4>
+                            <div class="group-section-title"><span>👥</span><h4 data-i18n="sec_members">Mitglieder</h4><span id="group-members-badge" class="group-count-badge"></span></div>
+                            <div class="group-member-filter"><span>⌕</span><input id="group-member-filter-input" type="search" data-i18n="ph_search_members" placeholder="Mitglieder suchen"></div>
                             <div id="group-members-list" class="members-list"></div>
-                            <button id="leave-group-btn" class="danger-btn" style="width: 100%; margin-top: 20px; display: none;" data-i18n="btn_leave_group">Gruppe verlassen</button>
-                            <button id="delete-group-btn" class="danger-btn" style="width: 100%; margin-top: 10px; display: none; background: #c62828;" data-i18n="btn_delete_group">🗑 Gruppe löschen</button>
+                            <div class="group-danger-actions">
+                                <button id="clear-chat-btn" class="group-settings-row warning" data-i18n="btn_clear_chat">🧹 Chat leeren</button>
+                                <button id="leave-group-btn" class="group-settings-row danger" style="display: none;" data-i18n="btn_leave_group">🚪 Gruppe verlassen</button>
+                                <button id="delete-group-btn" class="group-settings-row danger" style="display: none;" data-i18n="btn_delete_group">🗑 Gruppe löschen</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1003,11 +1021,11 @@
     <script src="tts.js?v=9"></script>
     <script src="doori-live.js?v=9"></script>
     <script src="assistant.js?v=12"></script>
-    <script src="app.js?v=354"></script>
+    <script src="app.js?v=355"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="vendor/telephony-providers.js?v=1"></script>
     <script src="agora-calls.js?v=3"></script>
-    <script src="doodle.js?v=276"></script>
+    <script src="doodle.js?v=277"></script>
 
         <!-- Add Contact Modal -->
         <div id="add-contact-modal" class="modal hidden">

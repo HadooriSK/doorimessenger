@@ -103,3 +103,30 @@ Die Log- und API-Diagnose zeigte die eindeutige Ursache:
 - `tests/assistant.test.cjs` (55/55 Tests grün, Modell- und Routing-Prüfungen aktualisiert)
 - `CODEX_HANDOFF_2026-09-24.md` & `GOOGLE_ANTIGRAVITY_HANDOFF_2026-09-24.md`
 
+## Fortsetzung: Moderne Gruppen und gemeinsames Doodle
+
+Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde fortgesetzt und nicht neu aufgesetzt.
+
+### Gruppen
+
+- Gruppen-Sprach- und Videoanrufe sind jetzt sowohl im Chat-Header als auch in der modernisierten Gruppeninfo sichtbar. Sie verwenden weiterhin die bestehende Agora-Infrastruktur mit serverseitiger Gruppenmitgliedschaftsprüfung.
+- Ein Live-Anruf-Banner zeigt Anruftyp und aktuelle Teilnehmerzahl und ermöglicht den direkten Beitritt.
+- Die Gruppeninfo enthält nun Gruppenbild, Beschreibung, Mitglieder- und Privatsphäreanzeige, Mitgliedersuche, Rollen, Einladungslink, Nur-Lesen-Modus, gemeinsame Medien sowie Verlassen-/Löschen-Aktionen.
+- Admin-Funktionen bleiben durch die vorhandenen Firestore-Regeln abgesichert und werden nur berechtigten Nutzern angezeigt.
+- Offene Einladungen können für dieselbe Person und Gruppe nicht mehrfach gesendet werden. Einladungen behalten die nachvollziehbaren Zustände `pending`, `accepted` und `declined`.
+- Das Design ist responsiv, unterstützt Hell- und Dunkelmodus und behält RTL für Arabisch und Persisch.
+
+### Doodle
+
+- Das gemeinsame Doodle ist wieder in privaten Direktchats verfügbar und bleibt in Gruppen, Kanälen und beim KI-Assistenten verborgen.
+- Der Verbindungsfehler durch eine doppelte `@`-Kennung wurde behoben; beide Teilnehmer landen zuverlässig in derselben Sitzung.
+- Die bestehende Firestore-Echtzeitsynchronisation wurde beibehalten und um Farbvorgaben, freie Farbe, größere Pinselstärken, Radierer, vier Hintergründe und PNG-Download ergänzt.
+- Normalisierte Koordinaten sorgen weiterhin für geräteübergreifende Synchronisation.
+- Die Oberfläche wurde als modernes, responsives Glas-Panel gestaltet.
+
+### Verifikation und relevante Dateien
+
+- Alle neuen sichtbaren Texte sind in Deutsch, Englisch, Arabisch, Persisch und Türkisch vorhanden; `ar` und `fa` bleiben RTL.
+- Geändert: `index.html`, `app.js`, `doodle.js`, `style.css`, `service-worker.js`, `tests/calls.test.cjs`, `tests/security.test.cjs` und beide Handoff-Dateien.
+- Cache: `web-messenger-v133-modern-groups-doodle`; Assets: `style.css?v=335`, `app.js?v=355`, `doodle.js?v=277`.
+- Syntaxprüfungen bestanden; `npm.cmd test`: `57/57` grün; `npm.cmd run build`: exakt `37` Dateien.

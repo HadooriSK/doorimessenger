@@ -5,6 +5,9 @@ const doodleCtx = doodleCanvas ? doodleCanvas.getContext('2d') : null;
 
 const doodleColorPicker = document.getElementById('doodle-color-picker');
 const doodleSizeSlider = document.getElementById('doodle-size-slider');
+const doodleColorPresets = document.getElementById('doodle-color-presets');
+const doodleBackgroundSelect = document.getElementById('doodle-background-select');
+const doodleDownloadBtn = document.getElementById('doodle-download-btn');
 const doodleEraserBtn = document.getElementById('doodle-eraser-btn');
 const doodleClearBtn = document.getElementById('doodle-clear-btn');
 const doodleSendBtn = document.getElementById('doodle-send-btn');
@@ -20,7 +23,8 @@ const doodleAcceptBtn = document.getElementById('doodle-accept-btn');
 const doodleDeclineBtn = document.getElementById('doodle-decline-btn');
 
 let isDrawing = false;
-let doodleColor = '#000000';
+let doodleColor = '#172b3a';
+let doodleBackground = '#ffffff';
 let doodleSize = 3;
 let isEraser = false;
 
@@ -74,7 +78,7 @@ function resizeCanvas() {
     doodleCanvas.width = rect.width;
     doodleCanvas.height = Math.max(rect.height - 60, 100); // header height
     
-    doodleCtx.fillStyle = '#fff';
+    doodleCtx.fillStyle = doodleBackground;
     doodleCtx.fillRect(0, 0, doodleCanvas.width, doodleCanvas.height);
     
     if(tempCanvas) {
@@ -84,7 +88,7 @@ function resizeCanvas() {
 
 function clearCanvas() {
     if(!doodleCtx) return;
-    doodleCtx.fillStyle = '#fff';
+    doodleCtx.fillStyle = doodleBackground;
     doodleCtx.fillRect(0, 0, doodleCanvas.width, doodleCanvas.height);
 }
 
@@ -161,6 +165,32 @@ if(doodleColorPicker) {
         doodleColor = e.target.value;
         isEraser = false;
         doodleEraserBtn.style.background = 'transparent';
+    });
+}
+if(doodleColorPresets) {
+    doodleColorPresets.addEventListener('click', event => {
+        const button = event.target.closest('[data-color]');
+        if(!button) return;
+        doodleColor = button.dataset.color;
+        doodleColorPicker.value = doodleColor;
+        isEraser = false;
+        doodleEraserBtn?.classList.remove('active');
+        doodleColorPresets.querySelectorAll('button').forEach(item => item.classList.toggle('active', item === button));
+    });
+}
+if(doodleBackgroundSelect) {
+    doodleBackgroundSelect.addEventListener('change', event => {
+        doodleBackground = event.target.value;
+        clearCanvas();
+        sendDoodleAction({ action: 'background', color: doodleBackground });
+    });
+}
+if(doodleDownloadBtn) {
+    doodleDownloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = doodleCanvas.toDataURL('image/png');
+        link.download = `doori-doodle-${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
     });
 }
 if(doodleSizeSlider) {
@@ -303,7 +333,7 @@ function endPosition() {
     if(currentStroke.length > 0) {
         const strokeData = {
             action: 'stroke',
-            color: isEraser ? '#ffffff' : doodleColor,
+            color: isEraser ? doodleBackground : doodleColor,
             size: doodleSize,
             points: currentStroke
         };
@@ -318,7 +348,7 @@ function draw(e) {
     doodleCtx.lineWidth = doodleSize;
     doodleCtx.lineCap = 'round';
     doodleCtx.lineJoin = 'round';
-    doodleCtx.strokeStyle = isEraser ? '#ffffff' : doodleColor;
+    doodleCtx.strokeStyle = isEraser ? doodleBackground : doodleColor;
     
     doodleCtx.lineTo(pos.x, pos.y);
     doodleCtx.stroke();
@@ -395,6 +425,10 @@ function handleRemoteAction(data) {
     }
     
     if(data.action === 'clear') {
+        clearCanvas();
+    } else if (data.action === 'background') {
+        doodleBackground = data.color || '#ffffff';
+        if(doodleBackgroundSelect) doodleBackgroundSelect.value = doodleBackground;
         clearCanvas();
     } else if (data.action === 'stroke') {
         doodleCtx.save();
