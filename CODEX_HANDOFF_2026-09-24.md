@@ -427,3 +427,29 @@ Ausgangspunkt für diesen Abschnitt war Commit `b55dfa9` auf `main`.
 - Unter `Chats` bleiben `Alle`, `Direkt` und `Ungelesen`; Gruppen besitzen weiterhin ihren eigenen Hauptbereich in der linken Navigation.
 - Der Filtertest erwartet nun exakt diese drei Einträge.
 - Cache: `web-messenger-v135-chat-filters`.
+
+---
+
+## 16. Große Mediendateien via Cloudflare R2 & Backblaze B2 (Stand: 24.09.2026)
+
+### 16.1 Hintergrund & Anforderung
+Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 (10 GB kostenlos) eingerichtet. Große Mediendateien (Videos, Audio, große Bilder, Dokumente) sollen primär auf Cloudflare R2 gespeichert werden. Nach Erreichen des 10 GB Kontingents (Sicherheitsgrenze 9,5 GB) schaltet das System automatisch auf Backblaze B2 um. Alle Dateien sollen nach maximal 30 Tagen automatisch gelöscht werden.
+
+### 16.2 Architektur & Umsetzung
+1. **S3 SigV4 Upload-Pipeline (`functions/large-media-storage.js`):**
+   - Direkte Presigned `PUT`-URLs (15 min Gültigkeit) werden serverseitig mit AWS Signature Version 4 über `node:crypto` signiert.
+   - Kein Byte großer Mediendateien belastet den Firebase Functions Server oder Firebase Bandbreite.
+   - Automatische Kaskadierung: Prüft Firestore `system_stats/storage`. Liegt R2 unter 9,5 GB, wird R2 gewählt; darüber oder bei Nichtkonfiguration schaltet das System transparent auf Backblaze B2 um.
+2. **30-Tage automatische Löschung:**
+   - Nativ in Storage-Plattformen über Lifecycle Rules konfigurierbar (R2: „Delete object after 30 days“, B2: „Delete files after 30 days“).
+   - In Firestore wird `expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000` dokumentiert.
+   - Cloud Function `cleanupExpiredLargeMedia` führt serverseitige Bereinigungen durch und aktualisiert Quota-Zähler.
+3. **Secrets-Verwaltung per Terminal:**
+   - Code 1 (R2): `firebase functions:secrets:set CLOUDFLARE_R2_CONFIG`
+   - Code 2 (B2): `firebase functions:secrets:set BACKBLAZE_B2_CONFIG`
+   - Alternativ auch Einzelsecrets unterstützt. Keine Zugangsdaten im Chat oder Code.
+4. **Validierung & Tests:**
+   - `tests/storage.test.cjs`: Prüft SigV4 URL-Generierung, R2->B2 Kaskadierung bei 9,5 GB, und 30-Tage Expiration.
+   - Testsuite: **63/63 Tests bestanden (100% grün)** (`npm.cmd test`).
+   - Build: **37 allowlistete Public-Dateien** (`npm.cmd run build`).
+

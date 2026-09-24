@@ -3,11 +3,18 @@ const {onCall,HttpsError}=require('firebase-functions/v2/https');
 const {defineSecret}=require('firebase-functions/params');
 const {initializeApp}=require('firebase-admin/app');
 const {getAuth}=require('firebase-admin/auth');
-const {getFirestore,Timestamp}=require('firebase-admin/firestore');
+const {getFirestore,Timestamp,FieldValue}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
 const {RtcTokenBuilder,RtcRole}=require('agora-token');
 const {createAssistantRouter,LocalFallbackError}=require('./assistant-router');
 const {detect:detectAssistantLanguage}=require('./assistant-language');
+const {
+ selectStorageProvider,
+ createUploadPlan,
+ deleteS3Object,
+ getR2Config,
+ getB2Config
+}=require('./large-media-storage');
 initializeApp();
 const db=getFirestore(),auth=getAuth();
 const BREVO_API_KEY=defineSecret('BREVO_API_KEY');
@@ -18,6 +25,8 @@ const GEMINI_API_KEY=defineSecret('GEMINI_API_KEY');
 const DOORI_ADMIN_EMAIL=defineSecret('DOORI_ADMIN_EMAIL');
 const DAILY_API_KEY=defineSecret('DAILY_API_KEY');
 const STREAM_API_SECRET=defineSecret('STREAM_API_SECRET');
+const CLOUDFLARE_R2_CONFIG=defineSecret('CLOUDFLARE_R2_CONFIG');
+const BACKBLAZE_B2_CONFIG=defineSecret('BACKBLAZE_B2_CONFIG');
 const {
  resolveTelephonySession,
  recordTelephonyDuration,
@@ -438,4 +447,112 @@ exports.updateTelephonyAdminConfig=onCall({...options,secrets:[DOORI_ADMIN_EMAIL
  }
  await db.collection('_telephonyConfig').doc('global').set({...next,updatedAt:Timestamp.now()},{merge:true});
  return {config:{...telephonyDefaults,...next}};
+});
+
+exports.requestLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_CONFIG, BACKBLAZE_B2_CONFIG] }, async request => {
+  const uid = signedIn(request);
+  const data = request.data || {};
+  const fileName = String(data.fileName || 'file').slice(0, 255);
+  const fileSize = Number(data.fileSize) || 0;
+  const mimeType = String(data.mimeType || 'application/octet-stream').slice(0, 100);
+  const chatId = String(data.chatId || '').slice(0, 100);
+
+  if (fileSize <= 0 || fileSize > 500 * 1024 * 1024) {
+    throw new HttpsError('invalid-argument', 'File size must be between 1 byte and 500 MB.');
+  }
+
+  const selection = await selectStorageProvider(db, fileSize);
+  if (selection.error === 'STORAGE_NOT_CONFIGURED') {
+    throw new HttpsError('failed-precondition', 'STORAGE_NOT_CONFIGURED');
+  }
+  if (selection.error === 'STORAGE_QUOTA_EXCEEDED') {
+    throw new HttpsError('resource-exhausted', 'STORAGE_QUOTA_EXCEEDED');
+  }
+
+  const plan = createUploadPlan({
+    provider: selection.provider,
+    config: selection.config,
+    chatId,
+    fileName,
+    fileSize,
+    mimeType
+  });
+
+  return plan;
+});
+
+exports.confirmLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_CONFIG, BACKBLAZE_B2_CONFIG] }, async request => {
+  const uid = signedIn(request);
+  const data = request.data || {};
+  const fileId = String(data.fileId || '').slice(0, 100);
+  const provider = String(data.provider || '').slice(0, 10);
+  const storageKey = String(data.storageKey || '').slice(0, 300);
+  const fileName = String(data.fileName || 'file').slice(0, 255);
+  const fileSize = Number(data.fileSize) || 0;
+  const mimeType = String(data.mimeType || 'application/octet-stream').slice(0, 100);
+  const chatId = String(data.chatId || '').slice(0, 100);
+  const expiresAt = Number(data.expiresAt) || (Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+  if (!fileId || !provider || !storageKey) {
+    throw new HttpsError('invalid-argument', 'Missing required media metadata.');
+  }
+
+  await db.collection('large_media').doc(fileId).set({
+    fileId,
+    provider,
+    storageKey,
+    fileName,
+    fileSize,
+    mimeType,
+    chatId,
+    uploaderUid: uid,
+    createdAt: Date.now(),
+    expiresAt,
+    status: 'active'
+  });
+
+  const fieldKey = provider === 'r2' ? 'r2_bytes' : 'b2_bytes';
+  const countKey = provider === 'r2' ? 'r2_count' : 'b2_count';
+  await db.collection('system_stats').doc('storage').set({
+    [fieldKey]: FieldValue.increment(fileSize),
+    [countKey]: FieldValue.increment(1),
+    updatedAt: Timestamp.now()
+  }, { merge: true });
+
+  return { success: true, fileId, expiresAt };
+});
+
+exports.cleanupExpiredLargeMedia = onCall({ ...options, secrets: [CLOUDFLARE_R2_CONFIG, BACKBLAZE_B2_CONFIG] }, async request => {
+  const now = Date.now();
+  const snapshot = await db.collection('large_media')
+    .where('status', '==', 'active')
+    .where('expiresAt', '<=', now)
+    .limit(50)
+    .get();
+
+  if (snapshot.empty) return { cleaned: 0 };
+
+  const r2Config = getR2Config();
+  const b2Config = getB2Config();
+  let cleaned = 0;
+
+  for (const doc of snapshot.docs) {
+    const file = doc.data();
+    const config = file.provider === 'r2' ? r2Config : b2Config;
+    if (config) {
+      await deleteS3Object({ config, provider: file.provider, key: file.storageKey });
+    }
+    await doc.ref.update({ status: 'expired', deletedAt: Date.now() });
+
+    const fieldKey = file.provider === 'r2' ? 'r2_bytes' : 'b2_bytes';
+    const countKey = file.provider === 'r2' ? 'r2_count' : 'b2_count';
+    await db.collection('system_stats').doc('storage').set({
+      [fieldKey]: FieldValue.increment(-file.fileSize),
+      [countKey]: FieldValue.increment(-1)
+    }, { merge: true });
+
+    cleaned++;
+  }
+
+  return { cleaned };
 });

@@ -143,6 +143,17 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Syntaxprüfung erfolgreich; `npm.cmd test`: `59/59` bestanden.
 ## Vereinfachte Chatfilter
 
-- Der redundante Gruppenfilter wurde aus `Chats` entfernt. Dort bleiben nur `Alle`, `Direkt` und `Ungelesen`.
-- Der eigenständige Gruppenbereich in der Hauptnavigation bleibt unverändert erhalten.
+- Der Filtertest erwartet nun exakt diese drei Einträge.
 - Cache: `web-messenger-v135-chat-filters`.
+
+## Große Mediendateien via Cloudflare R2 & Backblaze B2 (Stand: 24.09.2026)
+
+- Accounts: Cloudflare R2 (10 GB kostenlos) und Backblaze B2 (10 GB kostenlos).
+- Kaskadierung: Primär Cloudflare R2 bis 9,5 GB. Bei Erreichen der Quote automatisches Umschalten auf Backblaze B2.
+- S3 SigV4: Direkte Presigned-Upload-URLs entlasten Firebase Functions und Server-Bandbreite.
+- Automatische 30-Tage-Löschung: Nativ über Lifecycle Rules in R2 und B2 sowie serverseitige Bereinigung via `cleanupExpiredLargeMedia` und `expiresAt`-Metadaten.
+- Secrets per Terminal:
+  - Code 1: `firebase functions:secrets:set CLOUDFLARE_R2_CONFIG`
+  - Code 2: `firebase functions:secrets:set BACKBLAZE_B2_CONFIG`
+- Teststand: 63/63 Tests grün (`npm.cmd test`), Build: 37 Dateien (`npm.cmd run build`).
+
