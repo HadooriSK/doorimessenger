@@ -148,6 +148,11 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.match(liveClient,/models\/gemini-3\.8-live/);
  assert.match(liveClient,/BidiGenerateContentConstrained/);
  assert.match(liveClient,/getLiveToken/);
+ assert.match(liveClient,/realtimeInput:\s*\{\s*audio:/);
+ assert.match(liveClient,/mimeType:\s*'audio\/pcm;rate=16000'/);
+ assert.match(liveClient,/responseModalities:\s*\['AUDIO'\]/);
+ assert.match(liveClient,/captureBuffer\.length < 1600/);
+ assert.doesNotMatch(liveClient,/media_chunks|generation_config|response_modalities/);
  assert.doesNotMatch(liveClient,/AIza|AQ\.[A-Za-z0-9]|GROQ_API_KEY|CLOUDFLARE_API_TOKEN/);
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.match(html,/id="doori-live-btn"/);

@@ -196,3 +196,25 @@ npm.cmd run dev
    - Puffer über ein HTML5 `<audio>`-Element einmalig anzutriggern (wie in `DooriTTS.unlock()`), ist auf iOS essenziell, damit der Browser nicht durch den Hardware-Mute-Switch stummgeschaltet wird.
 4. **Service Worker Caching:**
    - Bei Änderungen an Frontend-Dateien immer die Versionsnummer in `index.html` und den Cache-Namen in `service-worker.js` anpassen, da mobile Browser PWA-Assets aggressiv cachen.
+
+---
+
+## 8. Codex-Fortsetzung: Gemini-Live-Antwort repariert
+
+**Problem:** Auf dem iPhone zeigte der Live-Modus beim Sprechen „Sprache erkannt“, Gemini gab jedoch keine hörbare Antwort zurück.
+
+**Bestätigte Ursache:** Der Client verwendete für Gemini 3.8 Live ein veraltetes/falsches WebSocket-Nachrichtenformat. Audio wurde als `realtime_input.media_chunks` gesendet und die Ausgabe-Konfiguration lag unter `generation_config`. Die aktuelle offizielle API erwartet `realtimeInput.audio` mit `mimeType` sowie `responseModalities`, `speechConfig` und `systemInstruction` direkt im `setup`. Zusätzlich erzeugte der AudioWorklet auf 48-kHz-Hardware nur etwa 2,7 ms lange Pakete und damit mehrere Hundert WebSocket-Nachrichten pro Sekunde.
+
+**Korrektur:**
+- Audioformat auf `realtimeInput.audio` und `mimeType: audio/pcm;rate=16000` umgestellt.
+- Setup auf die offiziellen CamelCase-Felder von Gemini 3.8 Live umgestellt.
+- Eingehende Worklet-Puffer werden zu 1.600 Samples bzw. 100 ms bei 16 kHz gebündelt.
+- Capture-Puffer wird beim Beenden des Mikrofons zuverlässig geleert.
+- Empfang bleibt für CamelCase aktiv und akzeptiert defensiv auch ältere Snake-Case-Antworten.
+- `doori-live.js?v=4`; Service-Worker-Cache `web-messenger-v124-gemini-live-protocol`.
+
+**Validierung und Veröffentlichung:**
+- Syntaxprüfung erfolgreich.
+- `npm.cmd test`: 55/55 bestanden.
+- `npm.cmd run build`: 37 allowlistete Dateien.
+- Firebase Hosting erfolgreich live veröffentlicht auf `https://doori-messenger.web.app/` und der verbundenen Domain `https://www.doori-messenger.de/`.

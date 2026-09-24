@@ -117,6 +117,7 @@
     token:         null,
     tokenExpiry:   0,
     lastRmsTime:   0,
+    captureBuffer: new Float32Array(0),
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
@@ -275,13 +276,23 @@
       }
     }
 
-    const b64 = float32ToB64Pcm16(samples16k);
+    // AudioWorklet callbacks can be only ~2.7 ms long on 48 kHz hardware.
+    // Gemini Live expects practical streaming chunks, so aggregate to 100 ms.
+    const combined = new Float32Array(state.captureBuffer.length + samples16k.length);
+    combined.set(state.captureBuffer);
+    combined.set(samples16k, state.captureBuffer.length);
+    state.captureBuffer = combined;
+    if (state.captureBuffer.length < 1600) return;
+    const packet = state.captureBuffer.slice(0, 1600);
+    state.captureBuffer = state.captureBuffer.slice(1600);
+
+    const b64 = float32ToB64Pcm16(packet);
     const msg = {
-      realtime_input: {
-        media_chunks: [{
-          mime_type: 'audio/pcm;rate=16000',
+      realtimeInput: {
+        audio: {
+          mimeType: 'audio/pcm;rate=16000',
           data: b64,
-        }],
+        },
       },
     };
     try { state.ws.send(JSON.stringify(msg)); } catch (_) {}
@@ -417,6 +428,7 @@
     delete root._dooriLiveProcessor;
     state.micStream?.getTracks().forEach(t => t.stop());
     state.micStream = null;
+    state.captureBuffer = new Float32Array(0);
   }
 
   /* ── Ephemeral Token ──────────────────────────────────────────────── */
@@ -465,15 +477,13 @@
       const setup = {
         setup: {
           model: 'models/gemini-3.8-live',
-          generation_config: {
-            response_modalities: ['AUDIO'],
-            speech_config: {
-              voice_config: {
-                prebuilt_voice_config: { voice_name: 'Aoede' },
-              },
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Aoede' },
             },
           },
-          system_instruction: {
+          systemInstruction: {
             parts: [{ text: sysPrompt }],
           },
         },
@@ -502,7 +512,7 @@
         }
 
         // Handle model turn parts
-        const parts = msg.serverContent?.modelTurn?.parts || [];
+        const parts = msg.serverContent?.modelTurn?.parts || msg.server_content?.model_turn?.parts || [];
         for (const part of parts) {
           if (part.inlineData?.data) {
             const rawB64 = part.inlineData.data;

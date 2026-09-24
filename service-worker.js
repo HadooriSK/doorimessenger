@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v123-gemini-live-worklet';
+const CACHE_NAME = 'web-messenger-v124-gemini-live-protocol';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=333',
   '/app.js?v=354',
   '/tts.js?v=7',
-  '/doori-live.js?v=3',
+  '/doori-live.js?v=4',
   '/assistant.js?v=9',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
