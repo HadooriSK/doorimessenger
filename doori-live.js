@@ -1,6 +1,8 @@
 /* doori-live.js – Doori Live-Sprachmodus (Gemini Live API, gemini-3.8-live)
  * Architektur: Backend holt ephemeral token → Browser verbindet WebSocket mit Token
- * API-Key verlässt den Server niemals.
+ * Unterstützt AudioWorklet (primär) + Analyser-ScriptProcessor (Fallback)
+ * Hardware-Rate Downsampling auf 16 kHz PCM (In) / Native Upsampling (Out)
+ * iOS Mute-Switch Override via DooriTTS.unlock()
  */
 (function (root) {
   'use strict';
@@ -13,6 +15,7 @@
       btnStop:     'Live-Gespräch beenden',
       connecting:  'Verbindung wird aufgebaut …',
       listening:   '🔴 Live: Ich höre zu …',
+      hearing:     '🔴 Live: Höre zu (Sprache erkannt) …',
       speaking:    '🔴 Live: Doori spricht …',
       ended:       'Live-Gespräch beendet.',
       quota:       'Live momentan nicht verfügbar – kostenloses Kontingent erreicht. Bitte später erneut versuchen.',
@@ -26,6 +29,7 @@
       btnStop:     'End live conversation',
       connecting:  'Connecting …',
       listening:   '🔴 Live: Listening …',
+      hearing:     '🔴 Live: Listening (speech detected) …',
       speaking:    '🔴 Live: Doori speaking …',
       ended:       'Live session ended.',
       quota:       'Live is temporarily unavailable – free quota reached. Please try again later.',
@@ -39,6 +43,7 @@
       btnStop:     'إنهاء المحادثة المباشرة',
       connecting:  'جارٍ الاتصال …',
       listening:   '🔴 مباشر: أستمع إليك …',
+      hearing:     '🔴 مباشر: أستمع (تم رصد الصوت) …',
       speaking:    '🔴 مباشر: Doori يتحدث …',
       ended:       'انتهت الجلسة المباشرة.',
       quota:       'الوضع المباشر غير متاح مؤقتاً – تم الوصول إلى الحصة المجانية. يرجى المحاولة لاحقاً.',
@@ -52,6 +57,7 @@
       btnStop:     'پایان گفتگوی زنده',
       connecting:  'در حال اتصال …',
       listening:   '🔴 زنده: در حال گوش دادن …',
+      hearing:     '🔴 زنده: در حال شنیدن (صدا دریافت شد) …',
       speaking:    '🔴 زنده: Doori در حال صحبت …',
       ended:       'جلسه زنده پایان یافت.',
       quota:       'حالت زنده موقتاً در دسترس نیست – سهمیه رایگان به پایان رسیده. لطفاً بعداً دوباره تلاش کنید.',
@@ -65,6 +71,7 @@
       btnStop:     'Canlı konuşmayı bitir',
       connecting:  'Bağlanıyor …',
       listening:   '🔴 Canlı: Dinliyorum …',
+      hearing:     '🔴 Canlı: Dinliyorum (ses algılandı) …',
       speaking:    '🔴 Canlı: Doori konuşuyor …',
       ended:       'Canlı oturum sona erdi.',
       quota:       'Canlı şu an kullanılamıyor – ücretsiz kota doldu. Lütfen daha sonra tekrar dene.',
@@ -78,22 +85,38 @@
   const RECONNECT_INIT = 1500;
   const RECONNECT_MAX  = 60000;
 
+  const WORKLET_CODE = `
+    class LiveMicProcessor extends AudioWorkletProcessor {
+      process(inputs) {
+        const input = inputs[0];
+        if (input && input[0] && input[0].length) {
+          this.port.postMessage(input[0]);
+        }
+        return true;
+      }
+    }
+    registerProcessor('live-mic-processor', LiveMicProcessor);
+  `;
+
   /* ── State ────────────────────────────────────────────────────────── */
   const state = {
-    active:       false,
-    ws:           null,
-    audioCtx:     null,
-    sourceNode:   null,
-    processorNode:null,
-    muteGain:     null,
-    micStream:    null,
-    playing:      false,
-    nextPlayTime: 0,
-    quotaBlocked: false,
-    retryTimer:   null,
-    retryDelay:   RECONNECT_INIT,
-    token:        null,
-    tokenExpiry:  0,
+    active:        false,
+    ready:         false,
+    ws:            null,
+    audioCtx:      null,
+    sourceNode:    null,
+    workletNode:   null,
+    processorNode: null,
+    analyserNode:  null,
+    micStream:     null,
+    playing:       false,
+    nextPlayTime:  0,
+    quotaBlocked:  false,
+    retryTimer:    null,
+    retryDelay:    RECONNECT_INIT,
+    token:         null,
+    tokenExpiry:   0,
+    lastRmsTime:   0,
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
@@ -109,7 +132,7 @@
       el.classList.toggle('hidden', !msg);
     }
     const chatStatus = document.getElementById('current-chat-status');
-    if (chatStatus && root.currentChat?.type === 'assistant') {
+    if (chatStatus && (root.currentChat?.type === 'assistant' || document.getElementById('assistant-mic-btn')?.offsetParent !== null)) {
       chatStatus.textContent = msg || root.DooriAssistant?.getStatus?.() || '';
     }
   }
@@ -141,7 +164,6 @@
     if (!state.audioCtx || state.audioCtx.state === 'closed') {
       const AC = root.AudioContext || root.webkitAudioContext;
       if (!AC) return null;
-      // Do NOT pass sampleRate — iOS WebKit throws NotSupportedError on custom sample rates!
       state.audioCtx = new AC();
     }
     if (state.audioCtx.state === 'suspended') {
@@ -150,21 +172,29 @@
     return state.audioCtx;
   }
 
-  function unlockAudio() {
+  async function unlockAudio() {
+    // 1. Unlock Web Audio Context
     const ctx = getAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    // Play a 1-sample silent buffer to unlock iOS audio hardware
+    if (ctx && ctx.state === 'suspended') {
+      await ctx.resume().catch(() => {});
+    }
+    // 2. Play silent buffer to unlock iOS hardware
     try {
-      const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
-      const src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      src.start(0);
+      if (ctx) {
+        const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+      }
+    } catch (_) {}
+    // 3. Call DooriTTS unlock to switch iOS audio session to playback
+    try {
+      await root.DooriTTS?.unlock?.();
     } catch (_) {}
   }
 
-  /* ── Linear downsampling from hardware rate to 16 kHz ─────────────── */
+  /* ── Downsampler: inRate → 16 kHz ─────────────────────────────────── */
   function downsampleTo16k(samples, inRate) {
     if (!samples || !samples.length) return new Float32Array(0);
     if (inRate === 16000) return samples;
@@ -187,6 +217,23 @@
     return result;
   }
 
+  /* ── Upsampler: 24 kHz → Native Context Rate ──────────────────────── */
+  function upsample24kToNative(f32_24k, targetRate) {
+    if (!f32_24k || !f32_24k.length) return new Float32Array(0);
+    if (targetRate === 24000) return f32_24k;
+    const ratio = 24000 / targetRate;
+    const targetLen = Math.round(f32_24k.length / ratio);
+    const out = new Float32Array(targetLen);
+    for (let i = 0; i < targetLen; i++) {
+      const srcIdx = i * ratio;
+      const i0 = Math.floor(srcIdx);
+      const i1 = Math.min(i0 + 1, f32_24k.length - 1);
+      const frac = srcIdx - i0;
+      out[i] = f32_24k[i0] * (1 - frac) + f32_24k[i1] * frac;
+    }
+    return out;
+  }
+
   /* ── Convert 16 kHz Float32 to Base64 PCM16 Little-Endian ─────────── */
   function float32ToB64Pcm16(f32) {
     const pcm = new Int16Array(f32.length);
@@ -203,6 +250,43 @@
     return btoa(binary);
   }
 
+  /* ── Stream Audio Chunk to Gemini ─────────────────────────────────── */
+  function processAndSendAudio(inputF32, inRate) {
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN || !state.ready) return;
+
+    // Downsample to 16 kHz
+    const samples16k = downsampleTo16k(inputF32, inRate);
+    if (!samples16k.length) return;
+
+    // RMS volume calculation
+    let sum = 0;
+    for (let i = 0; i < samples16k.length; i++) sum += samples16k[i] * samples16k[i];
+    const rms = Math.sqrt(sum / samples16k.length);
+
+    // Visual volume feedback & barge-in
+    if (state.playing && rms > 0.035) {
+      stopPlayback();
+      setStatus(t().listening);
+    } else if (!state.playing && rms > 0.025) {
+      const now = Date.now();
+      if (now - state.lastRmsTime > 800) {
+        state.lastRmsTime = now;
+        setStatus(t().hearing);
+      }
+    }
+
+    const b64 = float32ToB64Pcm16(samples16k);
+    const msg = {
+      realtime_input: {
+        media_chunks: [{
+          mime_type: 'audio/pcm;rate=16000',
+          data: b64,
+        }],
+      },
+    };
+    try { state.ws.send(JSON.stringify(msg)); } catch (_) {}
+  }
+
   /* ── Play 24 kHz PCM Little-Endian Audio from Gemini ──────────────── */
   function playPcm24k(bytes) {
     const ctx = getAudioCtx();
@@ -212,19 +296,22 @@
     const numSamples = Math.floor(bytes.byteLength / 2);
     if (!numSamples) return;
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const f32 = new Float32Array(numSamples);
+    const f32_24k = new Float32Array(numSamples);
     for (let i = 0; i < numSamples; i++) {
-      f32[i] = view.getInt16(i * 2, true) / 32768.0;
+      f32_24k[i] = view.getInt16(i * 2, true) / 32768.0;
     }
 
-    const audioBuf = ctx.createBuffer(1, f32.length, 24000);
-    audioBuf.getChannelData(0).set(f32);
+    // Upsample to native context sampleRate so WebKit never glitches
+    const nativeF32 = upsample24kToNative(f32_24k, ctx.sampleRate);
+    const audioBuf = ctx.createBuffer(1, nativeF32.length, ctx.sampleRate);
+    audioBuf.getChannelData(0).set(nativeF32);
 
     const src = ctx.createBufferSource();
     src.buffer = audioBuf;
     src.connect(ctx.destination);
 
-    const startTime = Math.max(ctx.currentTime, state.nextPlayTime);
+    const now = ctx.currentTime;
+    const startTime = Math.max(now + 0.015, state.nextPlayTime);
     src.start(startTime);
     state.nextPlayTime = startTime + audioBuf.duration;
     state.playing = true;
@@ -244,11 +331,10 @@
     if (ctx) state.nextPlayTime = ctx.currentTime;
   }
 
-  /* ── Microphone Capture with Downsampler ──────────────────────────── */
+  /* ── Microphone Capture (AudioWorklet + Analyser Fallback) ─────────── */
   async function startMic() {
     if (!navigator.mediaDevices?.getUserMedia) return false;
     try {
-      // Do NOT set sampleRate: 16000 here! Let browser pick native hardware rate to avoid OverconstrainedError!
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -264,53 +350,52 @@
       if (ctx.state === 'suspended') await ctx.resume();
 
       const sourceNode = ctx.createMediaStreamSource(stream);
-      const bufSize = 2048;
-      const processor = ctx.createScriptProcessor(bufSize, 1, 1);
+      state.sourceNode = sourceNode;
 
-      // Prevent iOS Safari garbage-collecting the ScriptProcessorNode
-      root._dooriLiveProcessor = processor;
-      state.sourceNode    = sourceNode;
-      state.processorNode = processor;
+      // Try AudioWorklet first (Modern standard, immune to GC and mute optimizations)
+      let workletReady = false;
+      if (ctx.audioWorklet?.addModule) {
+        try {
+          const blob = new Blob([WORKLET_CODE], { type: 'application/javascript' });
+          const workletUrl = URL.createObjectURL(blob);
+          await ctx.audioWorklet.addModule(workletUrl);
+          URL.revokeObjectURL(workletUrl);
 
-      // Mute gain to prevent microphone from screaming into device speakers
-      const muteGain = ctx.createGain();
-      muteGain.gain.value = 0;
-      state.muteGain = muteGain;
-
-      processor.onaudioprocess = (e) => {
-        if (!state.ws || state.ws.readyState !== WebSocket.OPEN || !state.ready) return;
-        const inputF32 = e.inputBuffer.getChannelData(0);
-        const inRate   = e.inputBuffer.sampleRate || ctx.sampleRate || 48000;
-
-        // Downsample to 16 kHz
-        const samples16k = downsampleTo16k(inputF32, inRate);
-
-        // RMS volume calculation for barge-in detection
-        let sum = 0;
-        for (let i = 0; i < samples16k.length; i++) sum += samples16k[i] * samples16k[i];
-        const rms = Math.sqrt(sum / samples16k.length);
-
-        // User speaks while AI is talking -> barge-in / interrupt
-        if (state.playing && rms > 0.035) {
-          stopPlayback();
-          setStatus(t().listening);
+          const worklet = new AudioWorkletNode(ctx, 'live-mic-processor');
+          worklet.port.onmessage = (e) => {
+            processAndSendAudio(e.data, ctx.sampleRate);
+          };
+          sourceNode.connect(worklet);
+          // Connect to analyser to keep WebKit rendering pipeline alive without speaker feedback
+          const analyser = ctx.createAnalyser();
+          worklet.connect(analyser);
+          state.workletNode  = worklet;
+          state.analyserNode = analyser;
+          workletReady = true;
+        } catch (err) {
+          console.warn('[DooriLive] AudioWorklet init failed, using ScriptProcessor fallback', err);
         }
+      }
 
-        const b64 = float32ToB64Pcm16(samples16k);
-        const msg = {
-          realtime_input: {
-            media_chunks: [{
-              mime_type: 'audio/pcm;rate=16000',
-              data: b64,
-            }],
-          },
+      // ScriptProcessor Fallback with Analyser sink (prevents WebKit zero-gain optimization)
+      if (!workletReady) {
+        const bufSize = 2048;
+        const processor = ctx.createScriptProcessor(bufSize, 1, 1);
+        root._dooriLiveProcessor = processor; // Prevent GC
+        state.processorNode = processor;
+
+        processor.onaudioprocess = (e) => {
+          const inputF32 = e.inputBuffer.getChannelData(0);
+          const inRate   = e.inputBuffer.sampleRate || ctx.sampleRate || 48000;
+          processAndSendAudio(inputF32, inRate);
         };
-        try { state.ws.send(JSON.stringify(msg)); } catch (_) {}
-      };
 
-      sourceNode.connect(processor);
-      processor.connect(muteGain);
-      muteGain.connect(ctx.destination);
+        const analyser = ctx.createAnalyser();
+        sourceNode.connect(processor);
+        processor.connect(analyser); // Analyser keeps processor alive without output to speakers!
+        state.analyserNode = analyser;
+      }
+
       return true;
     } catch (err) {
       console.warn('[DooriLive] mic error', err);
@@ -321,12 +406,14 @@
   function stopMic() {
     try {
       state.sourceNode?.disconnect();
+      state.workletNode?.disconnect();
       state.processorNode?.disconnect();
-      state.muteGain?.disconnect();
+      state.analyserNode?.disconnect();
     } catch (_) {}
     state.sourceNode    = null;
+    state.workletNode   = null;
     state.processorNode = null;
-    state.muteGain      = null;
+    state.analyserNode  = null;
     delete root._dooriLiveProcessor;
     state.micStream?.getTracks().forEach(t => t.stop());
     state.micStream = null;
@@ -400,13 +487,14 @@
         const text = typeof event.data === 'string' ? event.data : await event.data.text();
         const msg = JSON.parse(text);
 
+        // Handshake confirmed by Gemini
         if (msg.setupComplete) {
           state.ready = true;
           setStatus(t().listening);
           return;
         }
 
-        // Server-side barge-in: user interrupted the AI
+        // Server-side barge-in
         if (msg.serverContent?.interrupted) {
           stopPlayback();
           setStatus(t().listening);
@@ -486,7 +574,7 @@
       setStatus(t().unsupported);
       return;
     }
-    unlockAudio();
+    await unlockAudio();
     state.active       = true;
     state.quotaBlocked = false;
     state.ready        = false;
@@ -506,6 +594,7 @@
 
   function stopSession(updateUi = true) {
     state.active = false;
+    state.ready  = false;
     clearTimeout(state.retryTimer);
     state.retryTimer = null;
     if (state.ws) {
