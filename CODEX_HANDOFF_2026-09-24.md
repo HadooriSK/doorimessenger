@@ -518,3 +518,9 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Verifikation: Assistententests `18/18`, vollständige Suite `71/71`, Build `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
 - Firebase-Deployment erfolgreich: `askDooriAssistant`, `synthesizeDooriSpeech`, `getLiveToken`, `rememberDooriExchange`, `clearDooriMemory`, `confirmAccountDeletion` und Hosting sind live. Öffentliche Assets wurden anschließend mit `LIVE_MEMORY_ASSETS_OK` bestätigt.
 
+
+## Media Lounge production repair (2026-09-24)
+- Fixed the iPhone red `PROMISE ERROR` when starting Media Lounge: session creation now catches Firestore failures, prevents duplicate taps, removes partial sessions, and shows a localized retry message in de/en/ar/fa/tr.
+- Published the previously missing `liveMediaSessions` Firestore rules and the `requestLargeMediaUpload` / `confirmLargeMediaUpload` callable functions in `europe-west3`.
+- Bumped the client asset to `live-media.js?v=2` and service-worker cache to `web-messenger-v141-media-lounge-fix`.
+- Verification: 71/71 tests passed; build produced exactly 38 allowlisted files; Firestore rules compiled and deployed; both functions updated successfully; live assets returned `LIVE_MEDIA_LOUNGE_FIX_OK`.

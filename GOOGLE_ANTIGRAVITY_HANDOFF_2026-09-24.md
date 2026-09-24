@@ -207,3 +207,9 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Versionen: `web-messenger-v140-assistant-memory-tts`, `assistant.js?v=13`, `doori-live.js?v=11`; Tests `71/71`, Build `38` Dateien.
 - Die sechs betroffenen Functions und Firebase Hosting sind erfolgreich live veröffentlicht; die öffentlichen Assets wurden mit `LIVE_MEMORY_ASSETS_OK` verifiziert.
 
+
+## Media Lounge production repair (2026-09-24)
+- Fixed the iPhone red `PROMISE ERROR` when starting Media Lounge: session creation now catches Firestore failures, prevents duplicate taps, removes partial sessions, and shows a localized retry message in de/en/ar/fa/tr.
+- Published the previously missing `liveMediaSessions` Firestore rules and the `requestLargeMediaUpload` / `confirmLargeMediaUpload` callable functions in `europe-west3`.
+- Bumped the client asset to `live-media.js?v=2` and service-worker cache to `web-messenger-v141-media-lounge-fix`.
+- Verification: 71/71 tests passed; build produced exactly 38 allowlisted files; Firestore rules compiled and deployed; both functions updated successfully; live assets returned `LIVE_MEDIA_LOUNGE_FIX_OK`.
