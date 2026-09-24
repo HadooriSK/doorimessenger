@@ -498,4 +498,5 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Die Systemanweisung verlangt nun ausdrücklich, bis zu einer vollständigen ersten Äußerung still zu warten, beim Verbindungsaufbau nicht selbst zu grüßen, Begrüßungen nicht zu wiederholen und die sicher erkannte Gesprächssprache beizubehalten.
 - Cache-/Assetstand: `web-messenger-v138-live-ios-start-guard`, `doori-live.js?v=10`.
 - Verifikation: gezielte Assistententests `15/15`, vollständige Suite `68/68`, Build exakt `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
+- Hosting wurde erfolgreich auf Firebase veröffentlicht; `https://doori-messenger.de/doori-live.js?v=10` wurde anschließend auf die neuen Startschutz-Merkmale geprüft (`LIVE_ASSET_OK`).
 

@@ -191,4 +191,5 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Doori wartet beim Start stumm auf eine vollständige Äußerung, grüßt nicht ungefragt, wiederholt keine Begrüßung und hält die zuerst sicher erkannte Sprache stabil.
 - Versionen: `web-messenger-v138-live-ios-start-guard`, `doori-live.js?v=10`.
 - Tests: Assistent `15/15`, vollständig `68/68`; Build `38` Dateien.
+- Firebase Hosting ist veröffentlicht; die öffentliche Datei `doori-live.js?v=10` enthält nachweislich die neue Echo- und Startunterdrückung.
 
