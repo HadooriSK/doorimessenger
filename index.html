@@ -9,7 +9,7 @@
     <title>Doori Messenger</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#40afe6">
-    <link rel="stylesheet" href="style.css?v=335">
+    <link rel="stylesheet" href="style.css?v=336">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -356,6 +356,7 @@
                                         <div class="popup-item" id="emoji-btn" style="display: flex; gap: 10px; padding: 12px 15px;">😀 <span data-i18n="lbl_emoji">Smilies</span></div>
                                         <div class="popup-item" id="gif-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎞️ <span data-i18n="lbl_gif">GIF</span></div>
                                         <div class="popup-item" id="doodle-btn" style="display:none; gap:10px; padding:12px 15px;">🖍️ <span data-i18n="lbl_doodle">Doodle</span></div>
+                                        <div class="popup-item" id="media-lounge-btn" style="display:none; gap:10px; padding:12px 15px;">◉ <span data-i18n="media_lounge_menu">Media Lounge</span></div>
                                         <div class="popup-item" onclick="document.getElementById('media-upload').click()" style="display: flex; gap: 10px; padding: 12px 15px;">📁 <span data-i18n="lbl_file">Datei senden</span></div>
                                         <div class="popup-item" id="menu-location-btn" style="display: flex; gap: 10px; padding: 12px 15px;">📍 <span data-i18n="lbl_location">Standort teilen</span></div>
                                         <div class="popup-item" id="games-btn" style="display: flex; gap: 10px; padding: 12px 15px;">🎮 <span data-i18n="games_menu">Spiele</span></div>
@@ -1001,6 +1002,28 @@
             </div>
         </div>
 
+    <div id="media-lounge-modal" class="modal hidden media-lounge-modal" role="dialog" aria-modal="true" aria-labelledby="media-lounge-title">
+        <div class="media-lounge-shell">
+            <header class="media-lounge-header">
+                <div class="media-lounge-brand"><span class="media-lounge-orb">◉</span><div><h2 id="media-lounge-title" data-i18n="media_lounge_title">Media Lounge</h2><p id="media-lounge-subtitle" data-i18n="media_lounge_subtitle">Gemeinsam hören, ansehen und erleben</p></div></div>
+                <div class="media-lounge-header-actions"><span id="media-lounge-live-badge" class="media-lounge-live-badge" data-i18n="media_lounge_live">LIVE</span><button id="media-lounge-close" class="media-lounge-close" type="button" data-i18n-title="title_close" title="Schließen">×</button></div>
+            </header>
+            <main class="media-lounge-stage">
+                <div id="media-lounge-empty" class="media-lounge-empty"><span>♫ ◉ ▧</span><h3 data-i18n="media_lounge_empty_title">Noch keine Medien</h3><p data-i18n="media_lounge_empty_text">Füge Musik, Bilder oder Videos für eure gemeinsame Sitzung hinzu.</p></div>
+                <div id="media-lounge-viewer" class="media-lounge-viewer hidden"></div>
+                <button id="media-lounge-prev" class="media-lounge-nav media-lounge-prev" type="button" aria-label="Zurück">‹</button>
+                <button id="media-lounge-next" class="media-lounge-nav media-lounge-next" type="button" aria-label="Weiter">›</button>
+            </main>
+            <section class="media-lounge-now"><div><small data-i18n="media_lounge_now">Jetzt gemeinsam</small><strong id="media-lounge-file-name">—</strong></div><span id="media-lounge-counter">0 / 0</span></section>
+            <section class="media-lounge-tray" id="media-lounge-tray"></section>
+            <footer class="media-lounge-footer">
+                <div class="media-lounge-notice"><span>⏳</span><span data-i18n="media_lounge_retention">Nur vorübergehend für Live-Zwecke. Alle Bilder, Videos und Musikdateien werden spätestens nach 24 Stunden automatisch gelöscht.</span></div>
+                <div class="media-lounge-actions"><input id="media-lounge-upload" type="file" accept="image/*,video/*,audio/*" multiple class="hidden"><button id="media-lounge-add" class="media-lounge-add" type="button"><span>＋</span><span data-i18n="media_lounge_add">Medien hinzufügen</span></button><button id="media-lounge-end" class="media-lounge-end" type="button" data-i18n="media_lounge_end">Sitzung beenden</button></div>
+            </footer>
+            <div id="media-lounge-waiting" class="media-lounge-waiting hidden"><div class="media-lounge-pulse">◉</div><h3 data-i18n="media_lounge_waiting_title">Einladung gesendet</h3><p data-i18n="media_lounge_waiting_text">Die gemeinsame Sitzung startet, sobald die Einladung angenommen wurde.</p></div>
+        </div>
+    </div>
+
     <!-- Firebase Compat SDKs -->
     <script src="vendor/firebase-app-compat.js"></script>
     <script src="vendor/firebase-auth-compat.js"></script>
@@ -1015,12 +1038,13 @@
     <script src="message-cache.js?v=1"></script>
     <script src="quiz-questions.js?v=1"></script>
     <script src="games.js?v=4"></script>
+    <script src="live-media.js?v=1"></script>
     <meta name="doori-tts-endpoint" content="">
     <script src="assistant-language.js?v=1"></script>
     <script src="tts.js?v=9"></script>
     <script src="doori-live.js?v=9"></script>
     <script src="assistant.js?v=12"></script>
-    <script src="app.js?v=357"></script>
+    <script src="app.js?v=358"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="vendor/telephony-providers.js?v=1"></script>
     <script src="agora-calls.js?v=4"></script>

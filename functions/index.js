@@ -456,6 +456,7 @@ exports.requestLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_C
   const fileSize = Number(data.fileSize) || 0;
   const mimeType = String(data.mimeType || 'application/octet-stream').slice(0, 100);
   const chatId = String(data.chatId || '').slice(0, 100);
+  const purpose = data.purpose === 'live_media' ? 'live_media' : 'chat';
 
   if (fileSize <= 0 || fileSize > 500 * 1024 * 1024) {
     throw new HttpsError('invalid-argument', 'File size must be between 1 byte and 500 MB.');
@@ -475,7 +476,9 @@ exports.requestLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_C
     chatId,
     fileName,
     fileSize,
-    mimeType
+    mimeType,
+    purpose,
+    retentionMs: purpose === 'live_media' ? 24 * 60 * 60 * 1000 : undefined
   });
 
   return plan;
@@ -491,7 +494,10 @@ exports.confirmLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_C
   const fileSize = Number(data.fileSize) || 0;
   const mimeType = String(data.mimeType || 'application/octet-stream').slice(0, 100);
   const chatId = String(data.chatId || '').slice(0, 100);
-  const expiresAt = Number(data.expiresAt) || (Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const purpose = data.purpose === 'live_media' ? 'live_media' : 'chat';
+  const requestedExpiry = Number(data.expiresAt) || 0;
+  const maximumExpiry = Date.now() + (purpose === 'live_media' ? 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000);
+  const expiresAt = requestedExpiry > Date.now() ? Math.min(requestedExpiry, maximumExpiry) : maximumExpiry;
 
   if (!fileId || !provider || !storageKey) {
     throw new HttpsError('invalid-argument', 'Missing required media metadata.');
@@ -508,6 +514,7 @@ exports.confirmLargeMediaUpload = onCall({ ...options, secrets: [CLOUDFLARE_R2_C
     uploaderUid: uid,
     createdAt: Date.now(),
     expiresAt,
+    purpose,
     status: 'active'
   });
 

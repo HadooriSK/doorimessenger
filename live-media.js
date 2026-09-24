@@ -1,0 +1,203 @@
+(function () {
+  'use strict';
+
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const I18N = {
+    de: {media_lounge_menu:'Media Lounge',media_lounge_title:'Media Lounge',media_lounge_subtitle:'Gemeinsam hören, ansehen und erleben',media_lounge_live:'LIVE',media_lounge_empty_title:'Noch keine Medien',media_lounge_empty_text:'Füge Musik, Bilder oder Videos für eure gemeinsame Sitzung hinzu.',media_lounge_now:'Jetzt gemeinsam',media_lounge_add:'Medien hinzufügen',media_lounge_end:'Sitzung beenden',media_lounge_retention:'Nur vorübergehend für Live-Zwecke. Alle Bilder, Videos und Musikdateien werden spätestens nach 24 Stunden automatisch gelöscht.',media_lounge_waiting_title:'Einladung gesendet',media_lounge_waiting_text:'Die gemeinsame Sitzung startet, sobald die Einladung angenommen wurde.',media_lounge_invite_title:'Einladung zur Media Lounge',media_lounge_invite_text:'möchte Medien live mit dir teilen.',media_lounge_accept:'Annehmen',media_lounge_reject:'Ablehnen',media_lounge_accepted:'Einladung angenommen',media_lounge_rejected:'Einladung abgelehnt',media_lounge_ended:'Die Live-Sitzung wurde beendet.',media_lounge_expired:'Diese Live-Sitzung ist abgelaufen.',media_lounge_dm_only:'Die Media Lounge ist nur in privaten Chats verfügbar.',media_lounge_pending_exists:'Für diesen Chat wartet bereits eine Einladung.',media_lounge_uploading:'Medien werden sicher für die Live-Sitzung hochgeladen …',media_lounge_upload_error:'Die Medien konnten nicht hochgeladen werden.',media_lounge_type_error:'Bitte wähle nur Bilder, Videos oder Musikdateien aus.'},
+    en: {media_lounge_menu:'Media Lounge',media_lounge_title:'Media Lounge',media_lounge_subtitle:'Listen, watch and experience together',media_lounge_live:'LIVE',media_lounge_empty_title:'No media yet',media_lounge_empty_text:'Add music, photos or videos to your shared session.',media_lounge_now:'Together now',media_lounge_add:'Add media',media_lounge_end:'End session',media_lounge_retention:'Temporary and for live use only. All photos, videos and music files are automatically deleted within 24 hours.',media_lounge_waiting_title:'Invitation sent',media_lounge_waiting_text:'The shared session starts as soon as the invitation is accepted.',media_lounge_invite_title:'Media Lounge invitation',media_lounge_invite_text:'wants to share media live with you.',media_lounge_accept:'Accept',media_lounge_reject:'Decline',media_lounge_accepted:'Invitation accepted',media_lounge_rejected:'Invitation declined',media_lounge_ended:'The live session has ended.',media_lounge_expired:'This live session has expired.',media_lounge_dm_only:'Media Lounge is only available in private chats.',media_lounge_pending_exists:'An invitation is already waiting in this chat.',media_lounge_uploading:'Securely uploading media for the live session …',media_lounge_upload_error:'The media could not be uploaded.',media_lounge_type_error:'Please select photos, videos or music files only.'},
+    ar: {media_lounge_menu:'صالة الوسائط',media_lounge_title:'صالة الوسائط',media_lounge_subtitle:'استمعوا وشاهدوا واستمتعوا معًا',media_lounge_live:'مباشر',media_lounge_empty_title:'لا توجد وسائط بعد',media_lounge_empty_text:'أضف موسيقى أو صورًا أو فيديوهات إلى جلستكما المشتركة.',media_lounge_now:'معًا الآن',media_lounge_add:'إضافة وسائط',media_lounge_end:'إنهاء الجلسة',media_lounge_retention:'مؤقت وللاستخدام المباشر فقط. تُحذف جميع الصور والفيديوهات وملفات الموسيقى تلقائيًا خلال 24 ساعة كحد أقصى.',media_lounge_waiting_title:'تم إرسال الدعوة',media_lounge_waiting_text:'تبدأ الجلسة المشتركة بمجرد قبول الدعوة.',media_lounge_invite_title:'دعوة إلى صالة الوسائط',media_lounge_invite_text:'يريد مشاركة الوسائط معك مباشرة.',media_lounge_accept:'قبول',media_lounge_reject:'رفض',media_lounge_accepted:'تم قبول الدعوة',media_lounge_rejected:'تم رفض الدعوة',media_lounge_ended:'انتهت الجلسة المباشرة.',media_lounge_expired:'انتهت صلاحية هذه الجلسة المباشرة.',media_lounge_dm_only:'صالة الوسائط متاحة فقط في المحادثات الخاصة.',media_lounge_pending_exists:'توجد دعوة معلقة بالفعل في هذه المحادثة.',media_lounge_uploading:'جارٍ رفع الوسائط بأمان للجلسة المباشرة …',media_lounge_upload_error:'تعذّر رفع الوسائط.',media_lounge_type_error:'يرجى اختيار صور أو فيديوهات أو ملفات موسيقى فقط.'},
+    fa: {media_lounge_menu:'سالن رسانه',media_lounge_title:'سالن رسانه',media_lounge_subtitle:'با هم گوش دهید، تماشا کنید و لذت ببرید',media_lounge_live:'زنده',media_lounge_empty_title:'هنوز رسانه‌ای نیست',media_lounge_empty_text:'برای جلسه مشترک موسیقی، تصویر یا ویدیو اضافه کنید.',media_lounge_now:'اکنون با هم',media_lounge_add:'افزودن رسانه',media_lounge_end:'پایان جلسه',media_lounge_retention:'فقط موقت و برای استفاده زنده است. همه تصاویر، ویدیوها و فایل‌های موسیقی حداکثر ظرف ۲۴ ساعت به‌صورت خودکار حذف می‌شوند.',media_lounge_waiting_title:'دعوت ارسال شد',media_lounge_waiting_text:'به‌محض پذیرفتن دعوت، جلسه مشترک آغاز می‌شود.',media_lounge_invite_title:'دعوت به سالن رسانه',media_lounge_invite_text:'می‌خواهد رسانه را به‌صورت زنده با شما به اشتراک بگذارد.',media_lounge_accept:'پذیرفتن',media_lounge_reject:'رد کردن',media_lounge_accepted:'دعوت پذیرفته شد',media_lounge_rejected:'دعوت رد شد',media_lounge_ended:'جلسه زنده پایان یافت.',media_lounge_expired:'مهلت این جلسه زنده تمام شده است.',media_lounge_dm_only:'سالن رسانه فقط در گفت‌وگوهای خصوصی در دسترس است.',media_lounge_pending_exists:'در این گفت‌وگو یک دعوت در انتظار وجود دارد.',media_lounge_uploading:'رسانه‌ها به‌صورت امن برای جلسه زنده بارگذاری می‌شوند …',media_lounge_upload_error:'بارگذاری رسانه‌ها انجام نشد.',media_lounge_type_error:'لطفاً فقط تصویر، ویدیو یا فایل موسیقی انتخاب کنید.'},
+    tr: {media_lounge_menu:'Medya Salonu',media_lounge_title:'Medya Salonu',media_lounge_subtitle:'Birlikte dinleyin, izleyin ve yaşayın',media_lounge_live:'CANLI',media_lounge_empty_title:'Henüz medya yok',media_lounge_empty_text:'Ortak oturumunuza müzik, resim veya video ekleyin.',media_lounge_now:'Şimdi birlikte',media_lounge_add:'Medya ekle',media_lounge_end:'Oturumu bitir',media_lounge_retention:'Yalnızca geçici ve canlı kullanım içindir. Tüm resimler, videolar ve müzik dosyaları en geç 24 saat içinde otomatik olarak silinir.',media_lounge_waiting_title:'Davet gönderildi',media_lounge_waiting_text:'Davet kabul edilir edilmez ortak oturum başlar.',media_lounge_invite_title:'Medya Salonu daveti',media_lounge_invite_text:'seninle canlı medya paylaşmak istiyor.',media_lounge_accept:'Kabul et',media_lounge_reject:'Reddet',media_lounge_accepted:'Davet kabul edildi',media_lounge_rejected:'Davet reddedildi',media_lounge_ended:'Canlı oturum sona erdi.',media_lounge_expired:'Bu canlı oturumun süresi doldu.',media_lounge_dm_only:'Medya Salonu yalnızca özel sohbetlerde kullanılabilir.',media_lounge_pending_exists:'Bu sohbette zaten bekleyen bir davet var.',media_lounge_uploading:'Medya canlı oturum için güvenle yükleniyor …',media_lounge_upload_error:'Medya yüklenemedi.',media_lounge_type_error:'Lütfen yalnızca resim, video veya müzik dosyaları seçin.'}
+  };
+
+  let modal, viewer, empty, tray, waiting, uploadInput, currentSession = null, unsubscribe = null;
+  let applyingRemote = false, lastPlaybackWrite = 0, sessionsListener = null;
+  const me = () => String(window.currentUser || '').toLowerCase();
+  const tr = () => I18N[window.currentLang] || I18N.en;
+  const esc = value => String(value || '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+
+  function installTranslations() {
+    Object.keys(I18N).forEach(lang => {
+      if (window.TRANSLATIONS && window.TRANSLATIONS[lang]) Object.assign(window.TRANSLATIONS[lang], I18N[lang]);
+    });
+    const label = document.querySelector('#media-lounge-btn [data-i18n="media_lounge_menu"]');
+    if (label) label.textContent = tr().media_lounge_menu;
+  }
+
+  function applyOwnTranslations() {
+    document.querySelectorAll('#media-lounge-modal [data-i18n]').forEach(el => {
+      const value = tr()[el.dataset.i18n];
+      if (value) el.textContent = value;
+    });
+  }
+
+  function sessionRef(id) { return window.db.collection('liveMediaSessions').doc(id); }
+  function validSession(data) { return data && data.expiresAt > Date.now() && ['pending','active'].includes(data.status); }
+
+  async function createSession() {
+    const chat = window.currentChat;
+    if (!chat || chat.type !== 'dm') return alert(tr().media_lounge_dm_only);
+    const creator = me();
+    const peer = String(chat.id || '').toLowerCase();
+    if (!creator || !peer) return;
+    const existing = await window.db.collection('liveMediaSessions').where('participants','array-contains',creator).limit(30).get();
+    const duplicate = existing.docs.some(doc => {
+      const data = doc.data();
+      return validSession(data) && data.participants.includes(peer);
+    });
+    if (duplicate) return alert(tr().media_lounge_pending_exists);
+    const ref = window.db.collection('liveMediaSessions').doc();
+    const now = Date.now();
+    await ref.set({creator,participants:[creator,peer],status:'pending',items:[],currentIndex:0,playback:{playing:false,position:0,updatedAt:now,changedBy:creator},createdAt:now,updatedAt:now,expiresAt:now+SESSION_MS});
+    const sent = await window.sendMessage('', 'live_media_invite', JSON.stringify({id:ref.id}));
+    if (!sent) { await ref.delete().catch(()=>{}); return; }
+    openSession(ref.id);
+  }
+
+  async function decide(sessionId, messageId, accepted) {
+    const ref = sessionRef(sessionId);
+    try {
+      await window.db.runTransaction(async transaction => {
+        const snap = await transaction.get(ref);
+        const data = snap.data();
+        if (!data || data.status !== 'pending' || !data.participants.includes(me()) || data.creator === me()) throw new Error('invalid invitation');
+        transaction.update(ref,{status:accepted?'active':'declined',updatedAt:Date.now(),decidedBy:me()});
+      });
+      if (messageId) await window.db.collection('messages').doc(messageId).update({live_media_status:accepted?'accepted':'declined'});
+      window.renderMessages?.();
+      if (accepted) openSession(sessionId);
+    } catch (error) { console.error('Media Lounge invitation failed', error); }
+  }
+
+  function openSession(id) {
+    if (!modal) return;
+    applyOwnTranslations();
+    modal.classList.remove('hidden');
+    unsubscribe?.();
+    unsubscribe = sessionRef(id).onSnapshot(snapshot => {
+      if (!snapshot.exists) return closeLocal();
+      currentSession = {id:snapshot.id,...snapshot.data()};
+      if (currentSession.expiresAt <= Date.now()) { alert(tr().media_lounge_expired); return closeLocal(); }
+      if (['declined','ended'].includes(currentSession.status)) { alert(currentSession.status==='ended'?tr().media_lounge_ended:tr().media_lounge_rejected); return closeLocal(); }
+      render();
+    }, error => { console.error('Media Lounge sync failed', error); closeLocal(); });
+  }
+
+  function closeLocal() {
+    unsubscribe?.(); unsubscribe = null; currentSession = null;
+    modal?.classList.add('hidden');
+    if (viewer) { const media=viewer.querySelector('video,audio'); media?.pause(); viewer.replaceChildren(); }
+  }
+
+  function render() {
+    const items = Array.isArray(currentSession.items) ? currentSession.items.filter(item => item.expiresAt > Date.now()) : [];
+    const pending = currentSession.status === 'pending';
+    waiting.classList.toggle('hidden', !pending);
+    document.getElementById('media-lounge-add').disabled = pending;
+    const index = Math.min(Math.max(Number(currentSession.currentIndex)||0,0),Math.max(items.length-1,0));
+    empty.classList.toggle('hidden', items.length > 0);
+    viewer.classList.toggle('hidden', items.length === 0);
+    document.getElementById('media-lounge-prev').disabled = items.length < 2;
+    document.getElementById('media-lounge-next').disabled = items.length < 2;
+    document.getElementById('media-lounge-counter').textContent = items.length ? `${index+1} / ${items.length}` : '0 / 0';
+    document.getElementById('media-lounge-file-name').textContent = items[index]?.name || '—';
+    tray.replaceChildren(...items.map((item,itemIndex) => makeTile(item,itemIndex,index)));
+    renderViewer(items[index], index);
+  }
+
+  function makeTile(item, index, active) {
+    const button=document.createElement('button'); button.type='button'; button.className='media-lounge-tile'+(index===active?' active':'');
+    if (item.type==='image') { const img=document.createElement('img'); img.src=item.url; img.alt=''; button.appendChild(img); }
+    else { const icon=document.createElement('span'); icon.textContent=item.type==='video'?'▶':'♫'; button.appendChild(icon); }
+    const name=document.createElement('small'); name.textContent=item.name; button.appendChild(name);
+    button.onclick=()=>setIndex(index); return button;
+  }
+
+  function renderViewer(item, index) {
+    const existing=viewer.firstElementChild;
+    if (!item) { viewer.replaceChildren(); viewer.dataset.key=''; return; }
+    if (viewer.dataset.key===item.id) { applyPlayback(existing); return; }
+    viewer.dataset.key=item.id; viewer.replaceChildren();
+    if (item.type==='image') { const img=document.createElement('img'); img.src=item.url; img.alt=item.name||''; viewer.appendChild(img); return; }
+    const wrap=document.createElement('div'); wrap.style.cssText='width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center';
+    if(item.type==='audio'){const art=document.createElement('div');art.className='media-lounge-audio-art';art.textContent='♫';wrap.appendChild(art);}
+    const media=document.createElement(item.type==='video'?'video':'audio'); media.src=item.url; media.controls=true; media.playsInline=true; media.preload='metadata';
+    media.addEventListener('play',()=>syncPlayback(media,true)); media.addEventListener('pause',()=>syncPlayback(media,false));
+    media.addEventListener('seeked',()=>syncPlayback(media,!media.paused,true));
+    media.addEventListener('timeupdate',()=>{if(!media.paused&&Date.now()-lastPlaybackWrite>3000)syncPlayback(media,true);});
+    wrap.appendChild(media); viewer.appendChild(wrap); applyPlayback(media);
+  }
+
+  function applyPlayback(root) {
+    const media = root?.matches?.('video,audio') ? root : root?.querySelector?.('video,audio');
+    const state=currentSession?.playback; if(!media||!state||state.changedBy===me())return;
+    let target=Number(state.position)||0; if(state.playing)target+=(Date.now()-(Number(state.updatedAt)||Date.now()))/1000;
+    applyingRemote=true;
+    if(Math.abs((media.currentTime||0)-target)>1.2)try{media.currentTime=Math.max(0,target);}catch(_){ }
+    if(state.playing&&media.paused)media.play().catch(()=>{}); else if(!state.playing&&!media.paused)media.pause();
+    setTimeout(()=>{applyingRemote=false;},100);
+  }
+
+  function syncPlayback(media, playing, force=false) {
+    if(applyingRemote||!currentSession||currentSession.status!=='active')return;
+    if(!force&&Date.now()-lastPlaybackWrite<800)return; lastPlaybackWrite=Date.now();
+    sessionRef(currentSession.id).update({playback:{playing,position:Number(media.currentTime)||0,updatedAt:Date.now(),changedBy:me()},updatedAt:Date.now()}).catch(console.error);
+  }
+
+  function setIndex(index) {
+    if(!currentSession||currentSession.status!=='active')return;
+    sessionRef(currentSession.id).update({currentIndex:index,playback:{playing:false,position:0,updatedAt:Date.now(),changedBy:me()},updatedAt:Date.now()}).catch(console.error);
+  }
+
+  async function uploadFiles(files) {
+    if(!currentSession||currentSession.status!=='active')return;
+    const selected=[...files];
+    if(selected.some(file=>!/^image\//.test(file.type)&&!/^video\//.test(file.type)&&!/^audio\//.test(file.type)))return alert(tr().media_lounge_type_error);
+    const addButton=document.getElementById('media-lounge-add'); addButton.disabled=true; const old=addButton.innerHTML; addButton.textContent=tr().media_lounge_uploading;
+    try {
+      for(const file of selected){
+        const requestUpload=window.accountFunctions.httpsCallable('requestLargeMediaUpload');
+        const result=await requestUpload({fileName:file.name,fileSize:file.size,mimeType:file.type,chatId:currentSession.id,purpose:'live_media'});
+        const plan=result.data; const response=await fetch(plan.uploadUrl,{method:'PUT',body:file,headers:{'Content-Type':file.type}}); if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        await window.accountFunctions.httpsCallable('confirmLargeMediaUpload')({fileId:plan.fileId,provider:plan.provider,storageKey:plan.storageKey,fileName:file.name,fileSize:file.size,mimeType:file.type,chatId:currentSession.id,expiresAt:plan.expiresAt,purpose:'live_media'});
+        const type=file.type.startsWith('image/')?'image':file.type.startsWith('video/')?'video':'audio';
+        await sessionRef(currentSession.id).update({items:window.firebase.firestore.FieldValue.arrayUnion({id:plan.fileId,type,name:file.name,url:plan.downloadUrl,provider:plan.provider,expiresAt:plan.expiresAt,addedBy:me(),addedAt:Date.now()}),updatedAt:Date.now()});
+      }
+    } catch(error){console.error('Media Lounge upload failed',error);alert(tr().media_lounge_upload_error);} finally {addButton.disabled=false;addButton.innerHTML=old;uploadInput.value='';}
+  }
+
+  async function endSession(){if(!currentSession)return;await sessionRef(currentSession.id).update({status:'ended',endedBy:me(),updatedAt:Date.now()}).catch(console.error);closeLocal();}
+
+  function renderInvite(message){
+    let data={};try{data=JSON.parse(message.mediaUrl||'{}');}catch(_){ }
+    const status=message.live_media_status||'pending';
+    const mine=String(message.sender_username||'').toLowerCase()===me();
+    const state=status==='accepted'?tr().media_lounge_accepted:status==='declined'?tr().media_lounge_rejected:'';
+    const actions=!mine&&status==='pending'?`<div class="live-media-invite-actions"><button class="live-media-accept" onclick="acceptLiveMediaInvite('${esc(data.id)}','${esc(message.id)}')">${esc(tr().media_lounge_accept)}</button><button class="live-media-reject" onclick="rejectLiveMediaInvite('${esc(data.id)}','${esc(message.id)}')">${esc(tr().media_lounge_reject)}</button></div>`:status==='accepted'?`<div class="live-media-invite-actions"><button class="live-media-accept" onclick="openLiveMediaSession('${esc(data.id)}')">${esc(tr().media_lounge_title)}</button></div>`:'';
+    return `<div class="live-media-invite-card"><div class="live-media-invite-top"><span class="live-media-invite-icon">◉</span><strong>${esc(tr().media_lounge_invite_title)}</strong></div><p>${state?esc(state):`${esc(message.sender_username)} ${esc(tr().media_lounge_invite_text)}`}</p>${actions}</div>`;
+  }
+
+  function listenForActiveSessions(){
+    if(sessionsListener||!me()||!window.db)return;
+    sessionsListener=window.db.collection('liveMediaSessions').where('participants','array-contains',me()).limit(20).onSnapshot(snapshot=>{
+      snapshot.docChanges().forEach(change=>{const data=change.doc.data();if(change.type==='modified'&&data.status==='active'&&data.expiresAt>Date.now()&&data.participants.includes(String(window.currentChat?.id||'').toLowerCase()))openSession(change.doc.id);});
+    },error=>console.error('Media Lounge listener failed',error));
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    installTranslations(); modal=document.getElementById('media-lounge-modal');viewer=document.getElementById('media-lounge-viewer');empty=document.getElementById('media-lounge-empty');tray=document.getElementById('media-lounge-tray');waiting=document.getElementById('media-lounge-waiting');uploadInput=document.getElementById('media-lounge-upload');
+    document.getElementById('media-lounge-btn')?.addEventListener('click',createSession);
+    document.getElementById('media-lounge-close')?.addEventListener('click',closeLocal);
+    document.getElementById('media-lounge-add')?.addEventListener('click',()=>uploadInput.click()); uploadInput?.addEventListener('change',()=>uploadFiles(uploadInput.files));
+    document.getElementById('media-lounge-end')?.addEventListener('click',endSession);
+    document.getElementById('media-lounge-prev')?.addEventListener('click',()=>{const n=currentSession?.items?.length||0;if(n)setIndex(((currentSession.currentIndex||0)-1+n)%n);});
+    document.getElementById('media-lounge-next')?.addEventListener('click',()=>{const n=currentSession?.items?.length||0;if(n)setIndex(((currentSession.currentIndex||0)+1)%n);});
+    const timer=setInterval(()=>{if(me()){clearInterval(timer);listenForActiveSessions();}},500);
+  });
+  window.addEventListener('doori-language-change',()=>{installTranslations();applyOwnTranslations();window.renderMessages?.();});
+  window.renderDooriLiveMediaInvite=renderInvite;
+  window.acceptLiveMediaInvite=(id,messageId)=>decide(id,messageId,true);
+  window.rejectLiveMediaInvite=(id,messageId)=>decide(id,messageId,false);
+  window.openLiveMediaSession=openSession;
+  window.DooriLiveMediaTest={I18N,SESSION_MS,renderInvite};
+})();

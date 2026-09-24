@@ -4,7 +4,7 @@ const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'dist');
 require('esbuild').buildSync({stdin:{contents:"import DailyIframe from '@daily-co/daily-js'; import {StreamVideoClient} from '@stream-io/video-client'; window.DooriTelephonyProviders={DailyIframe,StreamVideoClient};",resolveDir:root},bundle:true,minify:true,format:'iife',platform:'browser',target:['es2020'],legalComments:'inline',outfile:path.join(root,'vendor','telephony-providers.js')});
 const files = ['index.html', 'account-action.html', 'account-action.js', 'operator.html', 'operator.js', 'operator.css', 'app.js', 'assistant.js', 'assistant-language.js', 'tts.js', 'doori-live.js', 'message-cache.js', 'quiz-questions.js', 'games.js', 'agora-calls.js', 'doodle.js', 'firebase-config.js', 'security.js',
-    'auth-translations.js', 'account-client.js', 'style.css', 'manifest.json', 'service-worker.js', 'logo.png', 'bg.png',
+    'auth-translations.js', 'account-client.js', 'live-media.js', 'style.css', 'manifest.json', 'service-worker.js', 'logo.png', 'bg.png',
     'wallpaper_1.png', 'wallpaper_2.png', 'wallpaper_3.png', 'vendor/purify.min.js', 'vendor/DOMPurify-LICENSE',
     'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js',
     'vendor/firebase-functions-compat.js', 'vendor/agora-rtc-sdk-ng.js', 'vendor/telephony-providers.js', 'vendor/FIREBASE-LICENSE'];

@@ -477,3 +477,17 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
    - Testsuite: **63/63 Tests bestanden (100% grün)** (`npm.cmd test`).
    - Build: **37 allowlistete Public-Dateien** (`npm.cmd run build`).
 
+## 17. Media Lounge – temporäre Live-Medien (Stand: 24.09.2026)
+
+- Neuer privater Zwei-Personen-Bereich **Media Lounge** für gemeinsam synchronisierte Bilder, Videos und Musik. Eine Sitzung startet erst nach Einladung und ausdrücklicher Annahme; offene Doppeleinladungen werden verhindert.
+- Auswahl des Mediums sowie Wiedergabe, Pause, Position und Wechsel zwischen Medien werden über `liveMediaSessions` in Firestore zwischen beiden Teilnehmern synchronisiert.
+- Das responsive Glas-Design umfasst Bühne, Medienleiste, Live-Anzeige, Wartezustand, Hell-/Dunkelmodus und Mobilansicht.
+- Der Hinweis ist dauerhaft sichtbar: Die Medien sind nur vorübergehend für Live-Zwecke bestimmt und werden spätestens nach 24 Stunden automatisch gelöscht.
+- Live-Medien verwenden den eigenen privaten Storage-Pfad `live-media/`, niemals eine öffentliche Basis-URL, und erhalten serverseitig höchstens 24 Stunden Gültigkeit. Normale Chat-Anhänge behalten ihre 30-Tage-Regel.
+- Cloudflare R2 bleibt primär; ab der vorhandenen 9,5-GB-Sicherheitsgrenze folgt automatisch Backblaze B2.
+- Alle sichtbaren Texte wurden in `de`, `en`, `ar`, `fa` und `tr` umgesetzt; Arabisch und Persisch bleiben RTL.
+- Geändert/neu: `live-media.js`, `index.html`, `style.css`, `app.js`, `firestore.rules`, `functions/index.js`, `functions/large-media-storage.js`, `scripts/build-hosting.cjs`, `service-worker.js`, `tests/storage.test.cjs`.
+- Verifikation: vollständige Suite `67/67` grün; gezielter Speichertest `8/8` grün; Syntaxprüfungen und `git diff --check` erfolgreich; Build exakt `38` Dateien.
+- Cache-/Assets: `web-messenger-v137-media-lounge`, `style.css?v=336`, `app.js?v=358`, `live-media.js?v=1`.
+- Einschränkung: Der lokale Firestore-Emulator konnte nicht gestartet werden, weil Java nicht im System-PATH installiert ist. Das geplante Firebase-Deployment wurde in Codex nicht ausgeführt, weil die angeforderte Ausführungsfreigabe abgelehnt wurde. Regeln und Live-Stand müssen daher beim nächsten Deployment noch serverseitig validiert/veröffentlicht werden.
+

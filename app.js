@@ -1517,6 +1517,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             else if (msg.mediaType === 'buzz') { contentHtml += `<div class="buzz-message">⚡ BUZZ! ⚡</div>`; }
             else if (msg.mediaType === 'game_invite' && window.renderDooriGameInvite) { contentHtml += window.renderDooriGameInvite(msg); }
             else if (msg.mediaType === 'game_status' && window.renderDooriGameStatus) { contentHtml += window.renderDooriGameStatus(msg); }
+            else if (msg.mediaType === 'live_media_invite' && window.renderDooriLiveMediaInvite) { contentHtml += window.renderDooriLiveMediaInvite(msg); }
             else if (msg.mediaType === 'doodle_invite') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
                     <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username)}>${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;
@@ -1598,7 +1599,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             const isStarred = window.isMessageStarred ? window.isMessageStarred(msg.id) : false;
             const starHtml = isStarred ? '<span class="msg-star-badge" title="Markiert">⭐</span>' : '';
             
-            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + (msg.fileName || '') + (msg.expires_at || '') + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + msg.game_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
+            const hash = (msg.text || '') + (msg.edited ? '1':'0') + (isStarred ? 's1':'s0') + msg.mediaType + timeStr + (msg.fileName || '') + (msg.expires_at || '') + JSON.stringify(msg.reactions||{}) + (msg.replyTo?'1':'0') + msg.type + msg.invite_status + msg.game_status + msg.live_media_status + (msg.read ? '1':'0') + (msg.deletedFor ? JSON.stringify(msg.deletedFor) : '');
             
             let expectedInner = '';
             let className = '';
@@ -2798,6 +2799,8 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         document.body.classList.toggle('assistant-chat-open', type === 'assistant');
         if (type !== 'assistant') document.body.classList.remove('assistant-thinking');
         document.querySelector('.composer-tools-row')?.classList.toggle('assistant-mode-hidden', type === 'assistant');
+        const mediaLoungeButton = document.getElementById('media-lounge-btn');
+        if (mediaLoungeButton) mediaLoungeButton.style.display = type === 'dm' ? 'flex' : 'none';
         
         currentChatName.textContent = getTranslatedChatName(chat);
         const detailsName = document.getElementById('details-chat-name');

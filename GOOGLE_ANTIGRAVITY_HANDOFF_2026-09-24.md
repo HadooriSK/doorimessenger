@@ -174,3 +174,13 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
   - Code 2: `firebase functions:secrets:set BACKBLAZE_B2_CONFIG`
 - Teststand: 63/63 Tests grün (`npm.cmd test`), Build: 37 Dateien (`npm.cmd run build`).
 
+## Media Lounge – Live-Bilder, -Videos und -Musik
+
+- Neuer privater Zwei-Personen-Bereich **Media Lounge** mit Einladung/Annahme und synchroner Medienauswahl sowie synchronem Play/Pause/Seek für Video und Audio.
+- Moderne responsive Bühne mit Media-Tray, Live- und Wartezustand sowie Hell-/Dunkelmodus.
+- Deutlich sichtbarer Hinweis in allen fünf Pflichtsprachen: Medien sind nur vorübergehend für Live-Zwecke bestimmt und werden spätestens nach 24 Stunden automatisch gelöscht.
+- Technisch eigener privater Prefix `live-media/`, keine öffentliche URL und maximale Laufzeit von 24 Stunden; normale Chatmedien bleiben bei 30 Tagen. R2 bleibt primär, B2 ist der bestehende Quota-Fallback.
+- Dateien: `live-media.js` (neu), `index.html`, `style.css`, `app.js`, `firestore.rules`, `functions/index.js`, `functions/large-media-storage.js`, `scripts/build-hosting.cjs`, `service-worker.js`, `tests/storage.test.cjs`.
+- Prüfstand: vollständige Tests `67/67`, gezielte Speichertests `8/8`, Build `38` Dateien, Syntax und Diff-Prüfung grün.
+- Noch offen: Firebase-Deployment von `requestLargeMediaUpload`, `confirmLargeMediaUpload`, Firestore-Regeln und Hosting. Die Codex-Ausführungsfreigabe wurde abgelehnt. Der lokale Regeltest benötigt außerdem Java im PATH; Firebase soll die Regeln beim Deployment validieren.
+

@@ -83,6 +83,9 @@ service cloud.firestore {
     (resource.data.get('mediaType', '') == 'game_invite' && resource.data.recipient_username.lower() == key() &&
      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['game_status']) &&
      request.resource.data.game_status in ['accepted', 'declined']) ||
+    (resource.data.get('mediaType', '') == 'live_media_invite' && resource.data.recipient_username.lower() == key() &&
+     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['live_media_status']) &&
+     request.resource.data.live_media_status in ['accepted', 'declined']) ||
     (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor']) &&
      request.resource.data.deletedFor.toSet().hasAll(resource.data.get('deletedFor', []).toSet()) &&
      request.resource.data.deletedFor.toSet().difference(resource.data.get('deletedFor', []).toSet()).hasOnly([name()])) ||
@@ -115,6 +118,26 @@ service cloud.firestore {
     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state', 'status', 'updatedAt', 'round', 'stateVersion', 'leftBy']) &&
     (request.resource.data.status != 'left' || request.resource.data.leftBy == key());
    allow delete: if verified() && key() in resource.data.participants;
+  }
+  match /liveMediaSessions/{sessionId} {
+   function participant() { return verified() && key() in resource.data.participants; }
+   allow read: if participant();
+   allow create: if verified() && request.resource.data.creator == key() &&
+    request.resource.data.participants is list && request.resource.data.participants.size() == 2 &&
+    key() in request.resource.data.participants && request.resource.data.status == 'pending' &&
+    request.resource.data.expiresAt <= request.time.toMillis() + 24 * 60 * 60 * 1000;
+   allow update: if participant() &&
+    request.resource.data.creator == resource.data.creator &&
+    request.resource.data.participants == resource.data.participants &&
+    request.resource.data.createdAt == resource.data.createdAt &&
+    request.resource.data.expiresAt == resource.data.expiresAt &&
+    request.resource.data.status in ['pending', 'active', 'declined', 'ended'] &&
+    ((resource.data.status == 'pending' &&
+      ((key() != resource.data.creator && request.resource.data.status in ['active', 'declined']) ||
+       (request.resource.data.status == 'pending' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['items', 'currentIndex', 'playback', 'updatedAt'])))) ||
+     (resource.data.status == 'active' && request.resource.data.status in ['active', 'ended'])) &&
+    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'items', 'currentIndex', 'playback', 'updatedAt', 'decidedBy', 'endedBy']);
+   allow delete: if participant();
   }
   match /groups/{groupId} {
    allow read: if verified() && (resource.data.privacy == 'public' || name() in resource.data.members);

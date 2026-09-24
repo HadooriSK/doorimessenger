@@ -137,6 +137,43 @@ test('Upload plan creates 30-day retention and S3 SigV4 URLs', () => {
     assert.ok(plan.expiresAt >= expectedExpiry && plan.expiresAt <= after + 30 * 24 * 60 * 60 * 1000);
 });
 
+test('Media Lounge upload plans use private 24-hour links and a separate storage prefix', () => {
+    const config = {
+        accountId: 'acc1', accessKeyId: 'AKID', secretAccessKey: 'SECRET',
+        bucketName: 'my-bucket', region: 'auto', endpoint: 'https://acc1.r2.cloudflarestorage.com',
+        publicUrl: 'https://public.example.test'
+    };
+    const before = Date.now();
+    const plan = storage.createUploadPlan({
+        provider: 'r2', config, chatId: 'session-1', fileName: 'live.mp4',
+        fileSize: 1024, mimeType: 'video/mp4', purpose: 'live_media'
+    });
+    const after = Date.now();
+    assert.match(plan.uploadUrl, /\/my-bucket\/live-media\/session-1\//);
+    assert.match(plan.downloadUrl, /^https:\/\/acc1\.r2\.cloudflarestorage\.com\//);
+    assert.doesNotMatch(plan.downloadUrl, /^https:\/\/public\.example\.test\//);
+    assert.equal(plan.purpose, 'live_media');
+    assert.ok(plan.expiresAt >= before + 24 * 60 * 60 * 1000);
+    assert.ok(plan.expiresAt <= after + 24 * 60 * 60 * 1000);
+});
+
+test('Media Lounge UI includes invitation, synchronization hooks, five languages and 24-hour notice', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const source = fs.readFileSync(path.join(__dirname, '../live-media.js'), 'utf8');
+    const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+    const rules = fs.readFileSync(path.join(__dirname, '../firestore.rules'), 'utf8');
+    assert.match(html, /id="media-lounge-modal"/);
+    assert.match(html, /id="media-lounge-btn"/);
+    assert.match(source, /liveMediaSessions/);
+    assert.match(source, /live_media_invite/);
+    assert.match(source, /syncPlayback/);
+    assert.match(source, /24 \* 60 \* 60 \* 1000/);
+    assert.match(rules, /match \/liveMediaSessions\/\{sessionId\}/);
+    for (const lang of ['de','en','ar','fa','tr']) assert.match(source, new RegExp(`\\b${lang}: \\{`));
+    assert.match(source, /[\u0600-\u06FF]/);
+});
+
 test('Firebase functions export large media endpoints with 30-day lifecycle', () => {
     process.env.GCLOUD_PROJECT = 'demo-doori-security';
     const functions = require('../functions/index');

@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 // 9.5 GB soft limit to safely stay within the 10 GB free tier for each provider
 const QUOTA_LIMIT_BYTES = 9.5 * 1024 * 1024 * 1024;
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const LIVE_MEDIA_RETENTION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function hmac(key, data) {
     return crypto.createHmac('sha256', key).update(data).digest();
@@ -205,11 +206,16 @@ async function selectStorageProvider(db, requestedBytes = 0, env = process.env) 
 /**
  * Generates an upload plan for a large media file.
  */
-function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeType }) {
+function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeType, purpose = 'chat', retentionMs = RETENTION_MS }) {
     const randomId = crypto.randomBytes(8).toString('hex');
     const safeName = String(fileName || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storageKey = `media/${chatId || 'general'}/${Date.now()}_${randomId}_${safeName}`;
-    const expiresAt = Date.now() + RETENTION_MS; // 30 days retention
+    const prefix = purpose === 'live_media' ? 'live-media' : 'media';
+    const storageKey = `${prefix}/${chatId || 'general'}/${Date.now()}_${randomId}_${safeName}`;
+    const safeRetentionMs = purpose === 'live_media'
+        ? LIVE_MEDIA_RETENTION_MS
+        : Math.min(Math.max(Number(retentionMs) || RETENTION_MS, 60 * 60 * 1000), RETENTION_MS);
+    const expiresAt = Date.now() + safeRetentionMs;
+    const downloadSeconds = Math.max(60, Math.min(Math.floor(safeRetentionMs / 1000), 86400 * 7));
 
     let uploadUrl = '';
     let downloadUrl = '';
@@ -226,7 +232,7 @@ function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeTy
             expiresIn: 900 // 15 min upload window
         });
 
-        downloadUrl = config.publicUrl
+        downloadUrl = config.publicUrl && purpose !== 'live_media'
             ? `${config.publicUrl}/${storageKey}`
             : generatePresignedUrl({
                 method: 'GET',
@@ -236,7 +242,7 @@ function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeTy
                 bucket: config.bucketName,
                 key: storageKey,
                 region: config.region,
-                expiresIn: 86400 * 7 // 7 days per token or direct
+                expiresIn: downloadSeconds
             });
     } else if (provider === 'b2') {
         uploadUrl = generatePresignedUrl({
@@ -250,7 +256,7 @@ function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeTy
             expiresIn: 900
         });
 
-        downloadUrl = config.publicUrl
+        downloadUrl = config.publicUrl && purpose !== 'live_media'
             ? `${config.publicUrl}/${storageKey}`
             : generatePresignedUrl({
                 method: 'GET',
@@ -260,7 +266,7 @@ function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeTy
                 bucket: config.bucketName,
                 key: storageKey,
                 region: config.region,
-                expiresIn: 86400 * 7
+                expiresIn: downloadSeconds
             });
     }
 
@@ -273,7 +279,8 @@ function createUploadPlan({ provider, config, chatId, fileName, fileSize, mimeTy
         expiresAt,
         fileName: safeName,
         fileSize: Number(fileSize) || 0,
-        mimeType: mimeType || 'application/octet-stream'
+        mimeType: mimeType || 'application/octet-stream',
+        purpose
     };
 }
 
@@ -306,6 +313,7 @@ async function deleteS3Object({ config, provider, key }) {
 module.exports = {
     QUOTA_LIMIT_BYTES,
     RETENTION_MS,
+    LIVE_MEDIA_RETENTION_MS,
     getR2Config,
     getB2Config,
     generatePresignedUrl,

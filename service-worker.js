@@ -1,14 +1,15 @@
-const CACHE_NAME = 'web-messenger-v136-large-media-storage';
+const CACHE_NAME = 'web-messenger-v137-media-lounge';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=335',
-  '/app.js?v=357',
+  '/style.css?v=336',
+  '/app.js?v=358',
   '/tts.js?v=9',
   '/doori-live.js?v=9',
   '/assistant.js?v=12',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
+  '/live-media.js?v=1',
   '/security.js?v=1',
   '/auth-translations.js?v=9',
   '/account-client.js?v=1',
