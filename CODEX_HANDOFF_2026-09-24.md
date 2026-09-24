@@ -3,6 +3,16 @@
 
 ## Neuester Nachtrag: Live-Sperrmeldungen und Wiederverbindungen
 
+### Live-Audio auf unterschiedlichen iPhones (24.09.2026)
+
+- Mehrere Stimmen behoben: `playPcm24k` registriert jede geplante Quelle; `stopPlayback` stoppt und trennt alle Quellen. `playbackGeneration` schützt neue Antworten vor verspäteten Ereignissen alter Quellen.
+- Lokales RMS-Barge-in entfernt, weil die eigene Lautsprecherausgabe auf iPhones ins Mikrofon zurückgelangen und Doori selbst unterbrechen konnte. Geminis serverseitiges `serverContent.interrupted` bleibt aktiv.
+- AudioWorklet- und ScriptProcessor-Pfade sind über Analyser und `GainNode(0.000001)` mit dem Audio-Ausgang verbunden. Das hält Audiocallbacks insbesondere im Fallback älterer iOS-Safari-Versionen aktiv, ohne hörbares Mikrofonsignal auszugeben.
+- Veraltete Nachrichten eines ersetzten WebSockets werden verworfen.
+- Mikrofonfehler unterscheiden in allen fünf Sprachen: nicht unterstützt, Berechtigung verweigert, Mikrofon durch andere App belegt.
+- Frontend `doori-live.js?v=8`, Service Worker `web-messenger-v131-live-mobile-audio`.
+- Syntaxprüfung, 55/55 Tests und Build mit 37 Dateien bestanden. Physischer Mehrgeräte-Test bleibt erforderlich.
+
 Die bisherigen Aussagen, der komplette Live-Dialog sei nachweislich repariert, waren zu weitgehend. Die 55 Tests enthalten vor allem Struktur- und Mock-Prüfungen; sie belegen keinen echten Gemini-Audioaustausch auf iPhone. Auch der Zähler live-v2 zählt ausgestellte Tokens, keine erfolgreich geführten Gespräche. Nicht erneut pauschal Kontingente zurücksetzen.
 
 Aktuelle Änderung: getLiveToken unterscheidet connection-rate (10 Token-Anfragen/15 Minuten), internal-daily (internes Tageslimit) und provider-rate (Google HTTP 429). Der Client zeigt passende Meldungen in allen fünf Sprachen, stoppt die automatische Quoten-Retry-Schleife und begrenzt sonstige Wiederverbindungen auf zwei. Permanente WebSocket-Protokollfehler stoppen sofort. Nach erfolgreichem Reconnect wird das zuvor gestoppte Mikrofon neu gestartet. Cache v126, doori-live.js?v=6. Bestehende 55 Tests bestanden, Build 37 Dateien. End-to-End-Live-Audio noch nicht bestätigt. Die zuletzt gelesenen Function-Logs zeigten authentifizierte Aufrufe, aber keinen eindeutigen Ablehnungsgrund.

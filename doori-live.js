@@ -22,6 +22,8 @@
       error:       'Live-Verbindung fehlgeschlagen. Bitte versuche es erneut.',
       retrying:    'Verbindung wird wiederhergestellt …',
       unsupported: 'Live-Modus ist in diesem Browser nicht verfügbar.',
+      micDenied:   'Mikrofonzugriff wurde nicht erlaubt. Bitte erlaube ihn in den Browser-Einstellungen.',
+      micBusy:     'Das Mikrofon wird bereits von einer anderen App verwendet.',
     },
     en: {
       btnLabel:    'Live',
@@ -36,6 +38,8 @@
       error:       'Live connection failed. Please try again.',
       retrying:    'Reconnecting …',
       unsupported: 'Live mode is not supported in this browser.',
+      micDenied:   'Microphone access was not allowed. Please enable it in your browser settings.',
+      micBusy:     'The microphone is already being used by another app.',
     },
     ar: {
       btnLabel:    'مباشر',
@@ -50,6 +54,8 @@
       error:       'فشل الاتصال المباشر. يرجى المحاولة مرة أخرى.',
       retrying:    'جارٍ إعادة الاتصال …',
       unsupported: 'الوضع المباشر غير مدعوم في هذا المتصفح.',
+      micDenied:   'لم يُسمح بالوصول إلى الميكروفون. يرجى السماح به في إعدادات المتصفح.',
+      micBusy:     'الميكروفون مستخدم حالياً بواسطة تطبيق آخر.',
     },
     fa: {
       btnLabel:    'زنده',
@@ -64,6 +70,8 @@
       error:       'اتصال زنده ناموفق بود. لطفاً دوباره تلاش کنید.',
       retrying:    'در حال اتصال مجدد …',
       unsupported: 'حالت زنده در این مرورگر پشتیبانی نمی‌شود.',
+      micDenied:   'دسترسی به میکروفون مجاز نشد. لطفاً آن را در تنظیمات مرورگر فعال کنید.',
+      micBusy:     'میکروفون هم‌اکنون توسط برنامه دیگری استفاده می‌شود.',
     },
     tr: {
       btnLabel:    'Canlı',
@@ -78,6 +86,8 @@
       error:       'Canlı bağlantı başarısız. Lütfen tekrar dene.',
       retrying:    'Yeniden bağlanıyor …',
       unsupported: 'Canlı mod bu tarayıcıda desteklenmiyor.',
+      micDenied:   'Mikrofon erişimine izin verilmedi. Lütfen tarayıcı ayarlarından izin verin.',
+      micBusy:     'Mikrofon şu anda başka bir uygulama tarafından kullanılıyor.',
     },
   };
 
@@ -122,6 +132,7 @@
     workletNode:   null,
     processorNode: null,
     analyserNode:  null,
+    sinkGainNode:  null,
     micStream:     null,
     playing:       false,
     nextPlayTime:  0,
@@ -133,6 +144,9 @@
     tokenExpiry:   0,
     lastRmsTime:   0,
     captureBuffer: new Float32Array(0),
+    playbackSources: new Set(),
+    playbackGeneration: 0,
+    micFailure:    '',
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
@@ -279,11 +293,9 @@
     for (let i = 0; i < samples16k.length; i++) sum += samples16k[i] * samples16k[i];
     const rms = Math.sqrt(sum / samples16k.length);
 
-    // Visual volume feedback & barge-in
-    if (state.playing && rms > 0.035) {
-      stopPlayback();
-      setStatus(t().listening);
-    } else if (!state.playing && rms > 0.025) {
+    // Gemini performs server-side barge-in. Local RMS must not stop playback:
+    // on iPhone the speaker can leak into the mic and otherwise interrupt Doori.
+    if (!state.playing && rms > 0.025) {
       const now = Date.now();
       if (now - state.lastRmsTime > 800) {
         state.lastRmsTime = now;
@@ -338,13 +350,17 @@
 
     const now = ctx.currentTime;
     const startTime = Math.max(now + 0.015, state.nextPlayTime);
+    const generation = state.playbackGeneration;
     src.start(startTime);
+    state.playbackSources.add(src);
     state.nextPlayTime = startTime + audioBuf.duration;
     state.playing = true;
     setStatus(t().speaking);
 
     src.onended = () => {
-      if (ctx.currentTime >= state.nextPlayTime - 0.05) {
+      state.playbackSources.delete(src);
+      try { src.disconnect(); } catch (_) {}
+      if (generation === state.playbackGeneration && !state.playbackSources.size && ctx.currentTime >= state.nextPlayTime - 0.05) {
         state.playing = false;
         if (state.active) setStatus(t().listening);
       }
@@ -352,6 +368,12 @@
   }
 
   function stopPlayback() {
+    state.playbackGeneration++;
+    for (const src of state.playbackSources) {
+      try { src.stop(0); } catch (_) {}
+      try { src.disconnect(); } catch (_) {}
+    }
+    state.playbackSources.clear();
     state.playing = false;
     const ctx = getAudioCtx();
     if (ctx) state.nextPlayTime = ctx.currentTime;
@@ -359,7 +381,8 @@
 
   /* ── Microphone Capture (AudioWorklet + Analyser Fallback) ─────────── */
   async function startMic() {
-    if (!navigator.mediaDevices?.getUserMedia) return false;
+    state.micFailure = '';
+    if (!navigator.mediaDevices?.getUserMedia) { state.micFailure = 'unsupported'; return false; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -394,9 +417,14 @@
           sourceNode.connect(worklet);
           // Connect to analyser to keep WebKit rendering pipeline alive without speaker feedback
           const analyser = ctx.createAnalyser();
+          const sinkGain = ctx.createGain();
+          sinkGain.gain.value = 0.000001;
           worklet.connect(analyser);
+          analyser.connect(sinkGain);
+          sinkGain.connect(ctx.destination);
           state.workletNode  = worklet;
           state.analyserNode = analyser;
+          state.sinkGainNode = sinkGain;
           workletReady = true;
         } catch (err) {
           console.warn('[DooriLive] AudioWorklet init failed, using ScriptProcessor fallback', err);
@@ -418,13 +446,20 @@
 
         const analyser = ctx.createAnalyser();
         sourceNode.connect(processor);
-        processor.connect(analyser); // Analyser keeps processor alive without output to speakers!
+        const sinkGain = ctx.createGain();
+        sinkGain.gain.value = 0.000001;
+        processor.connect(analyser);
+        analyser.connect(sinkGain);
+        sinkGain.connect(ctx.destination); // Required by older iOS Safari to run callbacks.
         state.analyserNode = analyser;
+        state.sinkGainNode = sinkGain;
       }
 
       return true;
     } catch (err) {
       console.warn('[DooriLive] mic error', err);
+      state.micFailure = err?.name === 'NotAllowedError' || err?.name === 'SecurityError' ? 'micDenied'
+        : err?.name === 'NotReadableError' || err?.name === 'AbortError' ? 'micBusy' : 'error';
       return false;
     }
   }
@@ -435,11 +470,13 @@
       state.workletNode?.disconnect();
       state.processorNode?.disconnect();
       state.analyserNode?.disconnect();
+      state.sinkGainNode?.disconnect();
     } catch (_) {}
     state.sourceNode    = null;
     state.workletNode   = null;
     state.processorNode = null;
     state.analyserNode  = null;
+    state.sinkGainNode  = null;
     delete root._dooriLiveProcessor;
     state.micStream?.getTracks().forEach(t => t.stop());
     state.micStream = null;
@@ -516,6 +553,7 @@
 
     ws.onmessage = async (event) => {
       try {
+        if (state.ws !== ws || !state.active) return;
         const text = typeof event.data === 'string' ? event.data : await event.data.text();
         const msg = JSON.parse(text);
 
@@ -629,7 +667,7 @@
     setStatus(t().connecting);
     const micOk = await startMic();
     if (!micOk) {
-      setStatus(t().error);
+      setStatus(t()[state.micFailure] || t().error);
       stopSession(false);
       return;
     }

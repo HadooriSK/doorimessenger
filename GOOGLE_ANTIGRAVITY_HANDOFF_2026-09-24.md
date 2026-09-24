@@ -13,6 +13,19 @@ Bitte lies zuerst diese Datei und danach `CODEX_HANDOFF_2026-09-24.md` im Projek
 - Keine Secrets, API-Schlüssel oder Tokens in Frontend-Code, Git oder Logs exponiert. Firebase Functions Secrets bleiben maßgeblich.
 - Alle sichtbaren Änderungen immer synchron in Deutsch, Englisch, Arabisch, Persisch und Türkisch gepflegt (RTL für ar/fa).
 
+## Update: Live-Audio auf verschiedenen iPhones (24.09.2026)
+
+- Praxisstand: Gemini Live funktioniert auf Laptop und auf einem iPhone mit geringer Latenz. Auf diesem iPhone traten gelegentlich mehrere gleichzeitige Stimmen auf; auf einem anderen iPhone startete das Live-Gespräch nicht zuverlässig.
+- Nachgewiesener Clientfehler: `stopPlayback()` setzte nur Zeitstatus zurück, stoppte aber bereits geplante `AudioBufferSourceNode`-Segmente nicht. Nach Barge-in oder Wiederverbindung konnten alte und neue Antworten gleichzeitig laufen.
+- Korrektur: Alle aktiven und geplanten Wiedergabequellen werden in `playbackSources` verfolgt, bei Unterbrechung vollständig gestoppt und getrennt. Eine Generation verhindert, dass alte `onended`-Ereignisse den Status einer neuen Antwort verändern.
+- iPhone-Echo: Die lokale RMS-Erkennung durfte die Doori-Wiedergabe stoppen. Lautsprecherton kann auf iPhones trotz Echo-Cancellation wieder ins Mikrofon gelangen und dadurch die eigene Antwort unterbrechen. Lokales RMS-Barge-in wurde entfernt; Unterbrechungen werden über Geminis serverseitiges `serverContent.interrupted` verarbeitet.
+- Kompatibilität älterer Safari-Versionen: AudioWorklet und ScriptProcessor sind nun über Analyser plus sehr leisen Gain-Knoten tatsächlich mit `ctx.destination` verbunden. Ohne vollständigen Graphen führt älteres iOS teilweise keine Audiocallbacks aus.
+- Gerätefehler werden unterschieden: fehlende Browserunterstützung, verweigerter Mikrofonzugriff und ein durch eine andere App belegtes Mikrofon. Alle Texte liegen in de/en/ar/fa/tr vor.
+- Veraltete WebSocket-Ereignisse einer bereits ersetzten Verbindung werden ignoriert.
+- Cache: `web-messenger-v131-live-mobile-audio`; `doori-live.js?v=8`.
+- Validierung: Syntaxprüfung bestanden, 55/55 Tests grün, Build exakt 37 Dateien. Tests prüfen Quellenbereinigung, aktiven iOS-Audiographen, entfernte lokale Echo-Unterbrechung und fünfsprachige Fehlermeldungen.
+- Grenze: Es wurde kein physisches zweites iPhone automatisiert gesteuert. Nach dem Deployment müssen beide iPhones die Seite vollständig schließen/neu öffnen, Mikrofonberechtigung erlauben und praktisch testen. Keine Zusage für buchstäblich jedes alte Gerät oder jeden eingebetteten Browser.
+
 ## UI-Umstrukturierung: KI-Assistent Chatleiste & Symbole
 
 Auf ausdrücklichen Nutzerwunsch (*„In dem KI-Assistant-Chat soll die Chatleiste alleine stehen und die Symbole zum Chatten da drüber sein. Also zuerst die Symbole und da drunter die Chatleiste soll sein.“*):

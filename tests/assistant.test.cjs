@@ -168,6 +168,11 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.equal(wire.setup.responseModalities,undefined,'modalities must not be sent directly in setup');
  assert.equal(wire.setup.speechConfig,undefined,'speech config belongs inside generationConfig');
  assert.match(liveClient,/captureBuffer\.length < 1600/);
+ assert.match(liveClient,/playbackSources:\s*new Set\(\)/);
+ assert.match(liveClient,/for \(const src of state\.playbackSources\)/);
+ assert.match(liveClient,/sinkGain\.connect\(ctx\.destination\)/);
+ assert.doesNotMatch(liveClient,/state\.playing && rms > [\d.]+\) \{\s*stopPlayback\(\)/);
+ for(const key of ['micDenied','micBusy']) assert.equal((liveClient.match(new RegExp(`\\b${key}:`, 'g'))||[]).length,5);
  assert.doesNotMatch(liveClient,/media_chunks|generation_config|response_modalities/);
  assert.doesNotMatch(liveClient,/AIza|AQ\.[A-Za-z0-9]|GROQ_API_KEY|CLOUDFLARE_API_TOKEN/);
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v130-assistant-ui-layout';
+const CACHE_NAME = 'web-messenger-v131-live-mobile-audio';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=334',
   '/app.js?v=354',
   '/tts.js?v=9',
-  '/doori-live.js?v=7',
+  '/doori-live.js?v=8',
   '/assistant.js?v=12',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',
