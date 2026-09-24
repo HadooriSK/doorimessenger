@@ -184,3 +184,11 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Prüfstand: vollständige Tests `67/67`, gezielte Speichertests `8/8`, Build `38` Dateien, Syntax und Diff-Prüfung grün.
 - Noch offen: Firebase-Deployment von `requestLargeMediaUpload`, `confirmLargeMediaUpload`, Firestore-Regeln und Hosting. Die Codex-Ausführungsfreigabe wurde abgelehnt. Der lokale Regeltest benötigt außerdem Java im PATH; Firebase soll die Regeln beim Deployment validieren.
 
+## Gemini Live: iPhone-Startschleife behoben
+
+- iOS-Lautsprecherecho wurde während der KI-Ausgabe weiterhin als Mikrofoneingabe an Gemini gesendet und konnte wiederholte Begrüßungen auslösen.
+- `doori-live.js` überträgt während der Wiedergabe keine Mikrofonpakete mehr, leert dabei den Puffer und nutzt eine 500-ms-Nachlauf- sowie 700-ms-Handshake-Sperre.
+- Doori wartet beim Start stumm auf eine vollständige Äußerung, grüßt nicht ungefragt, wiederholt keine Begrüßung und hält die zuerst sicher erkannte Sprache stabil.
+- Versionen: `web-messenger-v138-live-ios-start-guard`, `doori-live.js?v=10`.
+- Tests: Assistent `15/15`, vollständig `68/68`; Build `38` Dateien.
+

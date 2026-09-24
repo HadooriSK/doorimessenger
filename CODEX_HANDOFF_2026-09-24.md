@@ -491,3 +491,11 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Cache-/Assets: `web-messenger-v137-media-lounge`, `style.css?v=336`, `app.js?v=358`, `live-media.js?v=1`.
 - Einschränkung: Der lokale Firestore-Emulator konnte nicht gestartet werden, weil Java nicht im System-PATH installiert ist. Das geplante Firebase-Deployment wurde in Codex nicht ausgeführt, weil die angeforderte Ausführungsfreigabe abgelehnt wurde. Regeln und Live-Stand müssen daher beim nächsten Deployment noch serverseitig validiert/veröffentlicht werden.
 
+## 18. Stabiler Gemini-Live-Start auf iPhone
+
+- Ursache der wiederholten anfänglichen Antworten war eine iOS-Audio-Rückkopplung: Die laufende Lautsprecherausgabe gelangte wieder in den Mikrofonstream und wurde als neue Spracheingabe gesendet.
+- Während der Doori-Ausgabe werden Mikrofonpakete nun verworfen und der Aufnahmepuffer geleert. Nach dem Ende der Ausgabe gilt eine 500-ms-Beruhigungsphase; nach dem Live-Handshake werden die ersten 700 ms ebenfalls nicht übertragen.
+- Die Systemanweisung verlangt nun ausdrücklich, bis zu einer vollständigen ersten Äußerung still zu warten, beim Verbindungsaufbau nicht selbst zu grüßen, Begrüßungen nicht zu wiederholen und die sicher erkannte Gesprächssprache beizubehalten.
+- Cache-/Assetstand: `web-messenger-v138-live-ios-start-guard`, `doori-live.js?v=10`.
+- Verifikation: gezielte Assistententests `15/15`, vollständige Suite `68/68`, Build exakt `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
+

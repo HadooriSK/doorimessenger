@@ -1,11 +1,11 @@
-const CACHE_NAME = 'web-messenger-v137-media-lounge';
+const CACHE_NAME = 'web-messenger-v138-live-ios-start-guard';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=336',
   '/app.js?v=358',
   '/tts.js?v=9',
-  '/doori-live.js?v=9',
+  '/doori-live.js?v=10',
   '/assistant.js?v=12',
   '/quiz-questions.js?v=1',
   '/games.js?v=4',

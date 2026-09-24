@@ -198,3 +198,12 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  assert.match(functions,/live-v2-\$\{uid\}-\$\{day\}/);
  assert.match(functions,/liveDailyLimit/);
 });
+
+test('Gemini Live suppresses iPhone speaker echo and unsolicited startup greetings',()=>{
+ const source=fs.readFileSync(path.join(root,'doori-live.js'),'utf8');
+ assert.match(source,/state\.playing \|\| Date\.now\(\) < state\.ignoreInputUntil/);
+ assert.match(source,/state\.ignoreInputUntil = Date\.now\(\) \+ 700/);
+ assert.match(source,/state\.ignoreInputUntil = Date\.now\(\) \+ 500/);
+ assert.match(source,/Wait silently until the user has spoken a complete first utterance/);
+ assert.match(source,/never repeat a greeting/i);
+});

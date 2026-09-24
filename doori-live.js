@@ -149,6 +149,7 @@
     micFailure:    '',
     resumeHandle:  '',
     plannedResume: false,
+    ignoreInputUntil: 0,
   };
 
   const lang = () => ['de', 'en', 'ar', 'fa', 'tr'].includes(root.currentLang) ? root.currentLang : 'en';
@@ -287,6 +288,14 @@
   function processAndSendAudio(inputF32, inRate) {
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN || !state.ready) return;
 
+    // iOS routes a noticeable amount of loudspeaker output back into the mic.
+    // Never send that echo to Gemini: otherwise a short greeting can be
+    // interpreted as a new user turn and trigger a repeating response loop.
+    if (state.playing || Date.now() < state.ignoreInputUntil) {
+      state.captureBuffer = new Float32Array(0);
+      return;
+    }
+
     // Downsample to 16 kHz
     const samples16k = downsampleTo16k(inputF32, inRate);
     if (!samples16k.length) return;
@@ -358,6 +367,7 @@
     state.playbackSources.add(src);
     state.nextPlayTime = startTime + audioBuf.duration;
     state.playing = true;
+    state.captureBuffer = new Float32Array(0);
     setStatus(t().speaking);
 
     src.onended = () => {
@@ -365,6 +375,7 @@
       try { src.disconnect(); } catch (_) {}
       if (generation === state.playbackGeneration && !state.playbackSources.size && ctx.currentTime >= state.nextPlayTime - 0.05) {
         state.playing = false;
+        state.ignoreInputUntil = Date.now() + 500;
         if (state.active) setStatus(t().listening);
       }
     };
@@ -533,7 +544,7 @@
 
     ws.onopen = async () => {
       state.ready      = false;
-      const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the language of the user and always reply in the same language. Support German, English, Arabic, Persian, and Turkish. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.';
+      const sysPrompt = 'You are Doori, the friendly in-app assistant of Doori Messenger. Wait silently until the user has spoken a complete first utterance. Never greet or start speaking merely because the connection opened, and never repeat a greeting. Be warm, concise, and conversational. Keep responses short — typically 1 to 3 sentences. Detect the dominant language of the complete user utterance and always reply only in that same language. Support German, English, Arabic, Persian, and Turkish. Once the first language is clear, keep it for the conversation unless the user deliberately switches languages with a complete utterance. Arabic and Persian use RTL text direction. Never mention model names, API providers, or internal infrastructure. If asked for dangerous or illegal instructions, refuse briefly and offer a safe alternative.';
       const setup = {
         setup: {
           model: 'models/gemini-3.8-live',
@@ -570,6 +581,8 @@
           clearTimeout(state.connectTimer);
           state.connectTimer = null;
           state.ready = true;
+          state.captureBuffer = new Float32Array(0);
+          state.ignoreInputUntil = Date.now() + 700;
           reconnectAttempts = 0;
           state.retryDelay = RECONNECT_INIT;
           if (!state.micStream && !await startMic()) { failConnection(t().error); return; }
@@ -686,6 +699,7 @@
     state.ready        = false;
     state.resumeHandle = '';
     state.plannedResume = false;
+    state.ignoreInputUntil = 0;
     state.retryDelay   = RECONNECT_INIT;
     updateBtn();
     root.DooriTTS?.stop?.();
