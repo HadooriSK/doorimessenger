@@ -410,3 +410,14 @@ Ausgangspunkt für diesen Abschnitt war Commit `b55dfa9` auf `main`.
 - Tests: `57/57` bestanden.
 - Build: exakt `37` erlaubte Dateien in `dist/` erzeugt.
 - Lokale Asset-Prüfung: alle drei aktualisierten Assets wurden mit HTTP 200 ausgeliefert.
+## 14. Korrigierte Doodle-, Anruf- und Präsenzabläufe
+
+- Die sichtbare Doodle-Bezeichnung im Anhangmenü lautet in allen fünf Sprachen nur noch `Doodle`.
+- Beim Start eines Doodles wird zunächst ausschließlich eine Einladung gesendet. Die Zeichenfläche des Absenders öffnet sich erst, nachdem der Empfänger angenommen hat. Ablehnen und Sitzungsende bleiben synchronisiert.
+- Direkte Sprach- und Videoanrufe unterscheiden nun klar zwischen `calling`, `ringing` und `connected`. Der technische Beitritt des Anrufers zum Medienkanal setzt den Anruf nicht mehr fälschlich auf „Verbunden“.
+- Das Empfangsgerät bestätigt seine Erreichbarkeit mit `ringing`; erst die ausdrückliche Annahme setzt den Firestore-Anruf auf `connected` und startet die Gesprächsdauer.
+- Die Texte „Ruft an“, „Es klingelt“ und „Verbunden“ wurden für Deutsch, Englisch, Arabisch, Persisch und Türkisch gepflegt.
+- Die Chat- und Kontaktliste besitzt jetzt eine echte Präsenzanzeige: Grün nur bei `isOnline` plus einem höchstens 75 Sekunden alten Zeitstempel; Rot bei aktiver Präsenz und gesetztem besonderem Profilstatus; offline ohne Punkt.
+- Der bisherige blaue Ungelesen-Punkt wurde entfernt, weil er mit einer Online-Anzeige verwechselt werden konnte. Ungelesene Chats bleiben weiterhin durch Schrift und Hintergrund erkennbar.
+- Cache: `web-messenger-v134-presence-call-doodle-flow`; Assets: `app.js?v=356`, `agora-calls.js?v=4`, `doodle.js?v=278`.
+- Syntaxprüfungen bestanden; Teststand: `59/59` grün.

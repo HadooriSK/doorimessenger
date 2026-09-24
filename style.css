@@ -152,6 +152,12 @@ body.rtl-mode { direction: rtl; }
 .chat-item.active { background: rgba(64, 175, 230, 0.15); border-left: 3px solid var(--accent); }
 .chat-item.unread .chat-item-name { font-weight: bold; color: white; }
 .chat-item.unread::after { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-left: auto; }
+.chat-item.unread::after { display:none; }
+.contact-presence-dot { position:absolute; right:-1px; bottom:-1px; width:13px; height:13px; border-radius:50%; border:3px solid var(--panel-bg); box-sizing:content-box; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+.contact-presence-dot.online { background:#28c76f; }
+.contact-presence-dot.busy { background:#ff5d6c; }
+.rtl-mode .contact-presence-dot { right:auto; left:-1px; }
+body.light-mode .contact-presence-dot { border-color:#edf5f8; }
 .avatar {
     width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #1e2a33, #151e24);
     display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px;

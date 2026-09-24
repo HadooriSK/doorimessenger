@@ -262,3 +262,16 @@ test('video calls use picture-in-picture swapping and cross-tab login is safe', 
   for(const language of ['de','en','ar','fa','tr'])assert.match(calls,new RegExp(`${language}:\\{swapVideo:`));
 });
 
+test('direct calls remain calling until the peer rings and explicitly accepts', () => {
+  const calls=fs.readFileSync(path.join(root,'agora-calls.js'),'utf8');
+  assert.match(calls,/ringing:'Es klingelt …'/);
+  assert.match(calls,/ringing:'Ringing …'/);
+  assert.match(calls,/ringing:'يرنّ الآن …'/);
+  assert.match(calls,/ringing:'در حال زنگ خوردن …'/);
+  assert.match(calls,/ringing:'Çalıyor …'/);
+  assert.match(calls,/update\(\{status:'ringing',ringingAt:/);
+  assert.match(calls,/data\.status==='ringing'&&call\.outgoing\)status\('ringing'/);
+  assert.match(calls,/else if\(call\.status==='connected'\)\{status\('connected'/);
+  assert.match(calls,/await call\.ref\.update\(\{answer:[^}]+\},status:'connected'\}\)/);
+});
+

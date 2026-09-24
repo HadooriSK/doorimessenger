@@ -491,8 +491,6 @@ async function initDoodleInvite(peerId) {
             window.sendMessage('', 'doodle_invite', null);
         }
         
-        openDoodleWorkspace();
-        
         doodleSessionUnsubscribe = currentDoodleDocRef.onSnapshot(doc => {
             const data = doc.data();
             if(!data) return;
@@ -504,6 +502,7 @@ async function initDoodleInvite(peerId) {
             } else if (data.type === 'end') {
                 endDoodle();
             } else if (data.type === 'accept') {
+                openDoodleWorkspace();
                 const st = document.getElementById('doodle-status');
                 if(st) { 
                     const t = window.TRANSLATIONS ? (window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']) : { doodle_connected: 'Verbunden' };
@@ -644,6 +643,7 @@ window.endDoodle = endDoodle;
 
 window.handleDoodleAccept = function(ts) {
     if(ts && ts < doodleSessionStartTime) return; // Ignore old messages
+    openDoodleWorkspace();
     const st = document.getElementById('doodle-status');
     if(st) { 
         const t = window.TRANSLATIONS ? (window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']) : { doodle_connected: 'Verbunden' };

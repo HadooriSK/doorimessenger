@@ -130,3 +130,14 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Geändert: `index.html`, `app.js`, `doodle.js`, `style.css`, `service-worker.js`, `tests/calls.test.cjs`, `tests/security.test.cjs` und beide Handoff-Dateien.
 - Cache: `web-messenger-v133-modern-groups-doodle`; Assets: `style.css?v=335`, `app.js?v=355`, `doodle.js?v=277`.
 - Syntaxprüfungen bestanden; `npm.cmd test`: `57/57` grün; `npm.cmd run build`: exakt `37` Dateien.
+## Korrektur: Doodle-Annahme, Anrufstatus und Präsenz
+
+- Das Anhangmenü zeigt in `de`, `en`, `ar`, `fa` und `tr` nur noch die Bezeichnung `Doodle`.
+- Ein Doodle öffnet beim Absender erst nach der Annahme durch den Empfänger. Einladung, Ablehnung, Annahme und gemeinsame Firestore-Sitzung bleiben erhalten.
+- Direkte Anrufe zeigen `calling`/„Ruft an“, bis das Empfangsgerät die Einladung tatsächlich sieht. Dann folgt `ringing`/„Es klingelt“. `connected` wird ausschließlich nach Annahme gesetzt.
+- Der alleinige technische Medienkanal-Beitritt des Anrufers darf keinen verbundenen Zustand mehr auslösen.
+- Alle Anrufstatus sind in den fünf Pflichtsprachen vorhanden.
+- Präsenzpunkte in Kontakt- und Chatliste werden aus dem Firestore-Dokument `presence/{username}` berechnet. Online erfordert `isOnline === true` und einen maximal 75 Sekunden alten `lastSeen`-Zeitstempel. Grün bedeutet online, Rot online mit besonderem Profilstatus, offline bedeutet kein Punkt.
+- Der vorherige blaue Ungelesen-Punkt wurde entfernt, damit er nicht mehr als Online-Präsenz missverstanden wird.
+- Cache-/Assetstand: `web-messenger-v134-presence-call-doodle-flow`, `app.js?v=356`, `agora-calls.js?v=4`, `doodle.js?v=278`.
+- Syntaxprüfung erfolgreich; `npm.cmd test`: `59/59` bestanden.

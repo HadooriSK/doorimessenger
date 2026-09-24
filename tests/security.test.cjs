@@ -79,6 +79,20 @@ test('collaborative Doodle is private-chat only and has synchronized modern tool
  assert.match(doodle,/action: 'background'/);
  assert.match(doodle,/collection\('strokes'\)/);
  assert.match(doodle,/where\('receiver', '==', window\.currentUser\.toLowerCase\(\)\)/);
+ assert.doesNotMatch(doodle,/window\.sendMessage\('', 'doodle_invite', null\);[\s\S]{0,120}openDoodleWorkspace\(\)/);
+ assert.match(doodle,/data\.type === 'accept'[\s\S]{0,120}openDoodleWorkspace\(\)/);
+ for (const lang of ['de','en','ar','fa','tr']) assert.match(app,new RegExp(`Object\\.assign\\(TRANSLATIONS\\.${lang}, \\{ lbl_doodle:'Doodle'`));
+});
+
+test('chat-list presence dots require fresh online presence and use green or red state', () => {
+ const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+ assert.match(app,/const isOnlineNow = !!presence\?\.isOnline && lastSeenMs > 0 && Date\.now\(\) - lastSeenMs <= 75000/);
+ assert.match(app,/contact-presence-dot/);
+ assert.match(app,/\? 'busy' : 'online'/);
+ assert.match(css,/\.contact-presence-dot\.online \{ background:#28c76f; \}/);
+ assert.match(css,/\.contact-presence-dot\.busy \{ background:#ff5d6c; \}/);
+ assert.match(css,/\.chat-item\.unread::after \{ display:none; \}/);
 });
 test('authentication additions cover five languages', () => {
  const dom=new JSDOM('',{runScripts:'outside-only'});
