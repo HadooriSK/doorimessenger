@@ -207,3 +207,10 @@ test('Gemini Live suppresses iPhone speaker echo and unsolicited startup greetin
  assert.match(source,/Wait silently until the user has spoken a complete first utterance/);
  assert.match(source,/never repeat a greeting/i);
 });
+
+test('mobile Live status stays on one row without moving the voice selector',()=>{
+ const css=fs.readFileSync(path.join(root,'style.css'),'utf8');
+ assert.match(css,/\.assistant-controls-row\s*\{[^}]*flex-wrap:\s*nowrap/s);
+ assert.match(css,/\.doori-live-status\s*\{[^}]*flex:\s*1 1 auto[^}]*text-overflow:\s*ellipsis/s);
+ assert.match(css,/\.assistant-voice-select\s*\{[^}]*flex:\s*0 0 auto/s);
+});

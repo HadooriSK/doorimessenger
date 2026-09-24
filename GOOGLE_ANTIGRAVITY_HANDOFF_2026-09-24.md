@@ -193,3 +193,8 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Tests: Assistent `15/15`, vollständig `68/68`; Build `38` Dateien.
 - Firebase Hosting ist veröffentlicht; die öffentliche Datei `doori-live.js?v=10` enthält nachweislich die neue Echo- und Startunterdrückung.
 
+## Mobile Live-Steuerleiste
+
+- Live-Status, Mikrofon, Live-Schalter, Lautsprecher und Stimmenauswahl bleiben auf Mobilgeräten in einer festen Zeile. Lange Statusmeldungen werden gekürzt und verschieben die Stimmenauswahl nicht mehr.
+- Versionen: `web-messenger-v139-live-controls-layout`, `style.css?v=337`; Assistententests `16/16`, Build `38` Dateien.
+

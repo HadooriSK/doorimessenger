@@ -500,3 +500,10 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Verifikation: gezielte Assistententests `15/15`, vollständige Suite `68/68`, Build exakt `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
 - Hosting wurde erfolgreich auf Firebase veröffentlicht; `https://doori-messenger.de/doori-live.js?v=10` wurde anschließend auf die neuen Startschutz-Merkmale geprüft (`LIVE_ASSET_OK`).
 
+## 19. Stabile mobile Live-Steuerleiste
+
+- Der dynamische Text `Live: Listening …` darf die Stimmenauswahl auf Mobilgeräten nicht mehr in eine zweite Zeile drücken.
+- Die Assistenten-Steuerleiste bleibt einzeilig; der Status nutzt den verfügbaren flexiblen Platz und wird bei Bedarf mit Auslassungspunkten gekürzt. Mikrofon, Live, Lautsprecher und Stimmenauswahl behalten feste Positionen.
+- Cache-/Assetstand: `web-messenger-v139-live-controls-layout`, `style.css?v=337`.
+- Prüfung: Assistententests `16/16`, Build `38` Dateien, Diff-Prüfung erfolgreich.
+
