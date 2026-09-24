@@ -113,6 +113,7 @@
     nextPlayTime:  0,
     quotaBlocked:  false,
     retryTimer:    null,
+    connectTimer:  null,
     retryDelay:    RECONNECT_INIT,
     token:         null,
     tokenExpiry:   0,
@@ -469,6 +470,13 @@
     setStatus(t().connecting);
     const ws = new WebSocket(`${LIVE_WS}?access_token=${encodeURIComponent(token)}`);
     state.ws = ws;
+    clearTimeout(state.connectTimer);
+    state.connectTimer = setTimeout(() => {
+      if (state.ws === ws && !state.ready) {
+        setStatus(t().retrying);
+        try { ws.close(4000, 'setup_timeout'); } catch (_) {}
+      }
+    }, 12000);
 
     ws.onopen = async () => {
       state.retryDelay = RECONNECT_INIT;
@@ -499,6 +507,8 @@
 
         // Handshake confirmed by Gemini
         if (msg.setupComplete) {
+          clearTimeout(state.connectTimer);
+          state.connectTimer = null;
           state.ready = true;
           setStatus(t().listening);
           return;
@@ -536,6 +546,10 @@
     };
 
     ws.onclose = (event) => {
+      clearTimeout(state.connectTimer);
+      state.connectTimer = null;
+      state.token = null;
+      state.tokenExpiry = 0;
       stopMic();
       stopPlayback();
       if (!state.active) return;
@@ -606,7 +620,9 @@
     state.active = false;
     state.ready  = false;
     clearTimeout(state.retryTimer);
+    clearTimeout(state.connectTimer);
     state.retryTimer = null;
+    state.connectTimer = null;
     if (state.ws) {
       try { state.ws.close(1000, 'user_closed'); } catch (_) {}
       state.ws = null;

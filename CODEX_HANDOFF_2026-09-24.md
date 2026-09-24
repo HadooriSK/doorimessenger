@@ -218,3 +218,19 @@ npm.cmd run dev
 - `npm.cmd test`: 55/55 bestanden.
 - `npm.cmd run build`: 37 allowlistete Dateien.
 - Firebase Hosting erfolgreich live veröffentlicht auf `https://doori-messenger.web.app/` und der verbundenen Domain `https://www.doori-messenger.de/`.
+
+### 8.1 Live-Verbindung blieb bei „Verbindung wird hergestellt“ stehen
+
+**Bestätigte Ursache:** `getLiveToken` entfernte mit `replace(/^auth_tokens\//, '')` den von Google benötigten Präfix des Ephemeral Tokens. Laut offizieller API muss der vollständige Wert aus `token.name` – einschließlich `auth_tokens/` – als `access_token` verwendet werden. Außerdem wurde bei einer Wiederverbindung derselbe standardmäßig nur einmal nutzbare Token erneut verwendet.
+
+**Korrektur:**
+- `getLiveToken` liefert den vollständigen Wert `auth_tokens/...` an den Client.
+- Bei jedem geschlossenen WebSocket wird der gebrauchte Token verworfen; eine Wiederverbindung holt einen neuen Ephemeral Token.
+- Ein 12-Sekunden-Setup-Timeout verhindert einen dauerhaften Zustand „Verbindung wird hergestellt“ und startet kontrolliert einen neuen Verbindungsversuch.
+- `doori-live.js?v=5`; Service-Worker-Cache `web-messenger-v125-gemini-live-token`.
+
+**Validierung und Deployment:**
+- Syntaxprüfungen für `doori-live.js` und `functions/index.js` bestanden.
+- `npm.cmd test`: 55/55 bestanden.
+- Build: 37 Dateien.
+- `getLiveToken` und Firebase Hosting erfolgreich live bereitgestellt.

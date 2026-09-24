@@ -396,8 +396,7 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
   throw new HttpsError('unavailable','Live token unavailable.');
  }
  const json=await response.json();
- const raw=String(json?.name||json?.token||'').trim();
- const token=raw.replace(/^auth_tokens\//,'');
+ const token=String(json?.name||json?.token||'').trim();
  if(!token)throw new HttpsError('internal','Invalid live token response.');
  return {token,expiresAt:Date.now()+1800000};
 });

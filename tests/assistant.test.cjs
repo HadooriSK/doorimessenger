@@ -165,6 +165,7 @@ test('Gemini Live mode integrates gemini-3.8-live with ephemeral tokens, 5 langu
  const functions=fs.readFileSync(path.join(root,'functions/index.js'),'utf8');
  assert.match(functions,/exports\.getLiveToken=onCall/);
  assert.match(functions,/v1beta\/auth_tokens/);
+ assert.doesNotMatch(functions,/replace\(\/\^auth_tokens/);
  assert.match(functions,/liveDailySessionsPerUser/);
  assert.match(functions,/liveDailyLimit/);
 });
