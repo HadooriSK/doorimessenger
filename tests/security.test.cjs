@@ -406,7 +406,8 @@ test('five modern features (chat filter, voice speed, starred messages, profile 
  const filterBar = w.document.getElementById('chat-filter-bar');
  assert.ok(filterBar, 'chat-filter-bar exists');
  const pills = filterBar.querySelectorAll('.filter-pill');
- assert.equal(pills.length, 4, '4 filter pills');
+ assert.equal(pills.length, 3, '3 filter pills: all, direct and unread');
+ assert.deepEqual(Array.from(pills, pill => pill.dataset.filter), ['all','direct','unread']);
 
  // 2. Audio player playback speed button and preload="none" for bandwidth optimization
  const playerHtml = w.renderCustomPlayer('https://example.com/audio.mp3', 'audio');

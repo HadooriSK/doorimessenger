@@ -141,3 +141,8 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Der vorherige blaue Ungelesen-Punkt wurde entfernt, damit er nicht mehr als Online-Präsenz missverstanden wird.
 - Cache-/Assetstand: `web-messenger-v134-presence-call-doodle-flow`, `app.js?v=356`, `agora-calls.js?v=4`, `doodle.js?v=278`.
 - Syntaxprüfung erfolgreich; `npm.cmd test`: `59/59` bestanden.
+## Vereinfachte Chatfilter
+
+- Der redundante Gruppenfilter wurde aus `Chats` entfernt. Dort bleiben nur `Alle`, `Direkt` und `Ungelesen`.
+- Der eigenständige Gruppenbereich in der Hauptnavigation bleibt unverändert erhalten.
+- Cache: `web-messenger-v135-chat-filters`.

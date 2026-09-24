@@ -421,3 +421,9 @@ Ausgangspunkt für diesen Abschnitt war Commit `b55dfa9` auf `main`.
 - Der bisherige blaue Ungelesen-Punkt wurde entfernt, weil er mit einer Online-Anzeige verwechselt werden konnte. Ungelesene Chats bleiben weiterhin durch Schrift und Hintergrund erkennbar.
 - Cache: `web-messenger-v134-presence-call-doodle-flow`; Assets: `app.js?v=356`, `agora-calls.js?v=4`, `doodle.js?v=278`.
 - Syntaxprüfungen bestanden; Teststand: `59/59` grün.
+## 15. Vereinfachte Chatfilter
+
+- Der doppelt wirkende Filter `Gruppen` wurde aus der Filterleiste des Chatbereichs entfernt.
+- Unter `Chats` bleiben `Alle`, `Direkt` und `Ungelesen`; Gruppen besitzen weiterhin ihren eigenen Hauptbereich in der linken Navigation.
+- Der Filtertest erwartet nun exakt diese drei Einträge.
+- Cache: `web-messenger-v135-chat-filters`.

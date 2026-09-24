@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-messenger-v134-presence-call-doodle-flow';
+const CACHE_NAME = 'web-messenger-v135-chat-filters';
 const urlsToCache = [
   '/',
   '/index.html',
