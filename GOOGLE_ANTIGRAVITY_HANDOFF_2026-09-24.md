@@ -205,4 +205,5 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Einstellungsoberfläche und Löschbestätigung sind in allen fünf Pflichtsprachen vorhanden; die Sammlung ist für direkte Clients nicht freigegeben.
 - Die normale Gemini-TTS-Funktion sendet nur noch den eigentlichen Antworttext, sodass technische Stimm-/Sprechanweisungen nicht mehr vorgelesen werden.
 - Versionen: `web-messenger-v140-assistant-memory-tts`, `assistant.js?v=13`, `doori-live.js?v=11`; Tests `71/71`, Build `38` Dateien.
+- Die sechs betroffenen Functions und Firebase Hosting sind erfolgreich live veröffentlicht; die öffentlichen Assets wurden mit `LIVE_MEMORY_ASSETS_OK` verifiziert.
 

@@ -516,4 +516,5 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Gemini TTS erhält nur noch den eigentlichen Antworttext. Die technische Formulierung „Speak this … naturally and warmly“ wurde entfernt, damit sie nicht mehr vorgelesen werden kann; die Stimme bleibt getrennt in `speechConfig` konfiguriert.
 - Versionen: `web-messenger-v140-assistant-memory-tts`, `assistant.js?v=13`, `doori-live.js?v=11`.
 - Verifikation: Assistententests `18/18`, vollständige Suite `71/71`, Build `38` Dateien, Syntax- und Diff-Prüfung erfolgreich.
+- Firebase-Deployment erfolgreich: `askDooriAssistant`, `synthesizeDooriSpeech`, `getLiveToken`, `rememberDooriExchange`, `clearDooriMemory`, `confirmAccountDeletion` und Hosting sind live. Öffentliche Assets wurden anschließend mit `LIVE_MEMORY_ASSETS_OK` bestätigt.
 
