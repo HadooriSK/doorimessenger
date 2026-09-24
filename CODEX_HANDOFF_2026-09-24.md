@@ -15,7 +15,7 @@ Aktuelle Änderung: getLiveToken unterscheidet connection-rate (10 Token-Anfrage
 Diese Dokumentation führt die Arbeit aus `CODEX_HANDOFF_2026-09-23.md` (Start-Commit `d2cdb2a`) lückenlos fort. Alle Aufgaben wurden erfolgreich im bestehenden Projektverzeichnis umgesetzt, getestet und live bereitgestellt.
 
 - **Ausgangs-Commit:** `d2cdb2a`
-- **Aktueller Commit:** `30892c2` (Branch `main`, synchron mit `origin/main`)
+- **Aktueller Commit:** `f2dc226` (Branch `main`, synchron mit `origin/main`)
 - **Automatisierte Testsuite:** **55/55 Tests bestanden (100% grün)** (`npm.cmd test`)
 - **Hosting-Build:** **37 allowlistete Public-Dateien** (`scripts/build-hosting.cjs`)
 - **Deployments:** 
@@ -49,6 +49,13 @@ Diese Dokumentation führt die Arbeit aus `CODEX_HANDOFF_2026-09-23.md` (Start-C
    - Dokumentation des Audio-Hotfixes in `CODEX_HANDOFF_2026-09-23.md`.
 7. **`30892c2`** – *fix(live): implement AudioWorklet capture pipeline with AnalyserNode fallback, native sampleRate upsampler, and DooriTTS unlock*
    - Vollständige Härtung der mobilen Audio-Pipeline gegen WebKit/iOS-Eigenheiten (`AudioWorklet`, `AnalyserNode`-Sink, native Upsampling für 24 kHz Output, iOS Mute-Switch Override).
+8. **`760cfa3`** – *fix(assistant): update deprecated models to gemini-3.5-flash-lite / gemini-3.8-flash-tts and add iOS audio keep-alive*
+   - Behebung „Kein KI-Dienst verfügbar“: Umstellung auf `gemini-3.5-flash-lite` (Chat & Transkription) und `gemini-3.8-flash-tts` (TTS).
+   - Audio Keep-Alive Pipeline in `tts.js` zur Verhinderung der iOS Autoplay- und Mute-Switch-Stummschaltung.
+   - ProviderOrder mit Groq Fallback (`openai/gpt-oss-20b`, `max_completion_tokens: 360`).
+9. **`f2dc226`** – *feat(ui): place assistant chat controls above freestanding message composer*
+   - Zweistufiger Aufbau im KI-Assistenten-Chat: Symbole (`#assistant-controls-row`) oben drüber, Chatleiste (`.composer-main-row`) steht drunter alleine.
+   - Hosting Deployment mit Cache-Version `web-messenger-v130-assistant-ui-layout`, `style.css?v=334`, `assistant.js?v=12`.
 
 ---
 
