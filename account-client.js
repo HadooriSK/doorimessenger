@@ -47,12 +47,15 @@
     }
     async function signIn({ email, password, username, id }) {
         const user = (await auth.signInWithEmailAndPassword(email, password)).user;
+        let stage = 'account-lookup';
         try {
             const account = await ensureAccount();
+            stage = 'contact-id-check';
             const data = (await db.collection('users').doc(account.key).get()).data();
             if ((username && account.key !== keyOf(username)) || String(data.id_number) !== id) fail();
             return user;
         } catch (error) {
+            console.error('Email sign-in failed', stage, error?.code || 'unknown');
             await auth.signOut();
             throw error;
         }

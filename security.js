@@ -16,7 +16,7 @@
         if (!isPublic) {
             const recipient = chat.type === 'saved' ? username : chat.id;
             result.participants = [...new Set([username, recipient].map(normalizeUsername))];
-            if (chat.type === 'dm') result.recipient_username = recipient;
+            if (chat.type === 'dm') result.recipient_username = normalizeUsername(recipient);
         }
         return result;
     }

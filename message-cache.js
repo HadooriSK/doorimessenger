@@ -156,6 +156,34 @@
             });
         },
 
+        async clearChat(chatId) {
+            if (!chatId) return true;
+            memoryFallback.delete(chatId);
+            const db = await initDB();
+            if (!db) return true;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const index = store.index('chat_id');
+                    const req = index.openCursor(IDBKeyRange.only(chatId));
+                    req.onsuccess = (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            cursor.delete();
+                            cursor.continue();
+                        } else {
+                            resolve(true);
+                        }
+                    };
+                    req.onerror = () => resolve(false);
+                } catch (e) {
+                    console.warn('[MessageCache] clearChat error:', e);
+                    resolve(false);
+                }
+            });
+        },
+
         async clearCache() {
             memoryFallback.clear();
             const db = await initDB();

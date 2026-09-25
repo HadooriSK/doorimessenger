@@ -213,7 +213,9 @@ test('telephony secrets remain server-side and operator console cleanly separate
   vm.createContext(context);
   // Extract T object
   const startT = opJs.indexOf('const T={');
-  const endT = opJs.indexOf('};\nObject.assign(T.de', startT) + 1;
+  const rest = opJs.slice(startT);
+  const endMatch = rest.match(/};\s*Object\.assign\(T\.de/);
+  const endT = startT + endMatch.index + 1;
   vm.runInContext(`globalThis.T = ${opJs.slice(startT + 8, endT)}`, context);
   const T = context.T;
 

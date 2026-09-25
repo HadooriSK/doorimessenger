@@ -220,3 +220,50 @@ Ausgangspunkt war Commit `b55dfa9` auf Branch `main`. Der vorhandene Code wurde 
 - Firestore rules permit only the recipient to accept/decline and either participant to mark an invitation ended; the session/message relationship is immutable.
 - Cache bumped to `web-messenger-v142-media-lounge-status`, `live-media.js?v=3`.
 - Verification: 71/71 tests passed, build exactly 38 files, Firestore rules compiled/deployed, hosting deployed, live assets returned `LIVE_MEDIA_STATUS_OK`.
+
+## Update: Browser-CORS-Fix für R2/B2 Upload (24.09.2026)
+
+- **Problem:** Upload großer Dateien schlug nach `requestLargeMediaUpload` und vor `confirmLargeMediaUpload` fehl. Der direkte Browser-`PUT` auf die Presigned-URL löst immer einen CORS-Preflight aus; beide Buckets hatten keine CORS-Regeln.
+- **Ursache geklärt:** `PutBucketCors` (S3-API, SigV4) ist mit **Cloudflare R2 und Backblaze B2** kompatibel. Live verifiziert: R2 **HTTP 200**, B2 **HTTP 200**.
+- **Detail:** Backblaze B2 verlangt bei `PutBucketCors` einen `Content-MD5`-Header (sonst HTTP 400); die Anfrage signiert `content-md5` mit.
+- **Umgesetzt:**
+  - `functions/large-media-storage.js`: `buildCorsConfigurationXml`, `signPutBucketCorsRequest`, `putBucketCors`, `parseS3Error`.
+  - `functions/index.js`: neue admin-geschützte Funktion `configureStorageCors`.
+  - `scripts/apply-storage-cors.cjs`: wendet CORS an und verifiziert den OPTIONS-Preflight (Secrets nur im Speicher).
+  - `tests/storage.test.cjs`: 5 neue Tests. Zusätzlich vorbestehenden CRLF-Fehler in `tests/calls.test.cjs` repariert.
+- **CORS-Regeln:** Origins `doori-messenger.web.app`, `www.doori-messenger.de`, `doori-messenger.de`, `localhost:3000/5000`; Methoden `GET/PUT/HEAD/DELETE`; Header `*`; `MaxAgeSeconds 3600`.
+- **Verifiziert:** OPTIONS-Preflight liefert korrekte `Access-Control-Allow-Origin`/`Access-Control-Allow-Headers` und erlaubtes `PUT` auf R2 und B2.
+- **Stand:** 70/70 Tests grün; Build 37 Dateien; `configureStorageCors` (europe-west3) deployed. Keine sichtbaren Texte geändert (5 Sprachen unberührt). Änderungen **nicht committet** (Basis `main`, `c9d9d9f`).
+
+## Zwischenstand 24.09.2026 23:20 UTC
+- Historische Doodle-Akzeptanz-Nachrichten öffneten das Fenster beim Rendern erneut; gezielter Fix in `app.js` live (Hosting v143). Media-Lounge-Start wirft weiterhin `permission-denied`; `live-media.js?v=4` protokolliert jetzt nur Phase/Code. Noch keine Firestore-Regeln geändert.
+- Laptop-Anmeldung mit E-Mail/Kontakt-ID scheitert, iPhone bleibt nutzbar. Ohne Login-Diagnose ist die Ursache offen. Hosting v144 (`app.js?v=360`, `account-client.js?v=2`) protokolliert ausschließlich Phase/Fehlercode ohne Zugangsdaten; kein Konto oder Passwort verändert.
+- **79/79 Tests grün**, Build 38 Dateien; beide Hosting-Releases live auf den öffentlichen Domains verifiziert. HEAD `main`/`c9d9d9f`, Änderungen uncommittet, kein Push. Vollständige Dateiliste und sichere Fortsetzung im Nachtrag von `CODEX_HANDOFF_2026-09-24_MEDIA_LOUNGE.md`.
+
+## Nachtrag 25.09.2026 00:20 UTC – Release-Sperre
+- Drei lokale Lounge-Bereiche (Fotos/Videos/Musik), gemeinsamer Player und abgesicherte Ersetzung nur offener Doodle-/Lounge-/Spielanfragen im selben DM; Gruppe/Anrufe separat. Alle sichtbaren Änderungen in fünf Sprachen; RTL erhalten. **84/84 Tests** und Build mit **38 Dateien** bestanden.
+- **Firestore-Regeln deployed**, aber die neue Function `replaceActivityInvitation` scheiterte an Eventarc-Service-Identity bzw. Google Cloud Runtime Config. **Hosting v145 NICHT deployed**; v144 bleibt live. Erst Function erfolgreich veröffentlichen, danach Hosting; dann Zwei-Geräte-Probe. Uncommittet auf `main`/`c9d9d9f`. Details und Dateiliste in `CODEX_HANDOFF_2026-09-24_MEDIA_LOUNGE.md` (Nachtrag 00:20 UTC).
+## 24. Nachtrag 25.09.2026 02:15 UTC – Media Lounge Start-Fix & „Chat leeren“ Reparatur (Hosting v146)
+- **Media Lounge Start-Fehler behoben:**
+  - Nutzer-Identifikatoren in `live-media.js` via `normalizeUser` auf kanonisches `@username` gebracht (`creator` und `peer`), wodurch Firestore-Rule-Mismatches und Parameterfehler in `replaceActivityInvitation` verhindert werden.
+  - Clock-Skew-Schutz: Lokale Uhrzeiten, die der Google-Serverzeit minimal voraus sind, ließen `expiresAt <= request.time.toMillis() + 24h` scheitern. Client zieht 2 Minuten Sicherheitsabstand ab; `firestore.rules` gewährt 5 Minuten Puffer.
+  - Fehlerbehandlung um `list-sessions` gekapselt, sodass Index- oder Netzwerkverzögerungen den Start nicht abbrechen.
+- **„Chat leeren“ repariert:**
+  - In `message-cache.js` `clearChat(chatId)` implementiert (löscht IndexedDB-Cursor und memoryFallback für den Chat).
+  - In `app.js` `clearCurrentChat()` vereinheitlicht: räumt alle Chat-Keys (`currentChat.id`, `@...`, raw) im In-Memory `messages`-Store und im IndexedDB-Cache ab.
+  - Firestore-Sync: Eigene Nachrichten werden per `delete()` gelöscht; fremde Nachrichten werden regelkonform via `update({ deletedFor: [...currentUser] })` für den Nutzer verborgen (`difference.hasOnly([name()])`).
+  - `renderMessages()` filtert alle Nachrichten mit `deletedFor.includes(currentUser)` zuverlässig heraus.
+- **Deployments:**
+  - Firestore Rules live deployt.
+  - Cloud Function `replaceActivityInvitation` live deployt.
+  - Hosting **v146** live auf `https://doori-messenger.web.app` mit `app.js?v=362`, `live-media.js?v=6`, `security.js?v=2`, `message-cache.js?v=2`.
+- **Validierung:** 86/86 Tests grün (100%), Build 38 Public-Dateien sauber.
+## 25. Nachtrag 25.09.2026 02:22 UTC – iPhone Dateien-App Musik-Auswahl (Hosting v147)
+- **Problem:** Auf iOS Safari im Bereich „Musik“ der Media Lounge waren im Datei-Dialog (Dateien-App) alle Musikdateien ausgegraut/ausgeblendet.
+- **Ursache:** Apple Safari bewertet `accept="audio/*"` strikt über UTType (`public.audio`). Dateien in der iOS-Dateien-App (iCloud Drive / Downloads / WhatsApp) sind oft mit generischen UTIs hinterlegt und werden nur freigegeben, wenn die Dateiendungen (`.mp3`, `.m4a`, `.wav` etc.) explizit im `accept`-Attribut stehen. Zudem liefert iOS für ausgewählte Dateien oft `file.type = ""`, was die Validierung fälschlich blockierte.
+- **Fix:**
+  - `live-media.js`: `ACCEPT_BY_CATEGORY.audio` um alle gängigen Endungen (`.mp3,.m4a,.wav,.aac,.flac,.ogg,.opus,.m4r,.aiff,.wma`) erweitert.
+  - `live-media.js`: `resolveMediaType(file)` ergänzt, sodass bei leerem `file.type` automatisch über die Dateiendung die korrekte Kategorie und der MIME-Type zugewiesen wird.
+  - `index.html`: Input-Accept angepasst.
+  - `tests/storage.test.cjs`: Test erweitert und verifiziert.
+- **Deploy:** Hosting v147 mit `live-media.js?v=7` live auf `https://doori-messenger.web.app`. 86/86 Tests grün.

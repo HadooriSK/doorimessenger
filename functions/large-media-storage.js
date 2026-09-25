@@ -310,14 +310,127 @@ async function deleteS3Object({ config, provider, key }) {
     }
 }
 
+// Browser origins that are allowed to upload/download directly to the buckets.
+const DEFAULT_ALLOWED_ORIGINS = [
+    'https://doori-messenger.web.app',
+    'https://www.doori-messenger.de',
+    'https://doori-messenger.de',
+    'http://localhost:3000',
+    'http://localhost:5000'
+];
+
+/**
+ * Builds the S3 CORSConfiguration XML document required by PutBucketCors.
+ * Both Cloudflare R2 and Backblaze B2 accept the standard S3 CORS XML.
+ */
+function buildCorsConfigurationXml({
+    allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
+    allowedMethods = ['GET', 'PUT', 'HEAD', 'DELETE'],
+    allowedHeaders = ['*'],
+    exposeHeaders = ['ETag'],
+    maxAgeSeconds = 3600
+} = {}) {
+    const origins = allowedOrigins.map(o => `    <AllowedOrigin>${o}</AllowedOrigin>`).join('\n');
+    const methods = allowedMethods.map(m => `    <AllowedMethod>${m}</AllowedMethod>`).join('\n');
+    const headers = allowedHeaders.map(h => `    <AllowedHeader>${h}</AllowedHeader>`).join('\n');
+    const exposed = exposeHeaders.map(h => `    <ExposeHeader>${h}</ExposeHeader>`).join('\n');
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">\n  <CORSRule>\n    <ID>doori-messenger-web</ID>\n${origins}\n${methods}\n${headers}\n${exposed}\n    <MaxAgeSeconds>${maxAgeSeconds}</MaxAgeSeconds>\n  </CORSRule>\n</CORSConfiguration>`;
+}
+
+/**
+ * Extracts the S3 error code and message from an XML error body without
+ * exposing credentials (error bodies can echo the access key id).
+ */
+function parseS3Error(xml) {
+    const code = (String(xml || '').match(/<Code>([^<]+)<\/Code>/) || [])[1] || '';
+    const message = (String(xml || '').match(/<Message>([^<]+)<\/Message>/) || [])[1] || '';
+    return { code, message };
+}
+
+/**
+ * Signs a PutBucketCors request with AWS SigV4 (header based) for the
+ * `cors` subresource. Returns the ready-to-send URL and headers.
+ * The `cors` subresource must appear in the canonical query string as `cors=`.
+ */
+function signPutBucketCorsRequest({ config, provider, body, now = new Date() }) {
+    const accessKeyId = provider === 'r2' ? config.accessKeyId : config.keyId;
+    const secretAccessKey = provider === 'r2' ? config.secretAccessKey : config.applicationKey;
+    const region = config.region;
+    const endpoint = config.endpoint;
+    const bucket = config.bucketName;
+    const payloadHash = sha256Hex(body);
+    const contentMd5 = crypto.createHash('md5').update(body).digest('base64');
+
+    const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+
+    const canonicalUri = '/' + encodeURIComponent(bucket) + '/';
+    const canonicalQuery = 'cors=';
+    const canonicalHeaders = `content-md5:${contentMd5}\nhost:${endpoint}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+    const signedHeaders = 'content-md5;host;x-amz-content-sha256;x-amz-date';
+    const canonicalRequest = ['PUT', canonicalUri, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join('\n');
+
+    const credentialScope = `${dateStamp}/${region}/s3/aws4_request`;
+    const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, sha256Hex(canonicalRequest)].join('\n');
+
+    const kDate = hmac('AWS4' + secretAccessKey, dateStamp);
+    const kRegion = hmac(kDate, region);
+    const kService = hmac(kRegion, 's3');
+    const kSigning = hmac(kService, 'aws4_request');
+    const signature = crypto.createHmac('sha256', kSigning).update(stringToSign).digest('hex');
+
+    const authorization = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+    return {
+        url: `https://${endpoint}${canonicalUri}?cors`,
+        headers: {
+            'Content-MD5': contentMd5,
+            'x-amz-content-sha256': payloadHash,
+            'x-amz-date': amzDate,
+            'Authorization': authorization,
+            'Content-Type': 'application/xml'
+        },
+        payloadHash,
+        canonicalRequest
+    };
+}
+
+/**
+ * Sends a signed S3 PutBucketCors request to configure browser CORS on a bucket.
+ * Works with both Cloudflare R2 and Backblaze B2 (both implement the S3 CORS API).
+ */
+async function putBucketCors({ config, provider, allowedOrigins, allowedMethods, allowedHeaders, exposeHeaders, maxAgeSeconds }) {
+    const body = buildCorsConfigurationXml({ allowedOrigins, allowedMethods, allowedHeaders, exposeHeaders, maxAgeSeconds });
+    const signed = signPutBucketCorsRequest({ config, provider, body });
+
+    let status = 0;
+    let error = null;
+    try {
+        const response = await fetch(signed.url, { method: 'PUT', headers: signed.headers, body });
+        status = response.status;
+        if (!response.ok) {
+            const text = await response.text();
+            error = parseS3Error(text);
+        }
+    } catch (err) {
+        return { ok: false, status, code: 'NETWORK_ERROR', message: err.message };
+    }
+
+    return { ok: status >= 200 && status < 300, status, code: error ? error.code : null, message: error ? error.message : null };
+}
+
 module.exports = {
     QUOTA_LIMIT_BYTES,
     RETENTION_MS,
     LIVE_MEDIA_RETENTION_MS,
+    DEFAULT_ALLOWED_ORIGINS,
     getR2Config,
     getB2Config,
     generatePresignedUrl,
     selectStorageProvider,
     createUploadPlan,
-    deleteS3Object
+    deleteS3Object,
+    buildCorsConfigurationXml,
+    signPutBucketCorsRequest,
+    putBucketCors
 };

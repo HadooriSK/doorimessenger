@@ -7,13 +7,15 @@ const {getFirestore,Timestamp,FieldValue}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
 const {RtcTokenBuilder,RtcRole}=require('agora-token');
 const {createAssistantRouter,LocalFallbackError}=require('./assistant-router');
+const {replaceActivityInvitation}=require('./activity-invitations');
 const {detect:detectAssistantLanguage}=require('./assistant-language');
 const {
  selectStorageProvider,
  createUploadPlan,
  deleteS3Object,
  getR2Config,
- getB2Config
+ getB2Config,
+ putBucketCors
 }=require('./large-media-storage');
 initializeApp();
 const db=getFirestore(),auth=getAuth();
@@ -172,6 +174,16 @@ exports.registerAccount=onCall(options,async request=>{
  return {username,id:data.id_number};
 });
 exports.ensureAccount=onCall(options,request=>ensureAccount(signedIn(request)));
+exports.replaceActivityInvitation=onCall(options,async request=>{
+ const uid=signedIn(request),account=await ensureAccount(uid),peer=keyOf(request.data?.peer);
+ if(!/^@[\p{L}\p{N}_.-]{10,64}$/u.test(peer)||peer===account.key)throw new HttpsError('invalid-argument','Invalid activity recipient.');
+ try{return await replaceActivityInvitation(db,account.key,peer,request.data?.newMessageId,request.data?.previousMessageIds);}
+ catch(error){
+  if(error?.code==='permission-denied')throw new HttpsError('permission-denied','Invalid activity invitation.');
+  console.error('Activity invitation replacement failed',error?.code||'unknown');
+  throw new HttpsError('unavailable','Activity invitation replacement failed.');
+ }
+});
 exports.getAgoraToken=onCall({...options,secrets:[AGORA_APP_CERTIFICATE]},async request=>{
  const uid=signedIn(request),scope=String(request.data?.scope||''),id=String(request.data?.id||'');
  if(!['direct','group'].includes(scope)||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new HttpsError('invalid-argument','Invalid call scope.');
@@ -582,4 +594,21 @@ exports.cleanupExpiredLargeMedia = onCall({ ...options, secrets: [CLOUDFLARE_R2_
   }
 
   return { cleaned };
+});
+
+exports.configureStorageCors = onCall({ ...options, secrets: [CLOUDFLARE_R2_CONFIG, BACKBLAZE_B2_CONFIG, DOORI_ADMIN_EMAIL] }, async request => {
+  requireAdmin(request);
+
+  const results = { r2: null, b2: null };
+  const r2Config = getR2Config();
+  const b2Config = getB2Config();
+
+  if (r2Config) {
+    results.r2 = await putBucketCors({ config: r2Config, provider: 'r2' });
+  }
+  if (b2Config) {
+    results.b2 = await putBucketCors({ config: b2Config, provider: 'b2' });
+  }
+
+  return results;
 });

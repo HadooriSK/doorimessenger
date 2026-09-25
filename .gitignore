@@ -74,3 +74,4 @@ tts-server/voices/
 # Generated deployment output and portable test runtime
 dist/
 .test-runtime/
+.kilo/

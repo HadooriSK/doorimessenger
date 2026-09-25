@@ -10,8 +10,26 @@ test('mentions preserve canonical @ and support all supported alphabets', () => 
  assert.deepEqual(security.collectMentions('Hi @Alice @ALICE @علی @unknown', ['@Alice','@علی']), ['@alice','@علی']);
 });
 test('login usernames resolve identically with or without an at sign',()=>{
- assert.equal(security.normalizeUsername('@Hedisubs'),'@hedisubs');
- assert.equal(security.normalizeUsername('Hedisubs'),'@hedisubs');
+  assert.equal(security.normalizeUsername('@Hedisubs'),'@hedisubs');
+  assert.equal(security.normalizeUsername('Hedisubs'),'@hedisubs');
+});
+test('email sign-in diagnostics contain only the stage and error code', async () => {
+  const logged=[];
+  const previous=console.error;
+  const failure=Object.assign(new Error('private details'),{code:'permission-denied'});
+  const auth={currentUser:{uid:'test-uid'},signInWithEmailAndPassword:async()=>({user:{}}),signOut:async()=>{}};
+  const db={collection:name=>({doc:()=>({get:async()=>name==='accounts'
+    ? {exists:true,data:()=>({key:'@testuser'})} : Promise.reject(failure)})})};
+  const client=require('../account-client')(auth,db,{},{});
+  console.error=(...args)=>logged.push(args);
+  try {
+    await assert.rejects(client.signIn({email:'private@example.test',password:'private-password',id:'123456'}),failure);
+  } finally {
+    console.error=previous;
+  }
+  assert.deepEqual(logged,[['Email sign-in failed','contact-id-check','permission-denied']]);
+  const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+  assert.match(app,/console\.error\('Login failed', loginStage, error\?\.code \|\| 'unknown'\)/);
 });
 test('destination survives switching chats and saved messages are private', () => {
  const chat={id:'@alice',type:'dm'};
@@ -277,7 +295,7 @@ test('native two-player game center covers all games and five languages',()=>{
  assert.doesNotMatch(games,/<iframe|https?:\/\//i,'game module remains native');
  assert.match(html,/id="games-btn"/);
  assert.match(html,/quiz-questions\.js\?v=1/);
- assert.match(html,/games\.js\?v=4/);
+  assert.match(html,/games\.js\?v=5/);
  assert.match(rules,/match \/gameSessions\/\{gameId\}/);
  assert.match(rules,/participants\.size\(\) == 2/);
  assert.match(build,/'games\.js'/);
@@ -531,8 +549,99 @@ test('Aurora UI keeps primary calls visible, moves secondary actions into the me
  assert.match(css,/\.rtl-mode \.settings-tabs \.tab-btn\.active/);
  assert.match(appCode,/if \(videoBtn\) videoBtn\.style\.display = 'flex'/);
  assert.match(appCode,/if \(callContainer\) callContainer\.style\.display = 'flex'/);
- for (const lang of ['de','en','fa','ar','tr']) {
-  const marker = new RegExp(`${lang}: \\{[^}]*title_more_options:`);
-  assert.match(appCode, marker, `missing title_more_options for ${lang}`);
- }
+  for (const lang of ['de','en','fa','ar','tr']) {
+   const marker = new RegExp(`${lang}: \\{[^}]*title_more_options:`);
+   assert.match(appCode, marker, `missing title_more_options for ${lang}`);
+  }
+});
+
+function activityDb(records) {
+  const store = new Map(Object.entries(records));
+  return {
+    store,
+    collection: name => ({doc: id => ({path:`${name}/${id}`})}),
+    runTransaction: async callback => {
+      const writes=[];
+      const transaction={
+        get: async ref => ({data:()=>store.get(ref.path) && structuredClone(store.get(ref.path))}),
+        update: (ref, patch) => writes.push(()=>store.set(ref.path,{...store.get(ref.path),...patch})),
+        set: (ref, data) => writes.push(()=>store.set(ref.path,structuredClone(data)))
+      };
+      const result=await callback(transaction);
+      writes.forEach(write=>write());
+      return result;
+    }
+  };
+}
+
+test('new activity supersedes a pending game invitation and leaves accepted sessions untouched', async () => {
+  const {replaceActivityInvitation}=require('../functions/activity-invitations');
+  const now=Date.now(), participants=['@alice','@bob'];
+  const newMessage={id:'newlounge123',mediaType:'live_media_invite',mediaUrl:JSON.stringify({id:'lounge123'}),
+    sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now};
+  const oldMessage={id:'oldgame123',mediaType:'game_invite',mediaUrl:JSON.stringify({id:'game12345'}),
+    sender_username:'@bob',recipient_username:'@alice',participants,isPublic:false,timestamp:now-1000};
+  const db=activityDb({
+    'messages/newlounge123':newMessage,'messages/oldgame123':oldMessage,
+    'gameSessions/game12345':{status:'pending',createdBy:'@bob',participants},
+    'liveMediaSessions/lounge123':{status:'pending',creator:'@alice',participants}
+  });
+  const result=await replaceActivityInvitation(db,'@alice','@bob','newlounge123',['oldgame123']);
+  assert.equal(result.replaced,1);
+  assert.equal(db.store.get('messages/oldgame123').game_status,'superseded');
+  assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
+  assert.equal(db.store.get('liveMediaSessions/lounge123').status,'pending');
+  assert.ok([...db.store.keys()].some(name=>name.startsWith('_activityInvites/')));
+
+  db.store.set('gameSessions/game12345',{status:'active',createdBy:'@bob',participants});
+  db.store.set('messages/oldgame123',oldMessage);
+  const accepted=await replaceActivityInvitation(db,'@alice','@bob','newlounge123',['oldgame123']);
+  assert.equal(accepted.replaced,0);
+  assert.equal(db.store.get('gameSessions/game12345').status,'active');
+  assert.equal(db.store.get('messages/oldgame123').game_status,undefined);
+});
+
+test('activity replacement rejects foreign chats and cannot terminate a newer Doodle invite', async () => {
+  const {replaceActivityInvitation}=require('../functions/activity-invitations');
+  const now=Date.now(), participants=['@alice','@bob'];
+  const db=activityDb({
+    'messages/newdoodle123':{id:'newdoodle123',mediaType:'doodle_invite',sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now},
+    'messages/olddoodle123':{id:'olddoodle123',mediaType:'doodle_invite',sender_username:'@bob',recipient_username:'@alice',participants,isPublic:false,timestamp:now-1000},
+    'messages/foreign123':{id:'foreign123',mediaType:'game_invite',sender_username:'@alice',recipient_username:'@mallory',participants:['@alice','@mallory'],isPublic:false,timestamp:now-1000},
+    'doodle_sessions/session_@alice_@bob':{type:'invite',caller:'@alice',receiver:'@bob',inviteMessageId:'newdoodle123'}
+  });
+  const result=await replaceActivityInvitation(db,'@alice','@bob','newdoodle123',['olddoodle123','foreign123']);
+  assert.equal(result.replaced,1);
+  assert.equal(db.store.get('messages/olddoodle123').activity_status,'superseded');
+  assert.equal(db.store.get('doodle_sessions/session_@alice_@bob').type,'invite');
+  assert.equal(db.store.get('messages/foreign123').activity_status,undefined);
+  await assert.rejects(replaceActivityInvitation(db,'@mallory','@bob','newdoodle123',[]),{code:'permission-denied'});
+});
+
+test('pair-level invitation pointer replaces the previous request without a cached chat history', async () => {
+  const {replaceActivityInvitation}=require('../functions/activity-invitations');
+  const now=Date.now(),participants=['@alice','@bob'];
+  const db=activityDb({
+    'messages/firstgame123':{id:'firstgame123',mediaType:'game_invite',mediaUrl:'{"id":"game12345"}',sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now},
+    'messages/secondlounge123':{id:'secondlounge123',mediaType:'live_media_invite',mediaUrl:'{"id":"lounge12345"}',sender_username:'@bob',recipient_username:'@alice',participants,isPublic:false,timestamp:now},
+    'gameSessions/game12345':{status:'pending',createdBy:'@alice',participants},
+    'liveMediaSessions/lounge12345':{status:'pending',creator:'@bob',participants}
+  });
+  assert.equal((await replaceActivityInvitation(db,'@alice','@bob','firstgame123',[])).replaced,0);
+  assert.equal((await replaceActivityInvitation(db,'@bob','@alice','secondlounge123',[])).replaced,1);
+  assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
+});
+
+test('activity invite acceptance checks the backing Doodle session and its message id', () => {
+  const doodle=fs.readFileSync(path.join(root,'doodle.js'),'utf8');
+  const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+  assert.match(doodle,/data\.type!=='invite'/);
+  assert.match(doodle,/data\.inviteMessageId!==messageId/);
+  assert.match(doodle,/transaction\.update\(currentDoodleDocRef,\{type:'accept'/);
+  assert.match(app,/replaceActivityInvitation/);
+  assert.match(app,/activity_invite_superseded/);
+  assert.doesNotMatch(app,/doodleTypes\.includes\(m\.mediaType\)[\s\S]{0,160}\.delete\(\)/);
+  const rules=fs.readFileSync(path.join(root,'firestore.rules'),'utf8');
+  assert.match(rules,/resource\.data\.type in \['invite', 'reject', 'end'\]/);
+  assert.match(rules,/request\.resource\.data\.caller == resource\.data\.receiver/);
 });

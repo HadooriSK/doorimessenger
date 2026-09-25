@@ -1,18 +1,19 @@
-const CACHE_NAME = 'web-messenger-v142-media-lounge-status';
+const CACHE_NAME = 'web-messenger-v147-ios-audio';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=337',
-  '/app.js?v=358',
+  '/style.css?v=338',
+  '/app.js?v=362',
   '/tts.js?v=9',
   '/doori-live.js?v=11',
   '/assistant.js?v=13',
   '/quiz-questions.js?v=1',
-  '/games.js?v=4',
-  '/live-media.js?v=3',
-  '/security.js?v=1',
+  '/games.js?v=5',
+  '/live-media.js?v=7',
+  '/security.js?v=2',
+  '/message-cache.js?v=2',
   '/auth-translations.js?v=9',
-  '/account-client.js?v=1',
+  '/account-client.js?v=2',
   '/vendor/purify.min.js',
   '/vendor/firebase-app-compat.js',
   '/vendor/firebase-auth-compat.js',
@@ -21,7 +22,7 @@ const urlsToCache = [
   '/firebase-config.js?v=28',
   '/vendor/agora-rtc-sdk-ng.js?v=1',
   '/agora-calls.js?v=4',
-  '/doodle.js?v=278',
+  '/doodle.js?v=279',
   '/manifest.json'
 ];
 

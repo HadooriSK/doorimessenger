@@ -471,13 +471,21 @@ async function initDoodleInvite(peerId) {
         currentDoodlePeer = peerClean;
         currentDoodleDocRef = docRef;
         
+        const existing = await docRef.get();
+        if(existing.exists && existing.data().type === 'accept') {
+            const t = window.TRANSLATIONS?.[window.currentLang] || window.TRANSLATIONS?.en;
+            alert(t?.activity_already_active || 'A shared activity is already active.');
+            return;
+        }
+        const messageId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
         // THEN set invite
         doodleSessionStartTime = Date.now();
         await currentDoodleDocRef.set({
             type: 'invite',
             ts: doodleSessionStartTime,
             caller: window.currentUser.toLowerCase(),
-            receiver: peerClean
+            receiver: peerClean,
+            inviteMessageId: messageId
         }, {merge: true});
         
         // Clear old strokes just in case FIRST
@@ -487,8 +495,9 @@ async function initDoodleInvite(peerId) {
         await batch.commit();
 
         // THEN send message
-        if(window.sendMessage) {
-            window.sendMessage('', 'doodle_invite', null);
+        if(!window.sendMessage || !await window.sendMessage('', 'doodle_invite', null, false, null, {messageId})) {
+            await currentDoodleDocRef.update({type:'end',ts:Date.now()}).catch(()=>{});
+            return;
         }
         
         doodleSessionUnsubscribe = currentDoodleDocRef.onSnapshot(doc => {
@@ -519,7 +528,7 @@ async function initDoodleInvite(peerId) {
 window.initDoodleInvite = initDoodleInvite;
 
 // RECEIVER ACCEPTS
-function acceptDoodleInvite(caller) {
+async function acceptDoodleInvite(caller, messageId) {
     const btn = typeof event !== 'undefined' ? event.target : null;
     if(btn) { btn.disabled = true; }
     
@@ -527,13 +536,22 @@ function acceptDoodleInvite(caller) {
     const sessionId = getSessionId(window.currentUser, caller);
     currentDoodleDocRef = window.db.collection('doodle_sessions').doc(sessionId);
     
-    doodleSessionStartTime = Date.now();
-    currentDoodleDocRef.set({
-        type: 'accept',
-        ts: doodleSessionStartTime
-    }, {merge: true}).then(() => {
-        if(window.sendMessage) window.sendMessage('', 'doodle_accept', null);
-    }).catch(e=>console.error('Accept err', e));
+    try {
+        doodleSessionStartTime = Date.now();
+        await window.db.runTransaction(async transaction => {
+            const snap=await transaction.get(currentDoodleDocRef),data=snap.data();
+            if(!data || data.type!=='invite' || data.caller!==caller.toLowerCase() ||
+                (data.inviteMessageId && data.inviteMessageId!==messageId))throw new Error('invalid invitation');
+            transaction.update(currentDoodleDocRef,{type:'accept',ts:doodleSessionStartTime});
+        });
+    } catch(e) {
+        console.error('Accept err',e);
+        if(btn) btn.disabled=false;
+        const t=window.TRANSLATIONS?.[window.currentLang] || window.TRANSLATIONS?.en;
+        alert(t?.activity_invite_superseded || 'This invitation is no longer available.');
+        return;
+    }
+    if(window.sendMessage) window.sendMessage('', 'doodle_accept', null);
     
     openDoodleWorkspace();
     startStrokesListener();
@@ -556,13 +574,20 @@ function acceptDoodleInvite(caller) {
 window.acceptDoodleInvite = acceptDoodleInvite;
 
 // RECEIVER REJECTS
-function rejectDoodleInvite(caller) {
+async function rejectDoodleInvite(caller, messageId) {
     const btn = typeof event !== 'undefined' ? event.target : null;
     if(btn) { btn.disabled = true; }
     
     const sessionId = getSessionId(window.currentUser, caller);
     const docRef = window.db.collection('doodle_sessions').doc(sessionId);
-    docRef.set({ type: 'reject' }, {merge: true}).catch(e=>console.error('reject err', e));
+    try {
+        await window.db.runTransaction(async transaction => {
+            const snap=await transaction.get(docRef),data=snap.data();
+            if(!data || data.type!=='invite' || data.caller!==caller.toLowerCase() ||
+                (data.inviteMessageId && data.inviteMessageId!==messageId))throw new Error('invalid invitation');
+            transaction.update(docRef,{type:'reject',ts:Date.now()});
+        });
+    } catch(e) { console.error('reject err', e); if(btn)btn.disabled=false; return; }
     
     // Also notify explicitly in chat
     if(window.sendMessage) window.sendMessage('', 'doodle_reject', null, false);
@@ -660,8 +685,10 @@ window.handleDoodleClose = function(ts) {
 
 
 let currentPendingDoodleCaller = null;
-window.showDoodleInviteModal = function(caller) {
+let currentPendingDoodleMessageId = null;
+window.showDoodleInviteModal = function(caller, messageId) {
     currentPendingDoodleCaller = caller;
+    currentPendingDoodleMessageId = messageId;
     const modal = document.getElementById('doodle-invite-modal');
     const text = document.getElementById('doodle-invite-text');
     if(modal && text) {
@@ -677,13 +704,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if(accBtn) accBtn.addEventListener('click', () => {
         document.getElementById('doodle-invite-modal').classList.add('hidden');
         if(currentPendingDoodleCaller && window.acceptDoodleInvite) {
-            window.acceptDoodleInvite(currentPendingDoodleCaller);
+            window.acceptDoodleInvite(currentPendingDoodleCaller,currentPendingDoodleMessageId);
         }
     });
     if(rejBtn) rejBtn.addEventListener('click', () => {
         document.getElementById('doodle-invite-modal').classList.add('hidden');
         if(currentPendingDoodleCaller && window.rejectDoodleInvite) {
-            window.rejectDoodleInvite(currentPendingDoodleCaller);
+            window.rejectDoodleInvite(currentPendingDoodleCaller,currentPendingDoodleMessageId);
         }
     });
 });
@@ -704,10 +731,11 @@ function initGlobalDoodleListener() {
                     // Check if it's a new invite (within last 30 seconds)
                     if(data.ts && Date.now() - data.ts < 30000) {
                         if(window.showDoodleInviteModal) {
-                            window.showDoodleInviteModal(data.caller);
+                            window.showDoodleInviteModal(data.caller,data.inviteMessageId);
                         }
                     }
                 }
+                if(change.type === 'removed') document.getElementById('doodle-invite-modal')?.classList.add('hidden');
             });
         });
 }

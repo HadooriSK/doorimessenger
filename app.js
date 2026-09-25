@@ -1140,6 +1140,10 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                                 if (window.showDooriGameInvitePopup) window.showDooriGameInvitePopup(msg);
                             }
                         }
+                        if (msg.mediaType === 'game_invite' && msg.game_status === 'superseded') {
+                            const popup = document.getElementById('game-invite-popup');
+                            if (popup?.dataset.messageId === msg.id) popup.remove();
+                        }
                         if (window.MessageCache && window.MessageCache.saveMessages) {
                             window.MessageCache.saveMessages(chatId, [msg]);
                         }
@@ -1481,7 +1485,7 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         
         msgs.forEach((msg, idx) => {
             if (msg.expires_at && now > msg.expires_at) return;
-            if (msg.deletedFor && msg.deletedFor.includes(currentUser)) return;
+            if (msg.deletedFor && (msg.deletedFor.includes(currentUser) || msg.deletedFor.includes(normalizeUsername(currentUser)) || msg.deletedFor.includes(String(currentUser).replace(/^@/, '')))) return;
             
             // Only show the LATEST doodle message
             if ((doodleTypes.includes(msg.mediaType) || (msg.text && msg.text.includes('Doodle Einladung abgelehnt'))) && idx !== latestDoodleIndex) {
@@ -1519,20 +1523,18 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
             else if (msg.mediaType === 'game_status' && window.renderDooriGameStatus) { contentHtml += window.renderDooriGameStatus(msg); }
             else if (msg.mediaType === 'live_media_invite' && window.renderDooriLiveMediaInvite) { contentHtml += window.renderDooriLiveMediaInvite(msg); }
             else if (msg.mediaType === 'doodle_invite') {
-                contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br><button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
-                    <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username)}>${t.doodle_btn_reject || 'Ablehnen'}</button></div>`;
+                const mine = msg.sender_username.toLowerCase() === currentUser.toLowerCase();
+                const doodleActions = msg.activity_status === 'superseded' ? `<span>${escapeHTML(t.activity_invite_superseded)}</span>`
+                    : mine ? `<span>${escapeHTML(t.media_lounge_waiting_title)}</span>`
+                    : `<button class="submit-btn" style="padding: 8px 15px; font-size: 14px;" ${actionAttrs("acceptDoodleInvite", msg.sender_username, msg.id)}>${t.doodle_btn_accept || 'Mitzeichnen'}</button>
+                    <button class="submit-btn" style="padding: 8px 15px; font-size: 14px; background: var(--bg-red); color: white; margin-left: 5px;" ${actionAttrs("rejectDoodleInvite", msg.sender_username, msg.id)}>${t.doodle_btn_reject || 'Ablehnen'}</button>`;
+                contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">🎨 <b>${t.doodle_title || 'Doodle Einladung'}</b><br><br>${doodleActions}</div>`;
             }
             else if (msg.mediaType === 'doodle_accept') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(46, 213, 115, 0.1); color: #2ed573; padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">✅ <b>${t.doodle_msg_accepted || 'Doodle Einladung angenommen'}</b></div>`;
-                if(msg.sender !== currentUser && window.handleDoodleAccept) {
-                    window.handleDoodleAccept(msg.timestamp);
-                }
             }
             else if (msg.mediaType === 'doodle_close') {
                 contentHtml += `<div class="doodle-invite-msg" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 5px;">❌ <b>${t.doodle_msg_closed || 'Doodle beendet'}</b></div>`;
-                if(msg.sender !== currentUser && window.handleDoodleClose) {
-                    window.handleDoodleClose(msg.timestamp);
-                }
             }
             else if (msg.mediaType === 'location') {
                 contentHtml += `<a href="https://maps.google.com/?q=${msg.mediaUrl}" target="_blank" class="location-msg" style="display:inline-flex; align-items:center; gap:8px; background:rgba(0,210,211,0.1); color:var(--accent); padding:10px 15px; border-radius:12px; text-decoration:none; font-weight:600;"><span style="font-size:20px;">📍</span> ${(t.msg_location || 'Standort ansehen')}</a>`;
@@ -2357,17 +2359,31 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             replyBanner.classList.add('hidden');
         }
 
-        const doodleTypes = ['doodle_invite', 'doodle_accept', 'doodle_close', 'doodle_reject'];
-        if (doodleTypes.includes(mediaType) || (processedText && processedText.includes('Doodle Einladung abgelehnt'))) {
-            const existingMsgs = messages.get(targetChat.id) || [];
-            existingMsgs.forEach(m => {
-                if (doodleTypes.includes(m.mediaType) || (m.text && m.text.includes('Doodle Einladung abgelehnt'))) {
-                    if (window.db) window.db.collection('messages').doc(m.id).delete().catch(()=>{});
-                }
+        const activityTypes = ['doodle_invite','live_media_invite','game_invite'];
+        if (targetChat.type !== 'dm' || !activityTypes.includes(mediaType)) return executeSendMessage(msgObj);
+        const pair = [String(sender).toLowerCase(),String(targetChat.id).toLowerCase()].sort().join('|');
+        const previousMessageIds = (messages.get(targetChat.id) || []).filter(message => {
+            const status = message.mediaType === 'doodle_invite' ? message.activity_status
+                : message.mediaType === 'game_invite' ? message.game_status : message.live_media_status;
+            return activityTypes.includes(message.mediaType) && message.isPublic === false &&
+                [...(message.participants || [])].map(value => String(value).toLowerCase()).sort().join('|') === pair &&
+                (!status || status === 'pending');
+        }).slice(-30).map(message => message.id);
+        if (!await executeSendMessage(msgObj)) return false;
+        try {
+            await window.accountFunctions.httpsCallable('replaceActivityInvitation')({
+                peer: targetChat.type === 'dm' ? normalizeUsername(targetChat.id) : targetChat.id, newMessageId: msgObj.id, previousMessageIds
             });
+            return true;
+        } catch (error) {
+            console.error('Activity invitation replacement failed',error?.code||'unknown');
+            await window.db.collection('messages').doc(msgObj.id).delete().catch(()=>{});
+            const current = messages.get(targetChat.id);
+            if (current) messages.set(targetChat.id,current.filter(message => message.id !== msgObj.id));
+            renderMessages();
+            alert((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS.en).err_send_msg);
+            return false;
         }
-
-        return await executeSendMessage(msgObj);
     }
 
     async function executeSendMessage(msgObj) {
@@ -3119,22 +3135,68 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         });
     }
 
+    async function clearCurrentChat() {
+        if (!currentChat) return;
+        const t = typeof TRANSLATIONS !== 'undefined' ? (TRANSLATIONS[currentLang] || TRANSLATIONS['de']) : {};
+        if (!confirm(t.msg_confirm_clear || 'Diesen Chat wirklich für alle leeren?')) return;
+
+        const chatId = currentChat.id;
+        const normChatId = currentChat.type === 'dm' ? normalizeUsername(chatId) : chatId;
+        const chatKeys = new Set([chatId, normChatId]);
+        if (currentChat.type === 'dm') {
+            chatKeys.add(String(chatId).replace(/^@/, ''));
+        }
+
+        const msgMap = window.messages || messages;
+        const chatMsgs = [];
+        const seenIds = new Set();
+
+        chatKeys.forEach(k => {
+            const list = msgMap.get(k);
+            if (Array.isArray(list)) {
+                list.forEach(m => {
+                    if (m && m.id && !seenIds.has(m.id)) {
+                        seenIds.add(m.id);
+                        chatMsgs.push(m);
+                    }
+                });
+            }
+            msgMap.set(k, []);
+        });
+
+        renderMessages();
+
+        if (window.MessageCache && window.MessageCache.clearChat) {
+            for (const k of chatKeys) {
+                await window.MessageCache.clearChat(k).catch(()=>{});
+            }
+        }
+
+        const myName = currentUser;
+        const normMyName = normalizeUsername(myName);
+        const promises = chatMsgs.map(msg => {
+            const isMine = msg.sender_username === myName ||
+                           normalizeUsername(msg.sender_username) === normMyName ||
+                           (currentChat.isPublic && currentChat.isAdmin);
+            if (isMine) {
+                return window.db.collection('messages').doc(msg.id).delete().catch(console.error);
+            } else {
+                const df = Array.isArray(msg.deletedFor) ? [...msg.deletedFor] : [];
+                if (!df.includes(myName)) df.push(myName);
+                return window.db.collection('messages').doc(msg.id).update({ deletedFor: df }).catch(console.error);
+            }
+        });
+        await Promise.all(promises);
+
+        const sidebar = document.getElementById('group-info-sidebar');
+        if (sidebar && !sidebar.classList.contains('hidden')) sidebar.classList.add('hidden');
+    }
+
     if (dropdownClearChat) {
         dropdownClearChat.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!currentChat) return;
-            const msgs = messages.get(currentChat.id) || [];
-            const t = typeof TRANSLATIONS !== 'undefined' ? (TRANSLATIONS[currentLang] || TRANSLATIONS['de']) : {};
-            if(confirm(t.msg_confirm_clear || 'Diesen Chat wirklich für alle leeren?')) {
-                msgs.forEach(msg => {
-                    db.collection('messages').doc(msg.id).delete().catch(()=>{});
-                });
-                messages.set(currentChat.id, []);
-                renderMessages();
-                const sidebar = document.getElementById('group-info-sidebar');
-                if(sidebar && !sidebar.classList.contains('hidden')) sidebar.classList.add('hidden');
-            }
             chatHeaderDropdown.classList.add('hidden');
+            clearCurrentChat();
         });
     }
     document.getElementById('unblock-btn').addEventListener('click', () => { if(currentChat) { blockedContacts.delete(currentChat.id); saveUserData(); selectChat(currentChat.id, currentChat.type); } });
@@ -4542,15 +4604,18 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (resendVerificationContainer) resendVerificationContainer.style.display = 'none';
         let createdUser = null;
         let accountCreated = false;
+        let loginStage = 'set-persistence';
         try {
             window.auth.languageCode = currentLang;
             await window.auth.setPersistence(rememberMeCheckbox?.checked && !isRegisterMode
                 ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
             if (isRecoveryMode) {
+                loginStage = 'recover-account';
                 await authCall('recoverAccountDetails', { email: usernameInput.value.trim(), language: currentLang });
                 isRecoveryMode = false;
                 authNotice('security_recovery_sent');
             } else if (isRegisterMode) {
+                loginStage = 'register-account';
                 const credential = await window.auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
                 createdUser = credential.user;
                 const result = await authCall('registerAccount', { username: usernameInput.value.trim() });
@@ -4564,7 +4629,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 await window.auth.signOut();
                 syncAuthForm();
             } else {
+                loginStage = 'authenticate';
                 const user = await authenticateForm();
+                loginStage = 'verify-email';
                 await user.reload();
                 if (!user.emailVerified) {
                     authNotice('security_verify');
@@ -4573,7 +4640,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                     return;
                 }
                 await user.getIdToken(true);
+                loginStage = 'ensure-account';
                 const account = await authCall('ensureAccount');
+                loginStage = 'read-private-account';
                 const privateAccount = (await window.db.collection('users').doc(account.key).get()).data();
                 rememberAlias(account.username, String(privateAccount.id_number), user.email, !!rememberMeCheckbox?.checked);
                 if (rememberMeCheckbox?.checked) localStorage.setItem('doori_saved_username', usernameInput.value.trim());
@@ -4582,6 +4651,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 performLogin(account.username);
             }
         } catch (error) {
+            console.error('Login failed', loginStage, error?.code || 'unknown');
             // Keep an already registered account recoverable if email delivery fails.
             if (createdUser && !accountCreated) await createdUser.delete().catch(() => {});
             await window.auth.signOut().catch(() => {});
@@ -5520,18 +5590,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     const cBtn = document.getElementById('clear-chat-btn');
     if(cBtn) {
         cBtn.addEventListener('click', () => {
-            if(!currentChat) return;
-            const msgs = messages.get(currentChat.id) || [];
-            const t = TRANSLATIONS[currentLang] || TRANSLATIONS['de'];
-            if(confirm(t.msg_confirm_clear || 'Diesen Chat wirklich für alle leeren?')) {
-                msgs.forEach(msg => {
-                    db.collection('messages').doc(msg.id).delete().catch(()=>{});
-                });
-                messages.set(currentChat.id, []);
-                renderMessages();
-                const sidebar = document.getElementById('group-info-sidebar');
-                if(sidebar) sidebar.classList.add('hidden');
-            }
+            clearCurrentChat();
         });
     }
 

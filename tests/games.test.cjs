@@ -43,7 +43,7 @@ function client(username = '@alice') {
       };
     },
     async runTransaction(run) {
-      await run({
+       return run({
         async get(ref) { return { data: () => structuredClone(sessions.get(ref.id)) }; },
         update(ref, changes) {
           sessions.set(ref.id, { ...sessions.get(ref.id), ...structuredClone(changes) });
@@ -125,15 +125,17 @@ test('quiz offers 70 localized questions and selects 10 unique questions per due
   dom.window.close();
 });
 
-test('only one unanswered request per game and opponent is allowed', async () => {
+test('a newer request for the same game is sent so pending invitations can be superseded', async () => {
   const { dom, w, sessions } = client('@alice');
   const alerts = [];
+  let sent = 0;
   w.alert = text => alerts.push(text);
-  w.sendMessage = async () => true;
+  w.sendMessage = async () => { sent++; return true; };
   await w.DooriGamesTest.create('quiz');
   await w.DooriGamesTest.create('quiz');
-  assert.equal(sessions.size, 1);
-  assert.match(alerts.at(-1), /bereits eine Anfrage/);
+  assert.equal(sessions.size, 2);
+  assert.equal(sent, 2);
+  assert.equal(alerts.length, 0);
   dom.window.close();
 });
 
@@ -142,10 +144,12 @@ test('leaving creates a durable chat notification', async () => {
   w.sendMessage = async () => true;
   await w.DooriGamesTest.create('connect4');
   const id = [...sessions.keys()][0];
+  const inviteId = sessions.get(id).inviteMessageId;
+  sentMessages.set(inviteId, { mediaType: 'game_invite' });
   w.currentUser = '@bob';
-  await w.DooriGamesTest.decide(id, 'declined', 'invite-declined');
+  await w.DooriGamesTest.decide(id, 'declined', inviteId);
   assert.equal(sessions.get(id).status, 'declined');
-  assert.equal(sentMessages.get('invite-declined').game_status, 'declined');
+  assert.equal(sentMessages.get(inviteId).game_status, 'declined');
 
   sessions.set(id, { ...sessions.get(id), status: 'active' });
   w.openDooriGame(id);
@@ -160,15 +164,16 @@ test('accepting or declining replaces invitation actions with a final status', a
   w.sendMessage = async () => true;
   await w.DooriGamesTest.create('memory');
   const id = [...sessions.keys()][0];
-  sentMessages.set('invite-1', { mediaType: 'game_invite' });
+  const inviteId = sessions.get(id).inviteMessageId;
+  sentMessages.set(inviteId, { mediaType: 'game_invite' });
   w.currentUser = '@bob';
-  await w.DooriGamesTest.decide(id, 'active', 'invite-1');
-  assert.equal(sentMessages.get('invite-1').game_status, 'accepted');
+  await w.DooriGamesTest.decide(id, 'active', inviteId);
+  assert.equal(sentMessages.get(inviteId).game_status, 'accepted');
   const accepted = w.renderDooriGameInvite({ id:'invite-1', sender_username:'@alice', mediaUrl:JSON.stringify({id,type:'memory'}), game_status:'accepted' });
   assert.match(accepted, /Spielanfrage angenommen/);
   assert.doesNotMatch(accepted, /acceptDooriGame|declineDooriGame/);
 
-  sessions.set('game-declined', { ...sessions.get(id), status:'pending' });
+  sessions.set('game-declined', { ...sessions.get(id), status:'pending', inviteMessageId:'invite-2' });
   sentMessages.set('invite-2', { mediaType:'game_invite' });
   await w.DooriGamesTest.decide('game-declined', 'declined', 'invite-2');
   assert.equal(sentMessages.get('invite-2').game_status, 'declined');

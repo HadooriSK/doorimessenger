@@ -474,8 +474,8 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
    - Alternativ auch Einzelsecrets unterstützt. Keine Zugangsdaten im Chat oder Code.
 4. **Validierung & Tests:**
    - `tests/storage.test.cjs`: Prüft SigV4 URL-Generierung, R2->B2 Kaskadierung bei 9,5 GB, und 30-Tage Expiration.
-   - Testsuite: **63/63 Tests bestanden (100% grün)** (`npm.cmd test`).
-   - Build: **37 allowlistete Public-Dateien** (`npm.cmd run build`).
+- Testsuite: **63/63 Tests bestanden (100% grün)** (`npm.cmd test`).
+    - Build: **37 allowlistete Public-Dateien** (`npm.cmd run build`).
 
 ## 17. Media Lounge – temporäre Live-Medien (Stand: 24.09.2026)
 
@@ -531,3 +531,77 @@ Der Betreiber hat Accounts bei Cloudflare R2 (10 GB kostenlos) und Backblaze B2 
 - Firestore rules permit only the recipient to accept/decline and either participant to mark an invitation ended; the session/message relationship is immutable.
 - Cache bumped to `web-messenger-v142-media-lounge-status`, `live-media.js?v=3`.
 - Verification: 71/71 tests passed, build exactly 38 files, Firestore rules compiled/deployed, hosting deployed, live assets returned `LIVE_MEDIA_STATUS_OK`.
+
+---
+
+## 21. Browser-CORS-Fix für große Mediendateien (R2 & B2) (24.09.2026)
+
+### 21.1 Fehlerbild & Ursache
+- Der Upload großer Dateien schlug **nach** erfolgreichem `requestLargeMediaUpload`, aber **vor** `confirmLargeMediaUpload` fehl.
+- Ursache: Der Browser führt den direkten `PUT` auf die Presigned-URL von R2/B2 aus. Ein `PUT` ist keine „einfache“ CORS-Anfrage und löst immer einen `OPTIONS`-Preflight aus. Beide Buckets besaßen jedoch **keine CORS-Regeln**, sodass der Preflight unbeantwortet blieb und der Browser den Upload blockierte.
+- Die Presigned-URL selbst, die SigV4-Signatur und die Client-Pipeline waren korrekt – es fehlte ausschließlich die Bucket-CORS-Freigabe.
+
+### 21.2 Kompatibilität der signierten PutBucketCors-Anfrage (live verifiziert)
+- **Beide Anbieter unterstützen die S3-API `PutBucketCors` (SigV4).** Die signierte `PutBucketCors`-Anfrage ist mit **Cloudflare R2 und Backblaze B2** kompatibel.
+- Live-Test `scripts/apply-storage-cors.cjs` (liest Secrets nur im Prozessspeicher, gibt sie nie aus):
+  - Cloudflare R2: `PutBucketCors` → **HTTP 200 OK**.
+  - Backblaze B2: `PutBucketCors` → **HTTP 200 OK**.
+- Wichtiger Detailunterschied: **Backblaze B2 verlangt** bei `PutBucketCors` einen `Content-MD5`- oder `x-amz-checksum-*`-Header (HTTP 400 ohne diesen). Die Anfrage signiert daher zusätzlich `content-md5`.
+- Der `cors`-Subresource muss im kanonischen Request als Query `cors=` (mit angehängtem Gleichheitszeichen) und die kanonische URI als `/bucket/` (mit Schrägstrich) erscheinen.
+
+### 21.3 Umsetzung
+- `functions/large-media-storage.js`: neu `buildCorsConfigurationXml`, `signPutBucketCorsRequest`, `putBucketCors`, `parseS3Error`, `DEFAULT_ALLOWED_ORIGINS`.
+- `functions/index.js`: neue admin-geschützte Cloud Function `configureStorageCors` (Secrets `CLOUDFLARE_R2_CONFIG`, `BACKBLAZE_B2_CONFIG`, `DOORI_ADMIN_EMAIL`).
+- `scripts/apply-storage-cors.cjs`: einmaliges lokales Skript zum Anwenden **und** Verifizieren (OPTIONS-Preflight-Probe) der CORS-Regeln.
+- `tests/storage.test.cjs`: 5 neue Unit-Tests (CORS-XML, SigV4-Subresource-Signierung für R2 und B2, Fetch-Mocking, Fehler-Sanitisierung ohne Credential-Leak).
+- Zusätzlich repariert: `tests/calls.test.cjs` nutzte ein Literal `\n`, das bei Windows-CRLF-Checkouts brach (vorbestehender Fehler, kein Teil der CORS-Arbeit).
+
+### 21.4 Angewendete CORS-Regeln
+- Origins: `https://doori-messenger.web.app`, `https://www.doori-messenger.de`, `https://doori-messenger.de`, `http://localhost:3000`, `http://localhost:5000`.
+- Methods: `GET`, `PUT`, `HEAD`, `DELETE`; Header: `*`; Expose: `ETag`; `MaxAgeSeconds: 3600`.
+
+### 21.5 Validierung, Build & Deployment
+- Live-Preflight-Probe: R2 und B2 antworten korrekt mit `Access-Control-Allow-Origin: https://doori-messenger.web.app`, `Access-Control-Allow-Headers: content-type` und erlaubtem `PUT`.
+- Testsuite: **70/70 Tests bestanden (100% grün)** (`npm.cmd test`).
+- Build: **37 allowlistete Public-Dateien** (`npm.cmd run build`).
+- Deployment: `configureStorageCors` (europe-west3) erfolgreich live bereitgestellt.
+- Keine sichtbaren Texte geändert → alle 5 Sprachen unverändert synchron; RTL für `ar`/`fa` unberührt.
+
+### 21.6 Offene Punkte
+- Kein automatisierter echter Browser-Upload-Test durchgeführt; der Fix ist über die OPTIONS-Preflight-Probe und die `PutBucketCors`-200-Antworten beider Anbieter verifiziert.
+- Änderungen sind **nicht committet** (Basis `main`, Commit `c9d9d9f`).
+
+## 22. Zwischenstand 24.09.2026 23:20 UTC – Doodle-Fix, offene Berechtigung und Laptop-Login
+- Historische Doodle-Akzeptanz-Nachrichten öffneten durch Nebenwirkungen beim Chat-Rendern erneut das Doodle-Fenster. In `app.js` entfernt; laufende Doodle-Sitzungen nutzen weiter ihre eigenen Listener. Hosting v143 mit `app.js?v=359` und `live-media.js?v=4` veröffentlicht und öffentlich geprüft.
+- Der Media-Lounge-Start meldet weiterhin `Missing or insufficient permissions`; sein neues Log unterscheidet `list-sessions`, `create-session` und `send-invitation`. Keine Firestore-Regeln ohne diesen Beleg geöffnet oder deployed.
+- Auf dem Laptop scheitert die E-Mail-/Kontakt-ID-Anmeldung mit allgemeinem UI-Text; iPhone bleibt angemeldet. `account-client.js` und `app.js` protokollieren jetzt ausschließlich Phase/Fehlercode, keine Zugangsdaten. Hosting v144 mit `account-client.js?v=2`, `app.js?v=360` veröffentlicht und öffentlich geprüft; Auth-Fix ist **noch nicht bestätigt**.
+- Letzte Validierung: **79/79 Tests grün**, Build **38 Dateien**, Diff-Prüfung ohne Fehler; keine sichtbaren Übersetzungen oder RTL geändert. `main`/`c9d9d9f`, uncommittete CORS-/Diagnose-Dateien, kein neuer Commit oder Push. Aktuelle vollständige Dateiliste, Blocker und nächste Schritte: `CODEX_HANDOFF_2026-09-24_MEDIA_LOUNGE.md`, Nachtrag 23:20 UTC.
+
+## 23. Nachtrag 25.09.2026 00:20 UTC – Aktivitätsanfragen und drei Lounge-Bereiche
+- Doodle, Media Lounge und Spiele als getrennte Aktivitäten unter einem gemeinsamen Menü gruppiert. Offene Anfragen im selben DM sollen serverseitig transaktional durch neue ersetzt werden, ohne aktive Sitzungen zu beenden. Lounge lokal in Fotos, Videos, Musik samt synchroner Auswahl und Musikplayer gegliedert; alle fünf Sprachen und RTL berücksichtigt.
+- **84/84 Tests grün**, Build 38 Dateien; Firestore-Regeln kompiliert und live veröffentlicht. Die neue Callable `replaceActivityInvitation` konnte wegen Eventarc-Service-Identity-/Cloud-Runtime-Config-Störung **nicht** deployed werden. Hosting v145 wurde deshalb **nicht** veröffentlicht; live bleibt v144. Keine Commits/Pushes, `main`/`c9d9d9f`.
+- Vollständiger Zustand, uncommittete Dateien und sichere Deploy-Reihenfolge: `CODEX_HANDOFF_2026-09-24_MEDIA_LOUNGE.md`, Nachtrag 00:20 UTC.
+## 24. Nachtrag 25.09.2026 02:15 UTC – Media Lounge Start-Fix & „Chat leeren“ Reparatur (Hosting v146)
+- **Media Lounge Start-Fehler behoben:**
+  - Nutzer-Identifikatoren in `live-media.js` via `normalizeUser` auf kanonisches `@username` gebracht (`creator` und `peer`), wodurch Firestore-Rule-Mismatches und Parameterfehler in `replaceActivityInvitation` verhindert werden.
+  - Clock-Skew-Schutz: Lokale Uhrzeiten, die der Google-Serverzeit minimal voraus sind, ließen `expiresAt <= request.time.toMillis() + 24h` scheitern. Client zieht 2 Minuten Sicherheitsabstand ab; `firestore.rules` gewährt 5 Minuten Puffer.
+  - Fehlerbehandlung um `list-sessions` gekapselt, sodass Index- oder Netzwerkverzögerungen den Start nicht abbrechen.
+- **„Chat leeren“ repariert:**
+  - In `message-cache.js` `clearChat(chatId)` implementiert (löscht IndexedDB-Cursor und memoryFallback für den Chat).
+  - In `app.js` `clearCurrentChat()` vereinheitlicht: räumt alle Chat-Keys (`currentChat.id`, `@...`, raw) im In-Memory `messages`-Store und im IndexedDB-Cache ab.
+  - Firestore-Sync: Eigene Nachrichten werden per `delete()` gelöscht; fremde Nachrichten werden regelkonform via `update({ deletedFor: [...currentUser] })` für den Nutzer verborgen (`difference.hasOnly([name()])`).
+  - `renderMessages()` filtert alle Nachrichten mit `deletedFor.includes(currentUser)` zuverlässig heraus.
+- **Deployments:**
+  - Firestore Rules live deployt.
+  - Cloud Function `replaceActivityInvitation` live deployt.
+  - Hosting **v146** live auf `https://doori-messenger.web.app` mit `app.js?v=362`, `live-media.js?v=6`, `security.js?v=2`, `message-cache.js?v=2`.
+- **Validierung:** 86/86 Tests grün (100%), Build 38 Public-Dateien sauber.
+## 25. Nachtrag 25.09.2026 02:22 UTC – iPhone Dateien-App Musik-Auswahl (Hosting v147)
+- **Problem:** Auf iOS Safari im Bereich „Musik“ der Media Lounge waren im Datei-Dialog (Dateien-App) alle Musikdateien ausgegraut/ausgeblendet.
+- **Ursache:** Apple Safari bewertet `accept="audio/*"` strikt über UTType (`public.audio`). Dateien in der iOS-Dateien-App (iCloud Drive / Downloads / WhatsApp) sind oft mit generischen UTIs hinterlegt und werden nur freigegeben, wenn die Dateiendungen (`.mp3`, `.m4a`, `.wav` etc.) explizit im `accept`-Attribut stehen. Zudem liefert iOS für ausgewählte Dateien oft `file.type = ""`, was die Validierung fälschlich blockierte.
+- **Fix:**
+  - `live-media.js`: `ACCEPT_BY_CATEGORY.audio` um alle gängigen Endungen (`.mp3,.m4a,.wav,.aac,.flac,.ogg,.opus,.m4r,.aiff,.wma`) erweitert.
+  - `live-media.js`: `resolveMediaType(file)` ergänzt, sodass bei leerem `file.type` automatisch über die Dateiendung die korrekte Kategorie und der MIME-Type zugewiesen wird.
+  - `index.html`: Input-Accept angepasst.
+  - `tests/storage.test.cjs`: Test erweitert und verifiziert.
+- **Deploy:** Hosting v147 mit `live-media.js?v=7` live auf `https://doori-messenger.web.app`. 86/86 Tests grün.

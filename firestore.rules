@@ -126,7 +126,7 @@ service cloud.firestore {
    allow create: if verified() && request.resource.data.creator == key() &&
     request.resource.data.participants is list && request.resource.data.participants.size() == 2 &&
     key() in request.resource.data.participants && request.resource.data.status == 'pending' &&
-    request.resource.data.expiresAt <= request.time.toMillis() + 24 * 60 * 60 * 1000;
+    request.resource.data.expiresAt <= request.time.toMillis() + 24 * 60 * 60 * 1000 + 5 * 60 * 1000;
    allow update: if participant() &&
     request.resource.data.creator == resource.data.creator &&
     request.resource.data.get('inviteMessageId', '') == resource.data.get('inviteMessageId', '') &&
@@ -202,7 +202,11 @@ service cloud.firestore {
    function participant() { return verified() && (resource.data.caller == key() || resource.data.receiver == key()); }
    allow read: if participant();
    allow create: if verified() && request.resource.data.caller == key();
-   allow update: if participant() && request.resource.data.caller == resource.data.caller && request.resource.data.receiver == resource.data.receiver;
+    allow update: if participant() && (
+     (request.resource.data.caller == resource.data.caller && request.resource.data.receiver == resource.data.receiver) ||
+     (resource.data.type in ['invite', 'reject', 'end'] && request.resource.data.type == 'invite' &&
+      request.resource.data.caller == key() && request.resource.data.caller == resource.data.receiver &&
+      request.resource.data.receiver == resource.data.caller));
    allow delete: if participant();
    match /strokes/{strokeId} {
     allow read, write: if verified() && (get(/databases/$(database)/documents/doodle_sessions/$(sessionId)).data.caller == key() ||
