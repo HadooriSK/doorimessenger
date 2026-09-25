@@ -119,6 +119,7 @@ test('authentication additions cover five languages', () => {
  for (const lang of ['de','en','fa','ar','tr']) {
   assert.deepEqual(Object.keys(texts[lang]).sort(),Object.keys(texts.en).sort());
   for (const key of ['security_recovery_link','security_recover_button','security_recovery_instructions','security_recovery_sent','security_recovery_error']) assert.ok(texts[lang][key].trim(),`${lang}.${key}`);
+  assert.doesNotMatch(Object.values(texts[lang]).join(' '),/firebase/i,`${lang} must not expose the backend provider`);
  }
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.equal((html.match(/id="forgot-username-id-link"/g)||[]).length,1);

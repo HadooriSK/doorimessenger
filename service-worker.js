@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-messenger-v147-ios-audio';
+const CACHE_NAME = 'web-messenger-v148-branded-registration';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -12,7 +12,7 @@ const urlsToCache = [
   '/live-media.js?v=7',
   '/security.js?v=2',
   '/message-cache.js?v=2',
-  '/auth-translations.js?v=9',
+  '/auth-translations.js?v=10',
   '/account-client.js?v=2',
   '/vendor/purify.min.js',
   '/vendor/firebase-app-compat.js',
