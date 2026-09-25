@@ -40,23 +40,13 @@
         }
     </style>
     <script>
+        // Keep technical provider and source details out of the customer UI.
+        // User-facing flows display their own translated, actionable message.
         window.addEventListener('error', function(e) {
-            if (e.message === 'Script error.' || e.lineno === 0) return;
-            var banner = document.getElementById('global-error-banner');
-            if (banner) {
-                banner.style.display = 'block';
-                banner.innerText += 'ERROR: ' + e.message + ' at ' + (e.filename || 'unknown') + ':' + e.lineno + ':' + e.colno + '\n';
-                if (e.error && e.error.stack) {
-                    banner.innerText += e.error.stack + '\n';
-                }
-            }
+            if (e.message !== 'Script error.' && e.lineno !== 0) console.error('Application error', e.error || e.message);
         });
         window.addEventListener('unhandledrejection', function(e) {
-            var banner = document.getElementById('global-error-banner');
-            if (banner) {
-                banner.style.display = 'block';
-                banner.innerText += 'PROMISE ERROR: ' + (e.reason ? e.reason.stack || e.reason.message || e.reason : e) + '\n';
-            }
+            console.error('Application request failed', e.reason || e);
         });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -1057,7 +1047,7 @@
     <script src="tts.js?v=9"></script>
     <script src="doori-live.js?v=11"></script>
     <script src="assistant.js?v=13"></script>
-    <script src="app.js?v=362"></script>
+    <script src="app.js?v=363"></script>
     <script src="vendor/agora-rtc-sdk-ng.js?v=1"></script>
     <script src="vendor/telephony-providers.js?v=1"></script>
     <script src="agora-calls.js?v=4"></script>

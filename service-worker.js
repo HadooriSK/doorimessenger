@@ -1,9 +1,9 @@
-const CACHE_NAME = 'web-messenger-v148-branded-registration';
+const CACHE_NAME = 'web-messenger-v149-account-deletion';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=338',
-  '/app.js?v=362',
+  '/app.js?v=363',
   '/tts.js?v=9',
   '/doori-live.js?v=11',
   '/assistant.js?v=13',

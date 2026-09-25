@@ -402,6 +402,9 @@ test('two-step account deletion sends red confirmation email and second deleted 
  assert.ok(actionHtml.includes('europe-west3-doori-messenger.cloudfunctions.net'));
  const appCode=fs.readFileSync(path.join(root,'app.js'),'utf8');
  assert.match(appCode,/requestAccountDeletion/);
+ assert.match(funcCode,/confirmAccountDeletion[\s\S]*await auth\.deleteUser\(uid\)[\s\S]*await batch\.commit\(\)/);
+ assert.match(appCode,/resume-deleted-account/);
+ assert.match(appCode,/accountWasPresent/);
 });
 
 test('five modern features (chat filter, voice speed, starred messages, profile status, shared media) are fully functional', async () => {

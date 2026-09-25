@@ -329,8 +329,16 @@ exports.confirmAccountDeletion=onCall({...options,secrets:[BREVO_API_KEY]},async
   batch.delete(db.collection('presence').doc(key));
   batch.delete(db.collection('userData').doc(key));
  }
+ // Delete the authentication identity first. The request token deliberately
+ // remains available until the Firestore cleanup succeeds, so a partial
+ // failure can be retried without leaving the email address reserved.
+ try{await auth.deleteUser(uid);}catch(err){
+  if(err.code!=='auth/user-not-found'){
+   console.error('Delete user auth error',err?.code||'unknown');
+   throw new HttpsError('unavailable','Account deletion could not be completed.');
+  }
+ }
  await batch.commit();
- try{await auth.deleteUser(uid);}catch(err){if(err.code!=='auth/user-not-found')console.error('Delete user auth error',err);}
  const copy=deletionCompletedCopy[language],direction=language==='ar'||language==='fa'?'rtl':'ltr';
  const textContent=`${copy.title}\n\n${copy.message}`;
  const htmlContent=`<div dir="${direction}"><h2>${safe(copy.title)}</h2><p style="font-size:15px;line-height:1.6;">${safe(copy.message)}</p></div>`;

@@ -4616,7 +4616,20 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 authNotice('security_recovery_sent');
             } else if (isRegisterMode) {
                 loginStage = 'register-account';
-                const credential = await window.auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
+                const email = emailInput.value.trim();
+                let credential;
+                try {
+                    credential = await window.auth.createUserWithEmailAndPassword(email, passwordInput.value);
+                } catch (createError) {
+                    // Older deletion attempts could remove the profile before
+                    // the authentication identity. Prove ownership with the
+                    // previous password and rebuild only a missing account.
+                    if (createError?.code !== 'auth/email-already-in-use') throw createError;
+                    loginStage = 'resume-deleted-account';
+                    credential = await window.auth.signInWithEmailAndPassword(email, passwordInput.value);
+                    const accountDoc = await window.db.collection('accounts').doc(credential.user.uid).get();
+                    if (accountDoc.exists) throw createError;
+                }
                 createdUser = credential.user;
                 const result = await authCall('registerAccount', { username: usernameInput.value.trim() });
                 accountCreated = true;
@@ -4866,6 +4879,21 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             const result = await authCall('ensureAccount');
             if (!currentUser) performLogin(result.username);
         } catch (error) { console.error('Auto-login failed', error); }
+    });
+
+    // A confirmed deletion happens on the action page and can therefore be
+    // completed while the Messenger is still open on another device. Watch
+    // the private account marker and end that local session immediately.
+    let deletedAccountUnsubscribe = null;
+    window.auth.onAuthStateChanged(user => {
+        if (deletedAccountUnsubscribe) { deletedAccountUnsubscribe(); deletedAccountUnsubscribe = null; }
+        if (!user || !window.db) return;
+        let accountWasPresent = false;
+        deletedAccountUnsubscribe = window.db.collection('accounts').doc(user.uid).onSnapshot(snapshot => {
+            if (snapshot.exists) { accountWasPresent = true; return; }
+            if (!accountWasPresent || window.authFlowBusy) return;
+            window.auth.signOut().finally(() => window.location.reload());
+        }, () => {});
     });
 
     // --- Group Member Selection Logic ---
