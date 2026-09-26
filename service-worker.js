@@ -1,10 +1,10 @@
-const CACHE_NAME = 'web-messenger-v150-media-player';
+const CACHE_NAME = 'web-messenger-v153-video-upload';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=338',
+  '/style.css?v=339',
   '/media-lounge-player.css?v=1',
-  '/app.js?v=363',
+  '/app.js?v=364',
   '/tts.js?v=9',
   '/doori-live.js?v=11',
   '/assistant.js?v=13',
