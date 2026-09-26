@@ -226,7 +226,13 @@ test('Media Lounge separates photos, videos and music with a shared selected ite
         assert.ok(window.document.querySelector('#media-lounge-upload').accept.startsWith('audio/*'));
         assert.ok(window.document.querySelector('#media-lounge-upload').accept.includes('.mp3'));
         assert.equal(window.document.querySelector('#media-lounge-tray').children.length,1);
-        assert.ok(window.document.querySelector('.media-lounge-music-player audio[controls]'));
+        assert.ok(window.document.querySelector('.media-lounge-player-audio audio'));
+        assert.ok(window.document.querySelector('.media-lounge-player-audio .media-lounge-controls .media-lounge-seek'));
+        for (const lang of ['de','en','ar','fa','tr']) {
+            for (const key of ['media_lounge_play','media_lounge_pause','media_lounge_seek','media_lounge_volume','media_lounge_mute','media_lounge_fullscreen','media_lounge_playback_error']) {
+                assert.ok(window.DooriLiveMediaTest.I18N[lang][key],`${lang}: ${key}`);
+            }
+        }
         assert.equal(updates[0].currentIndex,2);
         assert.equal(updates[0].playback.playing,false);
         music.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));

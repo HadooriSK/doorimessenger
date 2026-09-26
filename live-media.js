@@ -10,14 +10,21 @@
     tr: {media_lounge_menu:'Medya Salonu',media_lounge_title:'Medya Salonu',media_lounge_subtitle:'Birlikte dinleyin, izleyin ve yaşayın',media_lounge_live:'CANLI',media_lounge_empty_title:'Henüz medya yok',media_lounge_empty_text:'Ortak oturumunuza müzik, resim veya video ekleyin.',media_lounge_empty_category:'Bu bölümde henüz medya yok.',media_lounge_sections:'Medya bölümleri',media_lounge_photos:'Fotoğraflar',media_lounge_videos:'Videolar',media_lounge_music:'Müzik',media_lounge_music_player:'Ortak müzik çalar',media_lounge_now:'Şimdi birlikte',media_lounge_add:'Medya ekle',media_lounge_end:'Oturumu bitir',media_lounge_retention:'Yalnızca geçici ve canlı kullanım içindir. Tüm resimler, videolar ve müzik dosyaları en geç 24 saat içinde otomatik olarak silinir.',media_lounge_waiting_title:'Davet gönderildi',media_lounge_waiting_text:'Davet kabul edilir edilmez ortak oturum başlar.',media_lounge_invite_title:'Medya Salonu daveti',media_lounge_invite_text:'seninle canlı medya paylaşmak istiyor.',media_lounge_accept:'Kabul et',media_lounge_reject:'Reddet',media_lounge_accepted:'Davet kabul edildi',media_lounge_rejected:'Davet reddedildi',media_lounge_ended:'Canlı oturum sona erdi.',media_lounge_expired:'Bu canlı oturumun süresi doldu.',media_lounge_dm_only:'Medya Salonu yalnızca özel sohbetlerde kullanılabilir.',media_lounge_pending_exists:'Bu sohbette zaten bekleyen bir davet var.',media_lounge_start_error:'Medya Salonu başlatılamadı. Lütfen tekrar deneyin.',media_lounge_uploading:'Medya canlı oturum için güvenle yükleniyor …',media_lounge_upload_error:'Medya yüklenemedi.',media_lounge_type_error:'Lütfen yalnızca resim, video veya müzik dosyaları seçin.'}
   };
   Object.assign(I18N.de,{shared_activities:'Gemeinsame Aktivitäten',activity_invite_superseded:'Durch eine neuere Anfrage ersetzt.',activity_already_active:'Hier läuft bereits eine gemeinsame Aktivität.',media_lounge_active_exists:'Für diesen Chat läuft bereits eine Media Lounge.'});
+  Object.assign(I18N.de,{media_lounge_play:'Abspielen',media_lounge_pause:'Pause',media_lounge_seek:'Position',media_lounge_volume:'Lautstärke',media_lounge_mute:'Stummschalten',media_lounge_fullscreen:'Vollbild',media_lounge_playback_error:'Die Datei kann nicht abgespielt werden. Bitte überprüfe das Format oder lade sie erneut hoch.'});
   Object.assign(I18N.en,{shared_activities:'Shared activities',activity_invite_superseded:'Replaced by a newer invitation.',activity_already_active:'A shared activity is already active here.',media_lounge_active_exists:'A Media Lounge is already active in this chat.'});
+  Object.assign(I18N.en,{media_lounge_play:'Play',media_lounge_pause:'Pause',media_lounge_seek:'Seek',media_lounge_volume:'Volume',media_lounge_mute:'Mute',media_lounge_fullscreen:'Fullscreen',media_lounge_playback_error:'This file cannot be played. Check the format or upload it again.'});
   Object.assign(I18N.ar,{shared_activities:'أنشطة مشتركة',activity_invite_superseded:'استُبدلت بدعوة أحدث.',activity_already_active:'يوجد نشاط مشترك نشط هنا بالفعل.',media_lounge_active_exists:'توجد صالة وسائط نشطة بالفعل في هذه الدردشة.'});
+  Object.assign(I18N.ar,{media_lounge_play:'تشغيل',media_lounge_pause:'إيقاف مؤقت',media_lounge_seek:'موضع التشغيل',media_lounge_volume:'مستوى الصوت',media_lounge_mute:'كتم الصوت',media_lounge_fullscreen:'ملء الشاشة',media_lounge_playback_error:'تعذّر تشغيل الملف. تحقّق من التنسيق أو أعد رفعه.'});
   Object.assign(I18N.fa,{shared_activities:'فعالیت‌های مشترک',activity_invite_superseded:'با دعوت جدیدتری جایگزین شد.',activity_already_active:'در اینجا یک فعالیت مشترک فعال است.',media_lounge_active_exists:'در این گفت‌وگو یک سالن رسانه فعال وجود دارد.'});
+  Object.assign(I18N.fa,{media_lounge_play:'پخش',media_lounge_pause:'مکث',media_lounge_seek:'موقعیت پخش',media_lounge_volume:'بلندی صدا',media_lounge_mute:'بی\u200cصدا',media_lounge_fullscreen:'تمام\u200cصفحه',media_lounge_playback_error:'این فایل پخش نمی\u200cشود. قالب آن را بررسی کنید یا دوباره بارگذاری کنید.'});
   Object.assign(I18N.tr,{shared_activities:'Ortak etkinlikler',activity_invite_superseded:'Daha yeni bir davetle değiştirildi.',activity_already_active:'Burada zaten etkin bir ortak etkinlik var.',media_lounge_active_exists:'Bu sohbette zaten etkin bir Medya Salonu var.'});
+  Object.assign(I18N.tr,{media_lounge_play:'Oynat',media_lounge_pause:'Duraklat',media_lounge_seek:'Konum',media_lounge_volume:'Ses düzeyi',media_lounge_mute:'Sessize al',media_lounge_fullscreen:'Tam ekran',media_lounge_playback_error:'Bu dosya oynatılamıyor. Biçimini kontrol edin veya yeniden yükleyin.'});
 
   let modal, viewer, empty, tray, waiting, uploadInput, currentSession = null, unsubscribe = null;
   let activeCategory = 'image', lastSharedItemId = null;
   let applyingRemote = false, lastPlaybackWrite = 0, sessionsListener = null, creatingSession = false;
+  let pendingPlayback = null, playbackSequence = 0;
+  const playbackClientId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   const normalizeUser = value => '@' + String(value || '').replace(/^@/, '').toLowerCase();
   const me = () => normalizeUser(window.currentUser || '');
   const ACCEPT_BY_CATEGORY = {
@@ -150,6 +157,7 @@
   }
 
   function closeLocal() {
+    pendingPlayback=null; playbackSequence++;
     unsubscribe?.(); unsubscribe = null; currentSession = null;
     modal?.classList.add('hidden');
     if (viewer) { const media=viewer.querySelector('video,audio'); media?.pause(); viewer.replaceChildren(); }
@@ -194,46 +202,122 @@
     button.onclick=()=>setIndex(index); return button;
   }
 
+  const clock = seconds => {
+    if (!Number.isFinite(seconds)) return '0:00';
+    const value = Math.max(0, Math.floor(seconds));
+    return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
+  };
+
   function renderViewer(item) {
-    const existing=viewer.firstElementChild;
-    if (!item) { const previous=viewer.querySelector('video,audio'); viewer.replaceChildren(); previous?.pause(); viewer.dataset.key=''; return; }
-    if (viewer.dataset.key===item.id) { applyPlayback(existing); return; }
-    const previous=viewer.querySelector('video,audio');
-    viewer.dataset.key=item.id; viewer.replaceChildren(); previous?.pause();
-    if (item.type==='image') { const img=document.createElement('img'); img.src=item.url; img.alt=item.name||''; viewer.appendChild(img); return; }
-    const wrap=document.createElement('div'); wrap.style.cssText='width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center';
-    if(item.type==='audio'){
-      wrap.className='media-lounge-music-player';
-      const art=document.createElement('div');art.className='media-lounge-audio-art';art.textContent='♫';wrap.appendChild(art);
-      const label=document.createElement('small');label.textContent=tr().media_lounge_music_player;wrap.appendChild(label);
-      const title=document.createElement('strong');title.textContent=item.name;wrap.appendChild(title);
+    if (!item) {
+      const previous=viewer.querySelector('video,audio');
+      viewer.replaceChildren(); previous?.pause(); viewer.dataset.key=''; return;
     }
-    const media=document.createElement(item.type==='video'?'video':'audio'); media.src=item.url; media.controls=true; media.playsInline=true; media.preload='metadata';
-    media.addEventListener('play',()=>syncPlayback(media,true)); media.addEventListener('pause',()=>syncPlayback(media,false));
-    media.addEventListener('seeked',()=>syncPlayback(media,!media.paused,true));
-    media.addEventListener('timeupdate',()=>{if(!media.paused&&Date.now()-lastPlaybackWrite>3000)syncPlayback(media,true);});
-    wrap.appendChild(media); viewer.appendChild(wrap); applyPlayback(media);
+    if (viewer.dataset.key===item.id) { applyPlayback(viewer); return; }
+    const previous=viewer.querySelector('video,audio');
+    viewer.dataset.key=item.id; viewer.replaceChildren();
+    // Pause the detached player without publishing a pause for the next item.
+    previous?.pause();
+    if (item.type==='image') {
+      const img=document.createElement('img'); img.src=item.url; img.alt=item.name||''; viewer.appendChild(img); return;
+    }
+    const panel=document.createElement('div'); panel.className='media-lounge-player';
+    const media=document.createElement(item.type==='video'?'video':'audio');
+    media.src=item.url; media.controls=false; media.playsInline=true; media.preload='metadata';
+    if (item.type==='video') {
+      media.setAttribute('playsinline',''); media.setAttribute('webkit-playsinline','');
+      const screen=document.createElement('div'); screen.className='media-lounge-screen';
+      screen.appendChild(media); panel.appendChild(screen);
+    } else {
+      const art=document.createElement('div'); art.className='media-lounge-audio-art'; art.textContent='♫'; panel.appendChild(art);
+      const label=document.createElement('small'); label.textContent=tr().media_lounge_music_player; panel.appendChild(label);
+      const title=document.createElement('strong'); title.textContent=item.name; panel.appendChild(title);
+      panel.classList.add('media-lounge-player-audio'); panel.appendChild(media);
+    }
+    const controls=document.createElement('div'); controls.className='media-lounge-controls';
+    const play=document.createElement('button'); play.type='button'; play.className='media-lounge-play';
+    const elapsed=document.createElement('span'); elapsed.className='media-lounge-time';
+    const seek=document.createElement('input'); seek.type='range'; seek.className='media-lounge-seek'; seek.min='0'; seek.max='1000'; seek.value='0'; seek.setAttribute('aria-label',tr().media_lounge_seek);
+    const duration=document.createElement('span'); duration.className='media-lounge-time';
+    const mute=document.createElement('button'); mute.type='button'; mute.className='media-lounge-mute';
+    const volume=document.createElement('input'); volume.type='range'; volume.className='media-lounge-volume'; volume.min='0'; volume.max='100'; volume.value='100'; volume.setAttribute('aria-label',tr().media_lounge_volume);
+    controls.append(play,elapsed,seek,duration,mute,volume);
+    if (item.type==='video') {
+      const full=document.createElement('button'); full.type='button'; full.className='media-lounge-fullscreen'; full.textContent='⛶'; full.title=tr().media_lounge_fullscreen; full.setAttribute('aria-label',full.title);
+      full.onclick=()=>{if(document.fullscreenElement)document.exitFullscreen?.();else if(panel.requestFullscreen)panel.requestFullscreen().catch(()=>{});else media.webkitEnterFullscreen?.();};
+      controls.appendChild(full);
+    }
+    panel.appendChild(controls); viewer.appendChild(panel);
+    const update=()=>{
+      if (!panel.isConnected) return;
+      play.textContent=media.paused?'▶':'❚❚'; play.setAttribute('aria-label',media.paused?tr().media_lounge_play:tr().media_lounge_pause);
+      mute.textContent=media.muted||media.volume===0?'🔇':'🔊'; mute.setAttribute('aria-label',tr().media_lounge_mute);
+      elapsed.textContent=clock(media.currentTime); duration.textContent=clock(media.duration);
+      if (Number.isFinite(media.duration)&&media.duration>0&&!seek.matches(':active')) seek.value=String(Math.round(media.currentTime/media.duration*1000));
+    };
+    play.onclick=()=>{if(media.paused)media.play().catch(()=>showPlayerError(panel));else media.pause();};
+    seek.oninput=()=>{if(Number.isFinite(media.duration)&&media.duration>0)media.currentTime=Number(seek.value)/1000*media.duration; update();};
+    seek.onchange=()=>syncPlayback(media,!media.paused,true);
+    mute.onclick=()=>{media.muted=!media.muted;update();};
+    volume.oninput=()=>{media.volume=Number(volume.value)/100;media.muted=false;update();};
+    media.addEventListener('loadedmetadata',()=>{applyPlayback(media);update();});
+    media.addEventListener('timeupdate',()=>{update();if(!media.paused&&Date.now()-lastPlaybackWrite>4000)syncPlayback(media,true);});
+    media.addEventListener('play',()=>{update();syncPlayback(media,true,true);});
+    media.addEventListener('pause',()=>{update();syncPlayback(media,false,true);});
+    media.addEventListener('seeked',()=>{update();syncPlayback(media,!media.paused,true);});
+    media.addEventListener('ended',()=>{update();syncPlayback(media,false,true);});
+    media.addEventListener('error',()=>showPlayerError(panel));
+    update(); applyPlayback(media);
+  }
+
+  function showPlayerError(panel) {
+    if (!panel.isConnected || panel.querySelector('.media-lounge-error')) return;
+    const message=document.createElement('p'); message.className='media-lounge-error'; message.textContent=tr().media_lounge_playback_error;
+    panel.appendChild(message);
   }
 
   function applyPlayback(root) {
     const media = root?.matches?.('video,audio') ? root : root?.querySelector?.('video,audio');
-    const state=currentSession?.playback; if(!media||!state||state.changedBy===me())return;
-    let target=Number(state.position)||0; if(state.playing)target+=(Date.now()-(Number(state.updatedAt)||Date.now()))/1000;
+    const state=currentSession?.playback;
+    if(!media||!state||state.clientId===playbackClientId)return;
+    // Playback state belongs to one item; never resume a different video/audio.
+    if(state.itemId && state.itemId!==viewer.dataset.key)return;
+    let target=Number(state.position)||0;
+    if(state.playing)target+=Math.max(0,(Date.now()-(Number(state.updatedAt)||Date.now()))/1000);
+    if(Number.isFinite(media.duration))target=Math.min(target,media.duration);
     applyingRemote=true;
-    if(Math.abs((media.currentTime||0)-target)>1.2)try{media.currentTime=Math.max(0,target);}catch(_){ }
-    if(state.playing&&media.paused)media.play().catch(()=>{}); else if(!state.playing&&!media.paused)media.pause();
-    setTimeout(()=>{applyingRemote=false;},100);
+    if(Math.abs((media.currentTime||0)-target)>1.2) {
+      if(media.readyState) {try{media.currentTime=Math.max(0,target);}catch(_){}}
+      else media.addEventListener('loadedmetadata',()=>{if(viewer.contains(media))media.currentTime=Math.max(0,target);},{once:true});
+    }
+    if(state.playing&&media.paused)media.play().catch(()=>{ /* iOS requires a local tap to allow sound. */ });
+    else if(!state.playing&&!media.paused)media.pause();
+    setTimeout(()=>{applyingRemote=false;},250);
   }
 
   function syncPlayback(media, playing, force=false) {
     if(applyingRemote||!viewer.contains(media)||!currentSession||currentSession.status!=='active')return;
-    if(!force&&Date.now()-lastPlaybackWrite<800)return; lastPlaybackWrite=Date.now();
-    sessionRef(currentSession.id).update({playback:{playing,position:Number(media.currentTime)||0,updatedAt:Date.now(),changedBy:me()},updatedAt:Date.now()}).catch(console.error);
+    if(!force&&Date.now()-lastPlaybackWrite<4000)return;
+    lastPlaybackWrite=Date.now();
+    const id=currentSession.id;
+    const playback={itemId:viewer.dataset.key,playing,position:Number(media.currentTime)||0,updatedAt:Date.now(),changedBy:me(),clientId:playbackClientId};
+    // Coalesce rapid seeking events so older writes cannot overtake the latest position.
+    pendingPlayback=playback;
+    const sequence=++playbackSequence;
+    if(force)flushPlayback(id,sequence);
+    else setTimeout(()=>flushPlayback(id,sequence),300);
+  }
+
+  function flushPlayback(id,sequence) {
+    if(sequence!==playbackSequence||!pendingPlayback||currentSession?.id!==id)return;
+    const playback=pendingPlayback; pendingPlayback=null;
+    sessionRef(id).update({playback,updatedAt:Date.now()}).catch(console.error);
   }
 
   function setIndex(index) {
     if(!currentSession||currentSession.status!=='active')return;
-    sessionRef(currentSession.id).update({currentIndex:index,playback:{playing:false,position:0,updatedAt:Date.now(),changedBy:me()},updatedAt:Date.now()}).catch(console.error);
+    pendingPlayback=null; playbackSequence++;
+    sessionRef(currentSession.id).update({currentIndex:index,playback:{itemId:currentSession.items?.[index]?.id||null,playing:false,position:0,updatedAt:Date.now(),changedBy:me(),clientId:playbackClientId},updatedAt:Date.now()}).catch(console.error);
   }
 
   function selectCategory(category) {
@@ -243,7 +327,6 @@
     const items = Array.isArray(currentSession?.items) ? currentSession.items : [];
     const first = items.findIndex(item => item.type === category && item.expiresAt > Date.now());
     if (first >= 0 && first !== currentSession.currentIndex && currentSession.status === 'active') {
-      currentSession.currentIndex = first;
       setIndex(first);
     }
     if (currentSession) render();

@@ -1,15 +1,16 @@
-const CACHE_NAME = 'web-messenger-v149-account-deletion';
+const CACHE_NAME = 'web-messenger-v150-media-player';
 const urlsToCache = [
   '/',
   '/index.html',
   '/style.css?v=338',
+  '/media-lounge-player.css?v=1',
   '/app.js?v=363',
   '/tts.js?v=9',
   '/doori-live.js?v=11',
   '/assistant.js?v=13',
   '/quiz-questions.js?v=1',
   '/games.js?v=5',
-  '/live-media.js?v=7',
+  '/live-media.js?v=8',
   '/security.js?v=2',
   '/message-cache.js?v=2',
   '/auth-translations.js?v=10',

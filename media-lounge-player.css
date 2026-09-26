@@ -1,0 +1,19 @@
+/* Controls live outside the video frame so mobile Safari and desktop never clip them. */
+.media-lounge-viewer .media-lounge-player{box-sizing:border-box;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;background:#03080d}
+.media-lounge-viewer .media-lounge-screen{flex:1 1 auto;min-height:0;width:100%;display:grid;place-items:center;overflow:hidden}
+.media-lounge-viewer .media-lounge-screen video{display:block;width:100%;height:100%;object-fit:contain;background:#03080d}
+.media-lounge-viewer .media-lounge-controls{box-sizing:border-box;flex:none;display:flex;align-items:center;gap:9px;width:100%;min-height:58px;padding:8px 12px;background:#101c29;direction:ltr}
+.media-lounge-controls button{flex:none;min-width:38px;min-height:38px;border:1px solid #547083;border-radius:9px;background:#203445;color:#eaf8ff;font-size:18px;cursor:pointer}
+.media-lounge-controls button:focus-visible,.media-lounge-controls input:focus-visible{outline:2px solid #86dcf6;outline-offset:2px}
+.media-lounge-controls .media-lounge-time{flex:none;font-size:12px;font-variant-numeric:tabular-nums;color:#eaf8ff}
+.media-lounge-controls input{accent-color:#86d9f0;cursor:pointer;min-width:0}
+.media-lounge-controls .media-lounge-seek{flex:1 1 auto}
+.media-lounge-controls .media-lounge-volume{width:75px;flex:none}
+.media-lounge-viewer .media-lounge-player-audio{gap:8px;background:transparent;padding-top:12px}
+.media-lounge-player-audio .media-lounge-audio-art{width:min(150px,35vw,22vh);margin:0;flex:none;aspect-ratio:1;font-size:48px}
+.media-lounge-player-audio small{font-size:12px;color:#9fc8db}
+.media-lounge-player-audio strong{max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media-lounge-player-audio audio{display:none}
+.media-lounge-player-audio .media-lounge-controls{margin-top:auto}
+.media-lounge-error{margin:6px 12px;color:#ff9ca6;font-size:12px;text-align:center}
+@media(max-width:720px){.media-lounge-viewer .media-lounge-controls{gap:5px;min-height:52px;padding:5px}.media-lounge-controls button{min-width:33px;min-height:35px;font-size:16px}.media-lounge-controls .media-lounge-volume{display:none}.media-lounge-controls .media-lounge-time{font-size:10px}.media-lounge-player-audio .media-lounge-audio-art{width:min(140px,28vh)}}
