@@ -328,6 +328,7 @@
     const first = items.findIndex(item => item.type === category && item.expiresAt > Date.now());
     if (first >= 0 && first !== currentSession.currentIndex && currentSession.status === 'active') {
       setIndex(first);
+      currentSession.currentIndex = first;
     }
     if (currentSession) render();
   }
