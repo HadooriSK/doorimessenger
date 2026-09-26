@@ -1,0 +1,46 @@
+name: Test and deploy Firebase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository laden
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: |
+          npm ci
+          npm ci --prefix functions
+
+      - name: Tests ausführen
+        run: npm test
+
+      - name: Hosting-Build erstellen
+        run: npm run build
+
+      - name: Media-Lounge-Dateien prüfen
+        run: |
+          test -s dist/live-media.js
+          test -s dist/media-lounge-player.css
+
+      - name: Zu Firebase Hosting deployen
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DOORI_MESSENGER }}
+          projectId: doori-messenger
