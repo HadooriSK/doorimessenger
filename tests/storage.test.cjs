@@ -209,7 +209,8 @@ test('Media Lounge separates photos, videos and music with a shared selected ite
         {id:'video',type:'video',url:'https://example.test/video',name:'video.mp4',expiresAt:future},
         {id:'song',type:'audio',url:'https://example.test/song',name:'song.mp3',expiresAt:future}
     ],currentIndex:0,playback:{playing:false,position:0,changedBy:'@alice'}};
-    window.db={collection:()=>({doc:()=>({onSnapshot:callback=>{callback({exists:true,id:'session',data:()=>session});return ()=>{};},update:patch=>{updates.push(patch);return Promise.resolve();}})})};
+    let notify;
+    window.db={collection:()=>({doc:()=>({onSnapshot:callback=>{notify=callback;callback({exists:true,id:'session',data:()=>session});return ()=>{};},update:patch=>{updates.push(patch);Object.assign(session,patch);notify({exists:true,id:'session',data:()=>session});return Promise.resolve();}})})};
     window.eval(source);
     window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
     try {
@@ -226,7 +227,7 @@ test('Media Lounge separates photos, videos and music with a shared selected ite
         assert.ok(window.document.querySelector('#media-lounge-upload').accept.startsWith('audio/*'));
         assert.ok(window.document.querySelector('#media-lounge-upload').accept.includes('.mp3'));
         assert.equal(window.document.querySelector('#media-lounge-tray').children.length,1);
-        assert.ok(window.document.querySelector('.media-lounge-music-player audio[controls]'));
+        assert.ok(window.document.querySelector('.media-lounge-music-player audio'));
         assert.equal(updates[0].currentIndex,2);
         assert.equal(updates[0].playback.playing,false);
         music.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));

@@ -1,11 +1,11 @@
 (function () {
   'use strict';
   const I18N = {
-    de:{games_menu:'Spiele',hub:'Gemeinsam spielen',sub:'Wähle ein Spiel für diesen privaten Chat.',classic:'Klassiker-Duell',classicDesc:'Tic-Tac-Toe oder Vier gewinnt',ttt:'Tic-Tac-Toe',c4:'Vier gewinnt',memory:'Memory-Duell',memoryDesc:'Finde mehr Paare als dein Gegner.',quiz:'Quiz-Duell',quizDesc:'Wissen, Tempo und Punkte.',battle:'Schiffe versenken',battleDesc:'Finde und versenke die gegnerische Flotte.',start:'Spielanfrage senden',close:'Schließen',waiting:'Warte darauf, dass der Mitspieler die Anfrage annimmt …',yourTurn:'Du bist am Zug',theirTurn:'Der Mitspieler ist am Zug',youWin:'Du hast gewonnen!',youLose:'Der Mitspieler hat gewonnen.',draw:'Unentschieden',rematch:'Revanche',open:'Spiel öffnen',invite:'hat dich zu einem Spiel eingeladen',dmOnly:'Spiele sind nur in privaten Chats verfügbar.',pairs:'Paare',score:'Punkte',ships:'Schiffe',hit:'Treffer!',miss:'Daneben',quizDone:'Quiz beendet',accept:'Annehmen',decline:'Ablehnen',request:'Spielanfrage',acceptPrompt:'Möchtest du diese Spielanfrage annehmen?',declined:'Die Spielanfrage wurde abgelehnt.',sent:'Spielanfrage wurde gesendet.',sendFailed:'Die Spielanfrage konnte nicht gesendet werden. Bitte versuche es erneut.',alreadyPending:'Für dieses Spiel wartet bereits eine Anfrage auf Antwort.',opponentDeclined:'Der Mitspieler hat die Spielanfrage abgelehnt.',opponentLeft:'Der Mitspieler hat das Spiel verlassen.',youLeft:'Du hast das Spiel verlassen.'},
-    en:{games_menu:'Games',hub:'Play together',sub:'Choose a game for this private chat.',classic:'Classic Duel',classicDesc:'Tic-Tac-Toe or Connect Four',ttt:'Tic-Tac-Toe',c4:'Connect Four',memory:'Memory Duel',memoryDesc:'Find more pairs than your opponent.',quiz:'Quiz Duel',quizDesc:'Knowledge, speed and points.',battle:'Battleship',battleDesc:'Find and sink the opposing fleet.',start:'Send game request',close:'Close',waiting:'Waiting for the other player to accept …',yourTurn:'Your turn',theirTurn:"Other player's turn",youWin:'You won!',youLose:'The other player won.',draw:'Draw',rematch:'Rematch',open:'Open game',invite:'invited you to a game',dmOnly:'Games are only available in private chats.',pairs:'Pairs',score:'Points',ships:'Ships',hit:'Hit!',miss:'Miss',quizDone:'Quiz finished',accept:'Accept',decline:'Decline',request:'Game request',acceptPrompt:'Would you like to accept this game request?',declined:'The game request was declined.',sent:'Game request sent.',sendFailed:'The game request could not be sent. Please try again.',alreadyPending:'A request for this game is already waiting for a response.',opponentDeclined:'The other player declined the game request.',opponentLeft:'The other player left the game.',youLeft:'You left the game.'},
-    ar:{games_menu:'الألعاب',hub:'العبا معًا',sub:'اختر لعبة لهذه الدردشة الخاصة.',classic:'مواجهة كلاسيكية',classicDesc:'إكس-أو أو أربعة على التوالي',ttt:'إكس-أو',c4:'أربعة على التوالي',memory:'تحدي الذاكرة',memoryDesc:'اعثر على أزواج أكثر من منافسك.',quiz:'تحدي المعلومات',quizDesc:'معرفة وسرعة ونقاط.',battle:'معركة السفن',battleDesc:'اعثر على أسطول الخصم وأغرقه.',start:'إرسال طلب لعب',close:'إغلاق',waiting:'في انتظار قبول اللاعب الآخر للطلب …',yourTurn:'دورك',theirTurn:'دور اللاعب الآخر',youWin:'لقد فزت!',youLose:'فاز اللاعب الآخر.',draw:'تعادل',rematch:'إعادة اللعب',open:'فتح اللعبة',invite:'دعاك إلى لعبة',dmOnly:'الألعاب متاحة فقط في الدردشات الخاصة.',pairs:'الأزواج',score:'النقاط',ships:'السفن',hit:'إصابة!',miss:'لم تصب',quizDone:'انتهى الاختبار',accept:'قبول',decline:'رفض',request:'طلب لعب',acceptPrompt:'هل تريد قبول طلب اللعب هذا؟',declined:'تم رفض طلب اللعب.',sent:'تم إرسال طلب اللعب.',sendFailed:'تعذر إرسال طلب اللعب. يرجى المحاولة مرة أخرى.',alreadyPending:'يوجد بالفعل طلب معلق لهذه اللعبة.',opponentDeclined:'رفض اللاعب الآخر طلب اللعب.',opponentLeft:'غادر اللاعب الآخر اللعبة.',youLeft:'لقد غادرت اللعبة.'},
-    fa:{games_menu:'بازی‌ها',hub:'با هم بازی کنید',sub:'برای این گفت‌وگوی خصوصی یک بازی انتخاب کنید.',classic:'رقابت کلاسیک',classicDesc:'دوز یا چهار در یک ردیف',ttt:'دوز',c4:'چهار در یک ردیف',memory:'رقابت حافظه',memoryDesc:'جفت‌های بیشتری از حریف پیدا کنید.',quiz:'مسابقه دانستنی‌ها',quizDesc:'دانش، سرعت و امتیاز.',battle:'نبرد کشتی‌ها',battleDesc:'ناوگان حریف را پیدا و غرق کنید.',start:'ارسال درخواست بازی',close:'بستن',waiting:'در انتظار پذیرش درخواست توسط بازیکن دیگر …',yourTurn:'نوبت شماست',theirTurn:'نوبت بازیکن دیگر است',youWin:'شما برنده شدید!',youLose:'بازیکن دیگر برنده شد.',draw:'مساوی',rematch:'بازی دوباره',open:'باز کردن بازی',invite:'شما را به یک بازی دعوت کرد',dmOnly:'بازی‌ها فقط در گفت‌وگوهای خصوصی در دسترس‌اند.',pairs:'جفت‌ها',score:'امتیاز',ships:'کشتی‌ها',hit:'اصابت!',miss:'خطا',quizDone:'مسابقه تمام شد',accept:'پذیرفتن',decline:'رد کردن',request:'درخواست بازی',acceptPrompt:'آیا می‌خواهید این درخواست بازی را بپذیرید؟',declined:'درخواست بازی رد شد.',sent:'درخواست بازی ارسال شد.',sendFailed:'درخواست بازی ارسال نشد. لطفاً دوباره تلاش کنید.',alreadyPending:'برای این بازی یک درخواست بی‌پاسخ وجود دارد.',opponentDeclined:'بازیکن دیگر درخواست بازی را رد کرد.',opponentLeft:'بازیکن دیگر بازی را ترک کرد.',youLeft:'شما بازی را ترک کردید.'},
-    tr:{games_menu:'Oyunlar',hub:'Birlikte oynayın',sub:'Bu özel sohbet için bir oyun seçin.',classic:'Klasik Düello',classicDesc:'XOX veya Dört Bir Arada',ttt:'XOX',c4:'Dört Bir Arada',memory:'Hafıza Düellosu',memoryDesc:'Rakibinden daha fazla çift bul.',quiz:'Bilgi Düellosu',quizDesc:'Bilgi, hız ve puan.',battle:'Amiral Battı',battleDesc:'Rakibin filosunu bul ve batır.',start:'Oyun isteği gönder',close:'Kapat',waiting:'Diğer oyuncunun isteği kabul etmesi bekleniyor …',yourTurn:'Sıra sende',theirTurn:'Sıra diğer oyuncuda',youWin:'Kazandın!',youLose:'Diğer oyuncu kazandı.',draw:'Berabere',rematch:'Rövanş',open:'Oyunu aç',invite:'seni bir oyuna davet etti',dmOnly:'Oyunlar yalnızca özel sohbetlerde kullanılabilir.',pairs:'Çiftler',score:'Puan',ships:'Gemiler',hit:'İsabet!',miss:'Iska',quizDone:'Bilgi yarışması bitti',accept:'Kabul et',decline:'Reddet',request:'Oyun isteği',acceptPrompt:'Bu oyun isteğini kabul etmek ister misin?',declined:'Oyun isteği reddedildi.',sent:'Oyun isteği gönderildi.',sendFailed:'Oyun isteği gönderilemedi. Lütfen tekrar dene.',alreadyPending:'Bu oyun için zaten yanıt bekleyen bir istek var.',opponentDeclined:'Diğer oyuncu oyun isteğini reddetti.',opponentLeft:'Diğer oyuncu oyundan ayrıldı.',youLeft:'Oyundan ayrıldın.'}
+    de:{games_menu:'Spiele',hub:'Gemeinsam spielen',sub:'Wähle ein Spiel für diesen privaten Chat.',classic:'Klassiker-Duell',classicDesc:'Tic-Tac-Toe oder Vier gewinnt',ttt:'Tic-Tac-Toe',c4:'Vier gewinnt',memory:'Memory-Duell',memoryDesc:'Finde mehr Paare als dein Gegner.',quiz:'Quiz-Duell',quizDesc:'Wissen, Tempo und Punkte.',battle:'Schiffe versenken',battleDesc:'Finde und versenke die gegnerische Flotte.',chess:'Schach',chessDesc:'Klassisches strategisches Duell auf dem 64-Felder-Brett.',check:'Schach!',checkmate:'Schachmatt!',start:'Spielanfrage senden',close:'Schließen',waiting:'Warte darauf, dass der Mitspieler die Anfrage annimmt …',yourTurn:'Du bist am Zug',theirTurn:'Der Mitspieler ist am Zug',youWin:'Du hast gewonnen!',youLose:'Der Mitspieler hat gewonnen.',draw:'Unentschieden',rematch:'Revanche',open:'Spiel öffnen',invite:'hat dich zu einem Spiel eingeladen',dmOnly:'Spiele sind nur in privaten Chats verfügbar.',pairs:'Paare',score:'Punkte',ships:'Schiffe',hit:'Treffer!',miss:'Daneben',quizDone:'Quiz beendet',accept:'Annehmen',decline:'Ablehnen',request:'Spielanfrage',acceptPrompt:'Möchtest du diese Spielanfrage annehmen?',declined:'Die Spielanfrage wurde abgelehnt.',sent:'Spielanfrage wurde gesendet.',sendFailed:'Die Spielanfrage konnte nicht gesendet werden. Bitte versuche es erneut.',alreadyPending:'Für dieses Spiel wartet bereits eine Anfrage auf Antwort.',opponentDeclined:'Der Mitspieler hat die Spielanfrage abgelehnt.',opponentLeft:'Der Mitspieler hat das Spiel verlassen.',youLeft:'Du hast das Spiel verlassen.'},
+    en:{games_menu:'Games',hub:'Play together',sub:'Choose a game for this private chat.',classic:'Classic Duel',classicDesc:'Tic-Tac-Toe or Connect Four',ttt:'Tic-Tac-Toe',c4:'Connect Four',memory:'Memory Duel',memoryDesc:'Find more pairs than your opponent.',quiz:'Quiz Duel',quizDesc:'Knowledge, speed and points.',battle:'Battleship',battleDesc:'Find and sink the opposing fleet.',chess:'Chess',chessDesc:'Classic strategic duel on the 64-square board.',check:'Check!',checkmate:'Checkmate!',start:'Send game request',close:'Close',waiting:'Waiting for the other player to accept …',yourTurn:'Your turn',theirTurn:"Other player's turn",youWin:'You won!',youLose:'The other player won.',draw:'Draw',rematch:'Rematch',open:'Open game',invite:'invited you to a game',dmOnly:'Games are only available in private chats.',pairs:'Pairs',score:'Points',ships:'Ships',hit:'Hit!',miss:'Miss',quizDone:'Quiz finished',accept:'Accept',decline:'Decline',request:'Game request',acceptPrompt:'Would you like to accept this game request?',declined:'The game request was declined.',sent:'Game request sent.',sendFailed:'The game request could not be sent. Please try again.',alreadyPending:'A request for this game is already waiting for a response.',opponentDeclined:'The other player declined the game request.',opponentLeft:'The other player left the game.',youLeft:'You left the game.'},
+    ar:{games_menu:'الألعاب',hub:'العبا معًا',sub:'اختر لعبة لهذه الدردشة الخاصة.',classic:'مواجهة كلاسيكية',classicDesc:'إكس-أو أو أربعة على التوالي',ttt:'إكس-أو',c4:'أربعة على التوالي',memory:'تحدي الذاكرة',memoryDesc:'اعثر على أزواج أكثر من منافسك.',quiz:'تحدي المعلومات',quizDesc:'معرفة وسرعة ونقاط.',battle:'معركة السفن',battleDesc:'اعثر على أسطول الخصم وأغرقه.',chess:'الشطرنج',chessDesc:'مبارزة استراتيجية كلاسيكية على رقعة من 64 مربعاً.',check:'كش ملك!',checkmate:'كش مات!',start:'إرسال طلب لعب',close:'إغلاق',waiting:'في انتظار قبول اللاعب الآخر للطلب …',yourTurn:'دورك',theirTurn:'دور اللاعب الآخر',youWin:'لقد فزت!',youLose:'فاز اللاعب الآخر.',draw:'تعادل',rematch:'إعادة اللعب',open:'فتح اللعبة',invite:'دعاك إلى لعبة',dmOnly:'الألعاب متاحة فقط في الدردشات الخاصة.',pairs:'الأزواج',score:'النقاط',ships:'السفن',hit:'إصابة!',miss:'لم تصب',quizDone:'انتهى الاختبار',accept:'قبول',decline:'رفض',request:'طلب لعب',acceptPrompt:'هل تريد قبول طلب اللعب هذا؟',declined:'تم رفض طلب اللعب.',sent:'تم إرسال طلب اللعب.',sendFailed:'تعذر إرسال طلب اللعب. يرجى المحاولة مرة أخرى.',alreadyPending:'يوجد بالفعل طلب معلق لهذه اللعبة.',opponentDeclined:'رفض اللاعب الآخر طلب اللعب.',opponentLeft:'غادر اللاعب الآخر اللعبة.',youLeft:'لقد غادرت اللعبة.'},
+    fa:{games_menu:'بازی‌ها',hub:'با هم بازی کنید',sub:'برای این گفت‌وگوی خصوصی یک بازی انتخاب کنید.',classic:'رقابت کلاسیک',classicDesc:'دوز یا چهار در یک ردیف',ttt:'دوز',c4:'چهار در یک ردیف',memory:'رقابت حافظه',memoryDesc:'جفت‌های بیشتری از حریف پیدا کنید.',quiz:'مسابقه دانستنی‌ها',quizDesc:'دانش، سرعت و امتیاز.',battle:'نبرد کشتی‌ها',battleDesc:'ناوگان حریف را پیدا و غرق کنید.',chess:'شطرنج',chessDesc:'دوئل استراتژیک کلاسیک روی صفحه ۶۴ خانه‌ای.',check:'کیش!',checkmate:'مات!',start:'ارسال درخواست بازی',close:'بستن',waiting:'در انتظار پذیرش درخواست توسط بازیکن دیگر …',yourTurn:'نوبت شماست',theirTurn:'نوبت بازیکن دیگر است',youWin:'شما برنده شدید!',youLose:'بازیکن دیگر برنده شد.',draw:'مساوی',rematch:'بازی دوباره',open:'باز کردن بازی',invite:'شما را به یک بازی دعوت کرد',dmOnly:'بازی‌ها فقط در گفت‌وگوهای خصوصی در دسترس‌اند.',pairs:'جفت‌ها',score:'امتیاز',ships:'کشتی‌ها',hit:'اصابت!',miss:'خطا',quizDone:'مسابقه تمام شد',accept:'پذیرفتن',decline:'رد کردن',request:'درخواست بازی',acceptPrompt:'آیا می‌خواهید این درخواست بازی را بپذیرید؟',declined:'درخواست بازی رد شد.',sent:'درخواست بازی ارسال شد.',sendFailed:'درخواست بازی ارسال نشد. لطفاً دوباره تلاش کنید.',alreadyPending:'برای این بازی یک درخواست بی‌پاسخ وجود دارد.',opponentDeclined:'بازیکن دیگر درخواست بازی را رد کرد.',opponentLeft:'بازیکن دیگر بازی را ترک کرد.',youLeft:'شما بازی را ترک کردید.'},
+    tr:{games_menu:'Oyunlar',hub:'Birlikte oynayın',sub:'Bu özel sohbet için bir oyun seçin.',classic:'Klasik Düello',classicDesc:'XOX veya Dört Bir Arada',ttt:'XOX',c4:'Dört Bir Arada',memory:'Hafıza Düellosu',memoryDesc:'Rakibinden daha fazla çift bul.',quiz:'Bilgi Düellosu',quizDesc:'Bilgi, hız ve puan.',battle:'Amiral Battı',battleDesc:'Rakibin filosunu bul ve batır.',chess:'Satranç',chessDesc:'64 karelik tahtada klasik stratejik düello.',check:'Şah!',checkmate:'Şah mat!',start:'Oyun isteği gönder',close:'Kapat',waiting:'Diğer oyuncunun isteği kabul etmesi bekleniyor …',yourTurn:'Sıra sende',theirTurn:'Sıra diğer oyuncuda',youWin:'Kazandın!',youLose:'Diğer oyuncu kazandı.',draw:'Berabere',rematch:'Rövanş',open:'Oyunu aç',invite:'seni bir oyuna davet etti',dmOnly:'Oyunlar yalnızca özel sohbetlerde kullanılabilir.',pairs:'Çiftler',score:'Puan',ships:'Gemiler',hit:'İsabet!',miss:'Iska',quizDone:'Bilgi yarışması bitti',accept:'Kabul et',decline:'Reddet',request:'Oyun isteği',acceptPrompt:'Bu oyun isteğini kabul etmek ister misin?',declined:'Oyun isteği reddedildi.',sent:'Oyun isteği gönderildi.',sendFailed:'Oyun isteği gönderilemedi. Lütfen tekrar dene.',alreadyPending:'Bu oyun için zaten yanıt bekleyen bir istek var.',opponentDeclined:'Diğer oyuncu oyun isteğini reddetti.',opponentLeft:'Diğer oyuncu oyundan ayrıldı.',youLeft:'Oyundan ayrıldın.'}
   };
   Object.assign(I18N.de,{inviteAccepted:'Spielanfrage angenommen.',inviteDeclined:'Spielanfrage abgelehnt.'});
   Object.assign(I18N.en,{inviteAccepted:'Game request accepted.',inviteDeclined:'Game request declined.'});
@@ -27,15 +27,15 @@
   let modal,body,unsub,current=null,creating=false;
   const lang=()=>window.currentLang||'en', t=()=>I18N[lang()]||I18N.en, me=()=>String(window.currentUser||'').toLowerCase();
   const esc=s=>window.escapeHTML?window.escapeHTML(String(s)):String(s);
-  const nameOf=type=>({tictactoe:t().ttt,connect4:t().c4,memory:t().memory,quiz:t().quiz,battleship:t().battle}[type]||type);
+  const nameOf=type=>({tictactoe:t().ttt,connect4:t().c4,memory:t().memory,quiz:t().quiz,battleship:t().battle,chess:t().chess}[type]||type);
   const shuffle=a=>{a=[...a];for(let i=a.length-1;i;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   function ensureModal(){if(modal)return;modal=document.createElement('div');modal.id='games-modal';modal.className='modal hidden';modal.innerHTML='<div class="games-shell glass-panel"><button class="games-close" aria-label="Close">×</button><div id="games-body"></div></div>';document.body.appendChild(modal);body=modal.querySelector('#games-body');modal.querySelector('.games-close').onclick=close;modal.onclick=e=>{if(e.target===modal)close();};}
   function dismiss(){unsub?.();unsub=null;current=null;modal?.classList.add('hidden');}
   async function sendStatus(session,event){const other=session.participants.find(p=>p!==me());if(!other)return;const id=Date.now().toString()+Math.random().toString(36).slice(2,11);await window.db.collection('messages').doc(id).set({id,sender_username:me(),recipient_username:other,participants:[me(),other],chat_id:other,isPublic:false,text:'',mediaType:'game_status',mediaUrl:JSON.stringify({id:session.id,type:session.type,event}),timestamp:Date.now(),read:false,reactions:{},silent:false});}
   async function close(){const leaving=current&&current.status==='active'?{...current}:null;if(leaving){try{await window.db.collection('gameSessions').doc(leaving.id).update({status:'left',leftBy:me(),updatedAt:Date.now()});await sendStatus(leaving,'left');}catch(e){console.error(e);}}dismiss();}
   function card(icon,title,desc,buttons){return `<article class="game-card"><div class="game-icon">${icon}</div><h3>${esc(title)}</h3><p>${esc(desc)}</p><div class="game-card-actions">${buttons}</div></article>`;}
-  function openHub(){ensureModal();const chat=window.currentChat;if(!chat||chat.type!=='dm'){alert(t().dmOnly);return;}modal.classList.remove('hidden');body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(t().hub)}</h2><p>${esc(t().sub)}</p></div></header><div class="games-grid">${card('⭕',t().classic,t().classicDesc,`<button data-new-game="tictactoe">${esc(t().ttt)}</button><button data-new-game="connect4">${esc(t().c4)}</button>`)}${card('🧠',t().memory,t().memoryDesc,`<button data-new-game="memory">${esc(t().start)}</button>`)}${card('✨',t().quiz,t().quizDesc,`<button data-new-game="quiz">${esc(t().start)}</button>`)}${card('🚢',t().battle,t().battleDesc,`<button data-new-game="battleship">${esc(t().start)}</button>`)}</div>`;body.querySelectorAll('[data-new-game]').forEach(b=>b.onclick=()=>create(b.dataset.newGame));}
-  function initial(type,players){if(type==='tictactoe')return{board:Array(9).fill(''),turn:0,winner:null};if(type==='connect4')return{board:Array(42).fill(''),turn:0,winner:null};if(type==='memory')return{deck:shuffle(['🌙','🌙','⭐','⭐','🌈','🌈','🍀','🍀','🎈','🎈','🦋','🦋','🍉','🍉','🚀','🚀']),open:[],matched:[],scores:[0,0],turn:0,winner:null};if(type==='quiz')return{order:shuffle(Array.from({length:70},(_,i)=>i)).slice(0,10),index:0,scores:[0,0],turn:0,winner:null};return{boards:{0:fleet(),1:fleet()},shots:[{},{}],hits:[0,0],turn:0,winner:null};}
+  function openHub(){ensureModal();const chat=window.currentChat;if(!chat||chat.type!=='dm'){alert(t().dmOnly);return;}modal.classList.remove('hidden');body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(t().hub)}</h2><p>${esc(t().sub)}</p></div></header><div class="games-grid">${card('⭕',t().classic,t().classicDesc,`<button data-new-game="tictactoe">${esc(t().ttt)}</button><button data-new-game="connect4">${esc(t().c4)}</button>`)}${card('🧠',t().memory,t().memoryDesc,`<button data-new-game="memory">${esc(t().start)}</button>`)}${card('✨',t().quiz,t().quizDesc,`<button data-new-game="quiz">${esc(t().start)}</button>`)}${card('🚢',t().battle,t().battleDesc,`<button data-new-game="battleship">${esc(t().start)}</button>`)}${card('♟️',t().chess,t().chessDesc,`<button data-new-game="chess">${esc(t().start)}</button>`)}</div>`;body.querySelectorAll('[data-new-game]').forEach(b=>b.onclick=()=>create(b.dataset.newGame));}
+  function initial(type,players){if(type==='chess')return initialChess();if(type==='tictactoe')return{board:Array(9).fill(''),turn:0,winner:null};if(type==='connect4')return{board:Array(42).fill(''),turn:0,winner:null};if(type==='memory')return{deck:shuffle(['🌙','🌙','⭐','⭐','🌈','🌈','🍀','🍀','🎈','🎈','🦋','🦋','🍉','🍉','🚀','🚀']),open:[],matched:[],scores:[0,0],turn:0,winner:null};if(type==='quiz')return{order:shuffle(Array.from({length:70},(_,i)=>i)).slice(0,10),index:0,scores:[0,0],turn:0,winner:null};return{boards:{0:fleet(),1:fleet()},shots:[{},{}],hits:[0,0],turn:0,winner:null};}
   function fleet(){const board=Array(100).fill(0),sizes=[5,4,3,3,2];for(const size of sizes){let ok=false;while(!ok){const h=Math.random()<.5,r=Math.floor(Math.random()*(h?10:11-size)),c=Math.floor(Math.random()*(h?11-size:10)),cells=Array.from({length:size},(_,i)=>(r+(h?0:i))*10+c+(h?i:0));if(cells.every(x=>!board[x])){cells.forEach(x=>board[x]=1);ok=true;}}}return board;}
   async function create(type){if(creating)return;creating=true;const opponent=String(window.currentChat.id).toLowerCase(),players=[me(),opponent],ref=window.db.collection('gameSessions').doc(),messageId=Date.now().toString()+Math.random().toString(36).slice(2,11);try{await ref.set({type,participants:players,createdBy:me(),inviteMessageId:messageId,status:'pending',round:1,state:initial(type,players),createdAt:Date.now(),updatedAt:Date.now()});const sent=await window.sendMessage('', 'game_invite', JSON.stringify({id:ref.id,type}),false,null,{messageId});if(!sent){await ref.delete().catch(()=>{});alert(t().sendFailed);return;}open(ref.id);}catch(e){console.error(e);await ref.delete().catch(()=>{});alert(t().sendFailed);}finally{creating=false;}}
   function open(id){ensureModal();modal.classList.remove('hidden');unsub?.();unsub=window.db.collection('gameSessions').doc(id).onSnapshot(s=>{if(!s.exists)return dismiss();current={id,...s.data()};render();},e=>{console.error(e);dismiss();});}
@@ -48,13 +48,167 @@
   window.showDooriGameInvitePopup=msg=>{try{const x=JSON.parse(msg.mediaUrl||'{}');document.getElementById('game-invite-popup')?.remove();const p=document.createElement('div');p.id='game-invite-popup';p.dataset.messageId=msg.id;p.className='game-request-popup glass-panel';p.innerHTML=`<span class="game-request-icon">🎮</span><div><b>${esc(t().request)} · ${esc(nameOf(x.type))}</b><p>${esc(msg.sender_username)} ${esc(t().invite)}. ${esc(t().acceptPrompt)}</p><div><button data-doori-action="acceptDooriGame" data-doori-args="${esc(JSON.stringify([x.id,msg.id]))}">${esc(t().accept)}</button><button class="game-decline" data-doori-action="declineDooriGame" data-doori-args="${esc(JSON.stringify([x.id,msg.id]))}">${esc(t().decline)}</button></div></div>`;document.body.appendChild(p);}catch(e){console.error(e);}};
   async function transact(mutator){const ref=window.db.collection('gameSessions').doc(current.id);await window.db.runTransaction(async tx=>{const snap=await tx.get(ref),d=snap.data();if(!d)return;const next=mutator(structuredClone(d.state),d);if(next)tx.update(ref,{state:next,stateVersion:(d.stateVersion||0)+1,updatedAt:Date.now(),status:next.winner!==null?'finished':'active'});});}
   const myIndex=()=>current.participants.indexOf(me());
-  function status(s){if(s.winner!==null&&s.winner!==undefined)return s.winner==='draw'?t().draw:(s.winner===myIndex()?t().youWin:t().youLose);return s.turn===myIndex()?t().yourTurn:t().theirTurn;}
-  function render(){const s=current.state,type=current.type;if(current.status==='pending'){const creator=current.createdBy===me();body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(creator?t().waiting:t().acceptPrompt)}</p></div></header>${creator?'':`<div class="game-pending-actions"><button id="game-accept">${esc(t().accept)}</button><button id="game-decline" class="game-decline">${esc(t().decline)}</button></div>`}`;body.querySelector('#game-accept')?.addEventListener('click',()=>decide(current.id,'active'));body.querySelector('#game-decline')?.addEventListener('click',()=>decide(current.id,'declined'));return;}if(current.status==='superseded'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(t().inviteSuperseded)}</p></div></header>`;return;}if(current.status==='declined'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(t().opponentDeclined)}</p></div></header>`;return;}if(current.status==='left'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(current.leftBy===me()?t().youLeft:t().opponentLeft)}</p></div></header>`;return;}let game='';if(type==='tictactoe')game=grid(s.board,3,'ttt');else if(type==='connect4')game=grid(s.board,7,'c4');else if(type==='memory')game=memory(s);else if(type==='quiz')game=quiz(s);else game=battle(s);body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(status(s))}</p></div></header>${game}${s.winner!==null&&s.winner!==undefined?`<button id="game-rematch" class="game-rematch">↻ ${esc(t().rematch)}</button>`:''}`;body.querySelector('#game-rematch')?.addEventListener('click',()=>transact(()=>initial(type,current.participants)));}
+  function status(s){if(s.winner!==null&&s.winner!==undefined)return s.winner==='draw'?t().draw:(s.winner===myIndex()?(s.checkmate?(t().checkmate||'Schachmatt!')+' · '+t().youWin:t().youWin):(s.checkmate?(t().checkmate||'Schachmatt!')+' · '+t().youLose:t().youLose));if(s.inCheck)return (s.turn===myIndex()?t().yourTurn:t().theirTurn)+' · ⚠️ '+(t().check||'Schach!');return s.turn===myIndex()?t().yourTurn:t().theirTurn;}
+  function render(){const s=current.state,type=current.type;if(current.status==='pending'){const creator=current.createdBy===me();body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(creator?t().waiting:t().acceptPrompt)}</p></div></header>${creator?'':`<div class="game-pending-actions"><button id="game-accept">${esc(t().accept)}</button><button id="game-decline" class="game-decline">${esc(t().decline)}</button></div>`}`;body.querySelector('#game-accept')?.addEventListener('click',()=>decide(current.id,'active'));body.querySelector('#game-decline')?.addEventListener('click',()=>decide(current.id,'declined'));return;}if(current.status==='superseded'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(t().inviteSuperseded)}</p></div></header>`;return;}if(current.status==='declined'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(t().opponentDeclined)}</p></div></header>`;return;}if(current.status==='left'){body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(current.leftBy===me()?t().youLeft:t().opponentLeft)}</p></div></header>`;return;}let game='';if(type==='tictactoe')game=grid(s.board,3,'ttt');else if(type==='connect4')game=grid(s.board,7,'c4');else if(type==='memory')game=memory(s);else if(type==='quiz')game=quiz(s);else if(type==='chess')game=chess(s);else game=battle(s);body.innerHTML=`<header class="games-head"><span>🎮</span><div><h2>${esc(nameOf(type))}</h2><p class="game-status">${esc(status(s))}</p></div></header>${game}${s.winner!==null&&s.winner!==undefined?`<button id="game-rematch" class="game-rematch">↻ ${esc(t().rematch)}</button>`:''}`;body.querySelector('#game-rematch')?.addEventListener('click',()=>transact(()=>initial(type,current.participants)));}
   function winLine(b,rows,cols,n){for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){const cells=[];for(let k=0;k<n;k++){const rr=r+dr*k,cc=c+dc*k;if(rr<0||rr>=rows||cc<0||cc>=cols){cells.length=0;break;}cells.push(rr*cols+cc);}if(cells.length&&b[cells[0]]&&cells.every(i=>b[i]===b[cells[0]]))return b[cells[0]];}return null;}
   function grid(board,cols,kind){setTimeout(()=>body.querySelectorAll('[data-cell]').forEach(x=>x.onclick=()=>transact(s=>{if(s.turn!==myIndex()||s.winner!==null)return;if(kind==='ttt'){const i=+x.dataset.cell;if(s.board[i])return;s.board[i]=String(myIndex()+1);const w=winLine(s.board,3,3,3);s.winner=w?+w-1:(s.board.every(Boolean)?'draw':null);}else{const col=+x.dataset.cell;let i=-1;for(let r=5;r>=0;r--)if(!s.board[r*7+col]){i=r*7+col;break;}if(i<0)return;s.board[i]=String(myIndex()+1);const w=winLine(s.board,6,7,4);s.winner=w?+w-1:(s.board.every(Boolean)?'draw':null);}s.turn=1-s.turn;return s;})),0);return `<div class="game-board ${kind}">${board.map((v,i)=>`<button data-cell="${kind==='c4'?i%7:i}" class="p${v||0}">${kind==='ttt'?(v==='1'?'×':v==='2'?'○':''):''}</button>`).join('')}</div>`;}
   function memory(s){setTimeout(()=>body.querySelectorAll('[data-card]').forEach(x=>x.onclick=()=>transact(n=>{const i=+x.dataset.card;if(n.turn!==myIndex()||n.matched.includes(i))return;if(n.open.length===2)n.open=[];if(n.open.includes(i))return;n.open.push(i);if(n.open.length===2){const [a,b]=n.open;if(n.deck[a]===n.deck[b]){n.matched.push(a,b);n.scores[n.turn]++;n.open=[];if(n.matched.length===n.deck.length)n.winner=n.scores[0]===n.scores[1]?'draw':(n.scores[0]>n.scores[1]?0:1);}else n.turn=1-n.turn;}return n;})),0);return `<div class="game-score">${esc(t().pairs)}: ${s.scores[0]} – ${s.scores[1]}</div><div class="memory-board">${s.deck.map((v,i)=>`<button data-card="${i}" class="${s.matched.includes(i)?'matched':''}">${s.open.includes(i)||s.matched.includes(i)?v:'?'}</button>`).join('')}</div>`;}
   function quiz(s){if(s.winner!==null)return `<div class="quiz-finish">🏆 ${esc(t().quizDone)}<br>${esc(t().score)}: ${s.scores[0]} – ${s.scores[1]}</div>`;const bank=window.DOORI_QUIZ_QUESTIONS?.[lang()]||window.DOORI_QUIZ_QUESTIONS?.en||QUESTIONS.en,q=bank[s.order[s.index]];setTimeout(()=>body.querySelectorAll('[data-answer]').forEach(x=>x.onclick=()=>transact(n=>{if(n.turn!==myIndex()||n.winner!==null)return;const base=(window.DOORI_QUIZ_QUESTIONS?.en||QUESTIONS.en)[n.order[n.index]];if(+x.dataset.answer===base[2])n.scores[n.turn]++;n.index++;n.turn=1-n.turn;if(n.index>=10)n.winner=n.scores[0]===n.scores[1]?'draw':(n.scores[0]>n.scores[1]?0:1);return n;})),0);return `<div class="game-score">${esc(t().score)}: ${s.scores[0]} – ${s.scores[1]}</div><div class="quiz-card"><h3>${esc(q[0])}</h3>${q[1].map((a,i)=>`<button data-answer="${i}">${esc(a)}</button>`).join('')}</div>`;}
   function battle(s){const mine=myIndex(),enemy=1-mine;setTimeout(()=>body.querySelectorAll('[data-shot]').forEach(x=>x.onclick=()=>transact(n=>{if(n.turn!==mine||n.winner!==null)return;const i=+x.dataset.shot;if(n.shots[mine][i]!==undefined)return;const hit=!!n.boards[enemy][i];n.shots[mine][i]=hit?1:0;if(hit)n.hits[mine]++;if(n.hits[mine]>=17)n.winner=mine;else n.turn=enemy;return n;})),0);const ownShots=s.shots[enemy],their=s.shots[mine];return `<div class="battle-wrap"><section><h4>${esc(t().ships)} · ${17-s.hits[enemy]}</h4><div class="battle-board">${s.boards[mine].map((ship,i)=>`<i class="${ship?'ship':''} ${ownShots[i]===1?'hit':ownShots[i]===0?'miss':''}"></i>`).join('')}</div></section><section><h4>${esc(t().battle)}</h4><div class="battle-board target">${s.boards[enemy].map((_,i)=>`<button data-shot="${i}" class="${their[i]===1?'hit':their[i]===0?'miss':''}"></button>`).join('')}</div></section></div>`;}
+  const CHESS_GLYPHS = {
+    wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙',
+    bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟'
+  };
+  function initialChess(){
+    const b=Array(64).fill('');
+    b[0]='bR'; b[1]='bN'; b[2]='bB'; b[3]='bQ'; b[4]='bK'; b[5]='bB'; b[6]='bN'; b[7]='bR';
+    for(let i=8;i<16;i++) b[i]='bP';
+    for(let i=48;i<56;i++) b[i]='wP';
+    b[56]='wR'; b[57]='wN'; b[58]='wB'; b[59]='wQ'; b[60]='wK'; b[61]='wB'; b[62]='wN'; b[63]='wR';
+    return { board:b, turn:0, winner:null, lastFrom:-1, lastTo:-1, capturedW:[], capturedB:[], inCheck:false };
+  }
+  function getChessMoves(board,from,color){
+    const piece=board[from];
+    if(!piece||piece[0]!==color) return [];
+    const type=piece[1], r=Math.floor(from/8), c=from%8, moves=[];
+    const addIfValid=(nr,nc)=>{
+      if(nr<0||nr>=8||nc<0||nc>=8) return false;
+      const d=nr*8+nc, target=board[d];
+      if(!target){ moves.push(d); return true; }
+      if(target[0]!==color) moves.push(d);
+      return false;
+    };
+    if(type==='P'){
+      const dir=color==='w'?-1:1, startRow=color==='w'?6:1, f1r=r+dir;
+      if(f1r>=0&&f1r<8&&!board[f1r*8+c]){
+        moves.push(f1r*8+c);
+        const f2r=r+dir*2;
+        if(r===startRow&&!board[f2r*8+c]) moves.push(f2r*8+c);
+      }
+      for(const dc of [-1,1]){
+        const nc=c+dc;
+        if(nc>=0&&nc<8&&f1r>=0&&f1r<8){
+          const target=board[f1r*8+nc];
+          if(target&&target[0]!==color) moves.push(f1r*8+nc);
+        }
+      }
+    } else if(type==='N'){
+      for(const [dr,dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) addIfValid(r+dr,c+dc);
+    } else if(type==='B'){
+      for(const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]){ let step=1; while(addIfValid(r+dr*step,c+dc*step)) step++; }
+    } else if(type==='R'){
+      for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){ let step=1; while(addIfValid(r+dr*step,c+dc*step)) step++; }
+    } else if(type==='Q'){
+      for(const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]]){ let step=1; while(addIfValid(r+dr*step,c+dc*step)) step++; }
+    } else if(type==='K'){
+      for(const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]]) addIfValid(r+dr,c+dc);
+    }
+    return moves;
+  }
+  function checkKingAttacked(board,kingColor){
+    const kingPos=board.indexOf(kingColor+'K');
+    if(kingPos===-1) return true;
+    const enemyColor=kingColor==='w'?'b':'w';
+    for(let i=0;i<64;i++){
+      if(board[i]&&board[i][0]===enemyColor){
+        if(getChessMoves(board,i,enemyColor).includes(kingPos)) return true;
+      }
+    }
+    return false;
+  }
+  function getLegalChessMoves(board,from,color){
+    return getChessMoves(board,from,color).filter(to=>{
+      const clone=[...board];
+      clone[to]=clone[from];
+      clone[from]='';
+      return !checkKingAttacked(clone,color);
+    });
+  }
+  function hasAnyLegalMoves(board,color){
+    for(let i=0;i<64;i++){
+      if(board[i]&&board[i][0]===color&&getLegalChessMoves(board,i,color).length>0) return true;
+    }
+    return false;
+  }
+  let chessSelected=-1;
+  function chess(s){
+    const mine=myIndex(), myColor=mine===0?'w':'b', isMyTurn=s.turn===mine&&s.winner===null;
+    const isFlipped=mine===1;
+    const rows=[0,1,2,3,4,5,6,7], cols=[0,1,2,3,4,5,6,7];
+    if(isFlipped){ rows.reverse(); cols.reverse(); }
+    const selectedMoves=(chessSelected>=0&&isMyTurn)?getLegalChessMoves(s.board,chessSelected,myColor):[];
+    const topCaptured=isFlipped?(s.capturedB||[]):(s.capturedW||[]);
+    const bottomCaptured=isFlipped?(s.capturedW||[]):(s.capturedB||[]);
+    let html=`<div class="chess-wrapper">`;
+    html+=`<div class="chess-captured-bar"><span class="chess-player-badge">${isFlipped?'⚪':'⚫'} ${esc(t().theirTurn)}</span><span>${topCaptured.map(p=>`<span class="chess-cap-piece">${CHESS_GLYPHS[p]||''}</span>`).join('')}</span></div>`;
+    html+=`<div class="chess-board">`;
+    for(const r of rows){
+      for(const c of cols){
+        const idx=r*8+c, piece=s.board[idx], isLight=(r+c)%2===0, isSelected=chessSelected===idx;
+        const isLastMove=(s.lastFrom===idx||s.lastTo===idx);
+        const isCheckSquare=s.inCheck&&piece===(myColor+'K');
+        const isValidMove=selectedMoves.includes(idx);
+        const isCapture=isValidMove&&!!piece;
+        let squareClasses=`chess-square ${isLight?'light':'dark'}`;
+        if(isSelected) squareClasses+=' selected';
+        if(isLastMove) squareClasses+=' last-move';
+        if(isCheckSquare) squareClasses+=' check-warning';
+        let marker='';
+        if(isValidMove) marker=isCapture?'<span class="chess-capture-ring"></span>':'<span class="chess-dot"></span>';
+        const pieceHtml=piece?`<span class="chess-piece ${piece[0]}">${CHESS_GLYPHS[piece]||''}</span>`:'';
+        html+=`<button type="button" class="${squareClasses}" data-chess-sq="${idx}">${marker}${pieceHtml}</button>`;
+      }
+    }
+    html+=`</div>`;
+    html+=`<div class="chess-captured-bar"><span class="chess-player-badge">${isFlipped?'⚫':'⚪'} ${esc(t().yourTurn)}</span><span>${bottomCaptured.map(p=>`<span class="chess-cap-piece">${CHESS_GLYPHS[p]||''}</span>`).join('')}</span></div>`;
+    html+=`</div>`;
+    setTimeout(()=>{
+      body.querySelectorAll('[data-chess-sq]').forEach(sq=>{
+        sq.onclick=()=>{
+          if(!isMyTurn) return;
+          const idx=+sq.dataset.chessSq, piece=s.board[idx];
+          if(chessSelected===-1){
+            if(piece&&piece[0]===myColor){ chessSelected=idx; render(); }
+          } else {
+            const from=chessSelected, moves=getLegalChessMoves(s.board,from,myColor);
+            if(idx===from){ chessSelected=-1; render(); }
+            else if(piece&&piece[0]===myColor){ chessSelected=idx; render(); }
+            else if(moves.includes(idx)){
+              chessSelected=-1;
+              transact(n=>{
+                if(n.turn!==mine||n.winner!==null) return;
+                const moving=n.board[from];
+                if(!moving||moving[0]!==myColor) return;
+                const dest=n.board[idx];
+                n.board[idx]=moving;
+                n.board[from]='';
+                n.lastFrom=from;
+                n.lastTo=idx;
+                if(dest){
+                  if(dest[1]==='K') n.winner=mine;
+                  if(dest[0]==='w') n.capturedW=[...(n.capturedW||[]),dest];
+                  else n.capturedB=[...(n.capturedB||[]),dest];
+                }
+                if(moving==='wP'&&Math.floor(idx/8)===0) n.board[idx]='wQ';
+                if(moving==='bP'&&Math.floor(idx/8)===7) n.board[idx]='bQ';
+                const enemyColor=myColor==='w'?'b':'w';
+                const enemyInCheck=checkKingAttacked(n.board,enemyColor);
+                n.inCheck=enemyInCheck;
+                const enemyHasMoves=hasAnyLegalMoves(n.board,enemyColor);
+                if(!enemyHasMoves){
+                  if(enemyInCheck){ n.winner=mine; n.checkmate=true; }
+                  else n.winner='draw';
+                }
+                n.turn=1-n.turn;
+                return n;
+              });
+            } else { chessSelected=-1; render(); }
+          }
+        };
+      });
+    },0);
+    return html;
+  }
   function installTranslations(){Object.keys(I18N).forEach(l=>{if(window.TRANSLATIONS?.[l])Object.assign(window.TRANSLATIONS[l],I18N[l]);});const label=document.querySelector('#games-btn [data-i18n="games_menu"]');if(label)label.textContent=t().games_menu;}
   document.addEventListener('DOMContentLoaded',()=>{installTranslations();document.getElementById('games-btn')?.addEventListener('click',openHub);window.renderMessages?.();});
   window.addEventListener('doori-language-change',()=>{installTranslations();if(current)render();});

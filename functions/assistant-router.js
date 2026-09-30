@@ -7,6 +7,8 @@ const GEMINI_MODEL='gemini-3.5-flash-lite';
 const CLOUDFLARE_MODEL='@cf/meta/llama-3.2-1b-instruct';
 const CLOUDFLARE_INPUT_NEURONS_PER_MILLION=2457;
 const CLOUDFLARE_OUTPUT_NEURONS_PER_MILLION=18252;
+const CURRENT_INFO_PATTERN=/(heute|aktuell|aktuelle|aktuellen|neueste|neuesten|news|nachrichten|neuigkeiten|gerade|jetzt|wetter|morgen|ereignis|ereignisse|serie|film|veröffentlicht|latest|current|news|weather|today|tomorrow|newest|recent|breaking|الأخبار|الطقس|اليوم|آخر|جدید|اخبار|هوا|امروز|güncel|haber|hava|bugün|son)/iu;
+const isCurrentInformationQuery=value=>CURRENT_INFO_PATTERN.test(String(value||''));
 
 class LocalFallbackError extends Error{
  constructor(){super('LOCAL_FALLBACK_REQUIRED');this.code='LOCAL_FALLBACK_REQUIRED';}
@@ -42,10 +44,13 @@ async function callGroq({fetchImpl,key,messages,language,memory,signal}){
  return text?{text,inputTokens:Number(json?.usage?.prompt_tokens||estimatedInput(messages)),outputTokens:Number(json?.usage?.completion_tokens||estimatedTokens(text))}:null;
 }
 
-async function callGemini({fetchImpl,key,messages,language,memory,signal}){
+async function callGemini({fetchImpl,key,messages,language,memory,signal,currentInfo=false}){
  if(!key)return null;
  const contents=messages.map(message=>({role:message.role==='assistant'?'model':'user',parts:[{text:message.content}]}));
- const response=await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt(language,memory)}]},contents,generationConfig:{temperature:0.55,maxOutputTokens:240}}),signal});
+  const groundedPrompt=currentInfo?`${systemPrompt(language,memory)}\n\nThis is a current-information request. Use Google Search grounding before answering. Prefer recent, primary and reputable sources, include a brief "as of" time and source names, and never guess when current facts cannot be verified.`:systemPrompt(language,memory);
+  const body={systemInstruction:{parts:[{text:groundedPrompt}]},contents,generationConfig:{temperature:0.35,maxOutputTokens:360}};
+  if(currentInfo)body.tools=[{google_search:{}}];
+  const response=await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'x-goog-api-key':key,'Content-Type':'application/json'},body:JSON.stringify(body),signal});
  if(!response.ok)throw Object.assign(new Error('PROVIDER_HTTP'),{status:response.status});
  const json=await parseJson(response),parts=json?.candidates?.[0]?.content?.parts||[];
  const text=parts.map(part=>part?.text||'').join('').trim();
@@ -81,11 +86,11 @@ async function withDeadline(task,milliseconds){
 }
 
 function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudflareToken='',cloudflareAccountId='',allowGroq=true,allowGemini=true,allowCloudflare=true,beforeProvider=async()=>true,onProviderEvent=async()=>{},providerTimeoutMs=4500,providerOrder=null}={}){
- return async function route({messages,language,memory}){
+ return async function route({messages,language,memory,currentInfo=false}){
   const compact=compactMessages(messages);
   if(!compact.length)throw new LocalFallbackError();
   const providerMap={
-   gemini:[allowGemini,signal=>callGemini({fetchImpl,key:geminiKey,messages:compact,language,memory,signal})],
+   gemini:[allowGemini,signal=>callGemini({fetchImpl,key:geminiKey,messages:compact,language,memory,signal,currentInfo})],
    groq:[allowGroq,signal=>callGroq({fetchImpl,key:groqKey,messages:compact,language,memory,signal})],
    cloudflare:[allowCloudflare,signal=>callCloudflare({fetchImpl,token:cloudflareToken,accountId:cloudflareAccountId,messages:compact,language,memory,signal})]
   };
@@ -103,4 +108,4 @@ function createAssistantRouter({fetchImpl=fetch,groqKey='',geminiKey='',cloudfla
  };
 }
 
-module.exports={createAssistantRouter,compactMessages,LocalFallbackError,GROQ_MODEL,GEMINI_MODEL,CLOUDFLARE_MODEL,cloudflareNeurons};
+module.exports={createAssistantRouter,compactMessages,LocalFallbackError,GROQ_MODEL,GEMINI_MODEL,CLOUDFLARE_MODEL,cloudflareNeurons,isCurrentInformationQuery};

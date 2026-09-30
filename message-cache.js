@@ -184,6 +184,20 @@
             });
         },
 
+        async removeMessage(chatId, id) {
+            memoryFallback.get(chatId)?.delete(id);
+            const db = await initDB();
+            if (!db) return true;
+            return new Promise(resolve => {
+                try {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.objectStore(STORE_NAME).delete(id);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                } catch (_) { resolve(false); }
+            });
+        },
+
         async clearCache() {
             memoryFallback.clear();
             const db = await initDB();

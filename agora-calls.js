@@ -287,9 +287,11 @@ function ensureGroupVideoTarget(uid){let target=$(`agora-video-${cssId(uid)}`);i
 
 async function checkCallPrivacy(receiver){const snap=await window.db.collection('profiles').doc(String(receiver).toLowerCase()).get();if(!snap.exists)return true;const setting=snap.data().callPrivacy||'all';const translations=window.TRANSLATIONS?.[lang()]||{};if(setting==='none'){alert(translations.err_calls_blocked||text('callFailed'));return false;}if(setting==='contacts'){const ok=window.chatData?.contacts?.some(item=>String(item.id).toLowerCase()===String(receiver).toLowerCase());if(!ok){alert(translations.err_calls_contacts||text('callFailed'));return false;}}return true;}
 
-async function startDirect(type){
- if(call.id||!window.currentChat||!currentUser)return;if(window.currentChat.type==='room'){return window.startGroupCall(window.currentChat,type);}
- const receiver=window.currentChat.id;if(!await checkCallPrivacy(receiver))return;
+async function startDirect(type, targetPeer){
+ const receiver = targetPeer || (window.currentChat ? window.currentChat.id : null);
+ if(call.id||!receiver||!currentUser)return;
+ if(window.currentChat&&window.currentChat.type==='room'&&!targetPeer){return window.startGroupCall(window.currentChat,type);}
+ if(!await checkCallPrivacy(receiver))return;
  try{
   const ref=window.db.collection('calls').doc();Object.assign(call,{id:ref.id,ref,type,peer:receiver,outgoing:true,scope:'direct',status:'calling',failedProviders:[]});ending=false;
   await ref.set({caller:currentUser,receiver,callType:type,provider:'agora',status:'calling',timestamp:firebase.firestore.FieldValue.serverTimestamp()});
@@ -308,7 +310,8 @@ function bindCallDoc(){
  if(callDocUnsubscribe)callDocUnsubscribe();callDocUnsubscribe=call.ref.onSnapshot(snapshot=>{if(!snapshot.exists)return;const data=snapshot.data();call.status=data.status;if(data.status==='ringing'&&call.outgoing)status('ringing',call.type);if(data.status==='connected'){status('connected',call.type);startTimer();}if(['ended','rejected'].includes(data.status)&&!ending)finish(false);});
 }
 
-async function recordHistory(){if(!call.peer||!currentUser||!window.db)return;const duration=call.start?Math.floor((Date.now()-call.start)/1000):0;const type=call.start?(call.outgoing?'outgoing':'incoming'):(call.outgoing?'outgoing':'missed');const id=call.id||window.db.collection('users').doc(String(currentUser).toLowerCase()).collection('callHistory').doc().id;await window.db.collection('users').doc(String(currentUser).toLowerCase()).collection('callHistory').doc(id).set({peer:call.peer,type,timestamp:firebase.firestore.FieldValue.serverTimestamp(),duration,seen:false,provider:call.currentProvider||'agora'}).catch(()=>{});}
+async function recordHistory(){if(!call.peer||!currentUser||!window.db)return;const duration=call.start?Math.floor((Date.now()-call.start)/1000):0;const type=call.start?(call.outgoing?'outgoing':'incoming'):(call.outgoing?'outgoing':'missed');const id=call.id||window.db.collection('users').doc(String(currentUser).toLowerCase()).collection('callHistory').doc().id;await window.db.collection('users').doc(String(currentUser).toLowerCase()).collection('callHistory').doc(id).set({peer:call.peer,type,callType:call.type||'audio',mediaType:call.type||'audio',isVideo:call.type==='video',timestamp:firebase.firestore.FieldValue.serverTimestamp(),duration,seen:false,provider:call.currentProvider||'agora'}).catch(()=>{});}
+window.startDirectCall = startDirect;
 
 async function closeAgora(){
  clearTimeout(timeout);clearInterval(timer);clearTimeout(failoverTimer);timeout=timer=failoverTimer=null;

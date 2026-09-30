@@ -11,6 +11,14 @@
     { "collectionGroup": "messages", "queryScope": "COLLECTION", "fields": [
       {"fieldPath":"isPublic","order":"ASCENDING"}, {"fieldPath":"chat_id","order":"ASCENDING"},
       {"fieldPath":"timestamp","order":"DESCENDING"}
+    ]},
+    { "collectionGroup": "messages", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath":"type","order":"ASCENDING"}, {"fieldPath":"invite_group_id","order":"ASCENDING"},
+      {"fieldPath":"recipient_username","order":"ASCENDING"}, {"fieldPath":"invite_status","order":"ASCENDING"}
+    ]},
+    { "collectionGroup": "messages", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath":"participants","arrayConfig":"CONTAINS"}, {"fieldPath":"mediaType","order":"ASCENDING"},
+      {"fieldPath":"timestamp","order":"DESCENDING"}
     ]}
   ],
   "fieldOverrides": []

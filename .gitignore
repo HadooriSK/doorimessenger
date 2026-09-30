@@ -75,3 +75,5 @@ tts-server/voices/
 dist/
 .test-runtime/
 .kilo/
+scratch/*.png
+.vscode/

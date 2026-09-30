@@ -559,13 +559,25 @@ function activityDb(records) {
   const store = new Map(Object.entries(records));
   return {
     store,
-    collection: name => ({doc: id => ({path:`${name}/${id}`})}),
+    collection: name => ({
+      doc: id => ({path:`${name}/${id}`}),
+      where: (field,op,value) => {
+        const query={filters:[[field,op,value]],max:100,where(nextField,nextOp,nextValue){query.filters.push([nextField,nextOp,nextValue]);return query;},orderBy(){return query;},limit(max){query.max=max;return query;}};
+        return query;
+      }
+    }),
     runTransaction: async callback => {
       const writes=[];
       const transaction={
-        get: async ref => ({data:()=>store.get(ref.path) && structuredClone(store.get(ref.path))}),
+        get: async ref => {
+          if (ref.path) return {exists:store.has(ref.path),id:ref.path.split('/').pop(),ref,data:()=>store.get(ref.path) && structuredClone(store.get(ref.path))};
+          const docs=[...store.entries()].filter(([path,value]) => path.startsWith('messages/') && ref.filters.every(([field,op,want]) => op === 'array-contains' ? value[field]?.includes(want) : op === 'in' ? want.includes(value[field]) : value[field] === want)).slice(0,ref.max).map(([path,value])=>({id:path.split('/').pop(),ref:{path},data:()=>structuredClone(value)}));
+          return {docs,size:docs.length};
+        },
         update: (ref, patch) => writes.push(()=>store.set(ref.path,{...store.get(ref.path),...patch})),
-        set: (ref, data) => writes.push(()=>store.set(ref.path,structuredClone(data)))
+        set: (ref, data) => writes.push(()=>store.set(ref.path,structuredClone(data))),
+        create: (ref, data) => writes.push(()=>{if(store.has(ref.path))throw new Error('already exists');store.set(ref.path,structuredClone(data));}),
+        delete: ref => writes.push(()=>store.delete(ref.path))
       };
       const result=await callback(transaction);
       writes.forEach(write=>write());
@@ -588,8 +600,8 @@ test('new activity supersedes a pending game invitation and leaves accepted sess
   });
   const result=await replaceActivityInvitation(db,'@alice','@bob','newlounge123',['oldgame123']);
   assert.equal(result.replaced,1);
-  assert.equal(db.store.get('messages/oldgame123').game_status,'superseded');
-  assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
+  assert.equal(db.store.has('messages/oldgame123'),false);
+   assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
   assert.equal(db.store.get('liveMediaSessions/lounge123').status,'pending');
   assert.ok([...db.store.keys()].some(name=>name.startsWith('_activityInvites/')));
 
@@ -612,7 +624,7 @@ test('activity replacement rejects foreign chats and cannot terminate a newer Do
   });
   const result=await replaceActivityInvitation(db,'@alice','@bob','newdoodle123',['olddoodle123','foreign123']);
   assert.equal(result.replaced,1);
-  assert.equal(db.store.get('messages/olddoodle123').activity_status,'superseded');
+  assert.equal(db.store.has('messages/olddoodle123'),false);
   assert.equal(db.store.get('doodle_sessions/session_@alice_@bob').type,'invite');
   assert.equal(db.store.get('messages/foreign123').activity_status,undefined);
   await assert.rejects(replaceActivityInvitation(db,'@mallory','@bob','newdoodle123',[]),{code:'permission-denied'});
@@ -623,13 +635,49 @@ test('pair-level invitation pointer replaces the previous request without a cach
   const now=Date.now(),participants=['@alice','@bob'];
   const db=activityDb({
     'messages/firstgame123':{id:'firstgame123',mediaType:'game_invite',mediaUrl:'{"id":"game12345"}',sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now},
-    'messages/secondlounge123':{id:'secondlounge123',mediaType:'live_media_invite',mediaUrl:'{"id":"lounge12345"}',sender_username:'@bob',recipient_username:'@alice',participants,isPublic:false,timestamp:now},
+     'messages/secondlounge123':{id:'secondlounge123',mediaType:'live_media_invite',mediaUrl:'{"id":"lounge12345"}',sender_username:'@bob',recipient_username:'@alice',participants,isPublic:false,timestamp:now+1},
     'gameSessions/game12345':{status:'pending',createdBy:'@alice',participants},
     'liveMediaSessions/lounge12345':{status:'pending',creator:'@bob',participants}
   });
-  assert.equal((await replaceActivityInvitation(db,'@alice','@bob','firstgame123',[])).replaced,0);
-  assert.equal((await replaceActivityInvitation(db,'@bob','@alice','secondlounge123',[])).replaced,1);
-  assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
+   assert.equal((await replaceActivityInvitation(db,'@alice','@bob','firstgame123',[])).replaced,0);
+   assert.equal((await replaceActivityInvitation(db,'@bob','@alice','secondlounge123',[])).replaced,1);
+   assert.equal(db.store.get('gameSessions/game12345').status,'superseded');
+});
+
+test('server-side bounded query supersedes old pending invitations beyond client history', async () => {
+  const {replaceActivityInvitation}=require('../functions/activity-invitations');
+  const now=Date.now(), participants=['@alice','@bob'], records={
+    'messages/newgame123':{id:'newgame123',mediaType:'game_invite',mediaUrl:'{"id":"newgame9999"}',sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now},
+    'gameSessions/newgame9999':{status:'pending',createdBy:'@alice',participants}
+  };
+  for(let i=0;i<40;i++) {
+    const id=`oldgame${String(i).padStart(4,'0')}`;
+    records[`messages/${id}`]={id,mediaType:'game_invite',mediaUrl:`{"id":"session${String(i).padStart(4,'0')}"}`,sender_username:'@alice',recipient_username:'@bob',participants,isPublic:false,timestamp:now-1000};
+    records[`gameSessions/session${String(i).padStart(4,'0')}`]={status:'pending',createdBy:'@alice',participants};
+  }
+  const db=activityDb(records);
+  const result=await replaceActivityInvitation(db,'@alice','@bob','newgame123',[]);
+  assert.equal(result.replaced,40);
+  assert.equal(db.store.has('messages/oldgame0000'),false);
+  assert.equal(db.store.get('gameSessions/session0039').status,'superseded');
+});
+
+test('group invitation replacement authorizes admins and atomically creates the new invite', async () => {
+  const {replaceGroupInvitation}=require('../functions/activity-invitations');
+  const participants=['@adminuser','@recipient1'];
+  const db=activityDb({
+    'groups/@group-123':{id:'@group-123',admins:['@adminuser'],members:['@adminuser']},
+    'users/@recipient1':{username:'@recipient1'},
+    'messages/oldgroup1':{id:'oldgroup1',type:'group_invite',invite_status:'pending',invite_group_id:'@group-123',sender_username:'@adminuser',recipient_username:'@recipient1',participants,isPublic:false},
+    'messages/accepted1':{id:'accepted1',type:'group_invite',invite_status:'accepted',invite_group_id:'@group-123',sender_username:'@adminuser',recipient_username:'@recipient1',participants,isPublic:false}
+  });
+  const fresh={id:'newgroup1',type:'group_invite',invite_status:'pending',invite_group_id:'@group-123',sender_username:'@adminuser',recipient_username:'@recipient1',participants,isPublic:false,timestamp:Date.now()};
+  const result=await replaceGroupInvitation(db,'@adminuser','@group-123','@recipient1','newgroup1',fresh);
+  assert.equal(result.replaced,1);
+  assert.equal(db.store.has('messages/oldgroup1'),false);
+  assert.equal(db.store.get('messages/accepted1').invite_status,'accepted');
+  assert.equal(db.store.get('messages/newgroup1').invite_group_id,'@group-123');
+  await assert.rejects(replaceGroupInvitation(db,'@recipient1','@group-123','@recipient1','othernew1',fresh),{code:'permission-denied'});
 });
 
 test('activity invite acceptance checks the backing Doodle session and its message id', () => {

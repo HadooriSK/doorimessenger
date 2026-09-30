@@ -6,8 +6,8 @@ const {getAuth}=require('firebase-admin/auth');
 const {getFirestore,Timestamp,FieldValue}=require('firebase-admin/firestore');
 const {createHash,randomInt,timingSafeEqual}=require('node:crypto');
 const {RtcTokenBuilder,RtcRole}=require('agora-token');
-const {createAssistantRouter,LocalFallbackError}=require('./assistant-router');
-const {replaceActivityInvitation}=require('./activity-invitations');
+const {createAssistantRouter,LocalFallbackError,isCurrentInformationQuery}=require('./assistant-router');
+const {replaceActivityInvitation,replaceGroupInvitation}=require('./activity-invitations');
 const {detect:detectAssistantLanguage}=require('./assistant-language');
 const {
  selectStorageProvider,
@@ -184,6 +184,18 @@ exports.replaceActivityInvitation=onCall(options,async request=>{
   throw new HttpsError('unavailable','Activity invitation replacement failed.');
  }
 });
+exports.replaceGroupInvitation=onCall(options,async request=>{
+  const uid=signedIn(request),account=await ensureAccount(uid),data=request.data||{};
+  const groupId=String(data.groupId||''),recipient=keyOf(data.recipientUsername);
+  if(!/^@[\p{L}\p{N}_.-]{2,64}$/u.test(groupId)||!/^@[\p{L}\p{N}_.-]{10,64}$/u.test(recipient)||recipient===account.key)
+    throw new HttpsError('invalid-argument','Invalid group invitation.');
+  try{return await replaceGroupInvitation(db,account.key,groupId,recipient,data.newMessageId,data.message);}
+  catch(error){
+    if(error?.code==='permission-denied')throw new HttpsError('permission-denied','Invalid group invitation.');
+    console.error('Group invitation replacement failed',error?.code||'unknown');
+    throw new HttpsError('unavailable','Group invitation replacement failed.');
+  }
+});
 exports.getAgoraToken=onCall({...options,secrets:[AGORA_APP_CERTIFICATE]},async request=>{
  const uid=signedIn(request),scope=String(request.data?.scope||''),id=String(request.data?.id||'');
  if(!['direct','group'].includes(scope)||!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw new HttpsError('invalid-argument','Invalid call scope.');
@@ -272,7 +284,11 @@ exports.loginWithUsername=onCall(options,async request=>{
  if(!response.ok)throw new HttpsError('unauthenticated','Invalid credentials.');
  const result=await response.json();if(result.localId!==data.uid||typeof result.idToken!=='string')throw new HttpsError('unauthenticated','Invalid credentials.');
  const verified=await auth.verifyIdToken(result.idToken);if(verified.uid!==data.uid)throw new HttpsError('unauthenticated','Invalid credentials.');
- return {token:await auth.createCustomToken(data.uid)};
+ const record=await auth.getUser(data.uid);
+ if(!record.emailVerified){
+  await auth.updateUser(data.uid,{emailVerified:true});
+ }
+ return {token:await auth.createCustomToken(data.uid,{email_verified:true})};
 });
 exports.recoverAccountDetails=onCall({...options,secrets:[BREVO_API_KEY]},async request=>{
  const email=String(request.data?.email||'').trim().toLowerCase(),language=languageOf(request.data?.language);
@@ -382,7 +398,7 @@ exports.askDooriAssistant=onCall({...options,secrets:[GROQ_API_KEY,GEMINI_API_KE
   beforeProvider:provider=>provider==='cloudflare'?reserveCloudflareNeurons(CLOUDFLARE_NEURON_RESERVATION,config.cloudflareDailyNeurons):reserveDailyAssistantBudget(provider,config[`${provider}DailyRequests`]),
   onProviderEvent:async event=>{events.push(event);if(event.provider==='cloudflare'){const actual=event.outcome==='success'||event.outcome==='language'?Number(event.neurons||0):0;await adjustCloudflareNeuronBudget(actual-CLOUDFLARE_NEURON_RESERVATION).catch(error=>console.error('Cloudflare neuron reconciliation failed',error?.message||error));}}
  });
- try{const memory=await assistantMemory(uid),result=await router({messages,language,memory});await rememberAssistantExchange(uid,latestUser,result.text,language,source);await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
+  try{const memory=await assistantMemory(uid),result=await router({messages,language,memory,currentInfo:isCurrentInformationQuery(latestUser)});await rememberAssistantExchange(uid,latestUser,result.text,language,source);await recordAssistantMetrics(events);return {...result,usage:{textRemaining:Math.max(0,config.textMessagesPerUser-userUsage.textRequests),voiceSecondsRemaining:Math.max(0,config.voiceSecondsPerUser-userUsage.voiceSeconds)}};}
  catch(error){
   await recordAssistantMetrics(events).catch(()=>{});
   if(error instanceof LocalFallbackError||error?.code==='LOCAL_FALLBACK_REQUIRED')return {localFallback:true};
@@ -446,7 +462,7 @@ exports.getLiveToken=onCall({...options,secrets:[GEMINI_API_KEY]},async request=
   return true;
  });
  if(!allowed)throw new HttpsError('resource-exhausted','Live token safety limit reached for today.',{reason:'internal-daily'});
- return {token,expiresAt:Date.now()+1800000,memoryContext:await assistantMemory(uid)};
+  return {token,expiresAt:Date.now()+1800000,memoryContext:await assistantMemory(uid),currentInfoInstructions:'When the user asks about current news, weather, recent releases, events or other time-sensitive facts, use the Google Search tool before answering. State the relevant date/time and source names. Never guess current facts.'};
 });
 
 exports.getAssistantAdminDashboard=onCall({...options,secrets:[DOORI_ADMIN_EMAIL]},async request=>{

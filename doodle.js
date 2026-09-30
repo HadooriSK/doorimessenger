@@ -43,6 +43,21 @@ let isDraggingDoodle = false;
 let doodleDragOffsetX = 0;
 let doodleDragOffsetY = 0;
 
+function ensureCurrentUserString() {
+    if (!window.currentUser) return '';
+    if (typeof window.currentUser === 'string') return window.currentUser.toLowerCase();
+    if (typeof window.currentUser.toLowerCase !== 'function') {
+        const val = window.currentUser.username || window.currentUser.displayName || window.currentUser.uid || '';
+        try {
+            window.currentUser.toLowerCase = function() { return String(val).toLowerCase(); };
+        } catch (e) {}
+        return String(val).toLowerCase();
+    }
+    return window.currentUser.toLowerCase();
+}
+
+
+
 // INIT
 if(doodleCanvas) {
     resizeCanvas();
@@ -406,6 +421,7 @@ function sendDoodleAction(data) {
     localStrokesDrawn.add(actionId);
     
     data.id = actionId;
+    ensureCurrentUserString();
     data.sender = window.currentUser.toLowerCase();
     data.timestamp = Date.now();
     
@@ -415,7 +431,7 @@ function sendDoodleAction(data) {
 function handleRemoteAction(data) {
     if(!doodleCtx || !doodleCanvas) return;
     if(localStrokesDrawn.has(data.id)) return; // Ignore our own strokes
-    if(data.sender === window.currentUser.toLowerCase()) return;
+    if(data.sender === (window.currentUser && typeof window.currentUser.toLowerCase === "function" ? window.currentUser.toLowerCase() : "")) return;
     
     receivedStrokesCount++;
     const st = document.getElementById('doodle-status');
@@ -483,7 +499,7 @@ async function initDoodleInvite(peerId) {
         await currentDoodleDocRef.set({
             type: 'invite',
             ts: doodleSessionStartTime,
-            caller: window.currentUser.toLowerCase(),
+            caller: (ensureCurrentUserString(), window.currentUser.toLowerCase()),
             receiver: peerClean,
             inviteMessageId: messageId
         }, {merge: true});
@@ -620,6 +636,7 @@ function openDoodleWorkspace() {
     if(doodleMaximizeBtn) doodleMaximizeBtn.textContent = '🔲';
 
     doodleContainer.classList.remove('hidden');
+    document.body.classList.add('doodle-open');
     doodleContainer.style.setProperty('display', 'flex', 'important');
     clearCanvas();
     localStrokesDrawn.clear();
@@ -654,6 +671,7 @@ function endDoodle() {
         
         if(doodleContainer) {
             doodleContainer.classList.add('hidden');
+        document.body.classList.remove('doodle-open');
             doodleContainer.style.setProperty('display', 'none', 'important');
         }
     } catch(e) {
@@ -719,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let globalDoodleInviteUnsubscribe = null;
 function initGlobalDoodleListener() {
     if(!window.currentUser || !window.db) return;
+    if(!ensureCurrentUserString()) return;
     if(globalDoodleInviteUnsubscribe) globalDoodleInviteUnsubscribe();
     
     globalDoodleInviteUnsubscribe = window.db.collection('doodle_sessions')
@@ -742,7 +761,7 @@ function initGlobalDoodleListener() {
 
 // Call initGlobalDoodleListener when currentUser is set
 const checkUserInterval = setInterval(() => {
-    if(window.currentUser) {
+    if(window.currentUser && ensureCurrentUserString()) {
         initGlobalDoodleListener();
         clearInterval(checkUserInterval);
     }

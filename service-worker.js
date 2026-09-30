@@ -1,17 +1,18 @@
-const CACHE_NAME = 'web-messenger-v147-ios-audio';
+const CACHE_NAME = 'web-messenger-v161-assistant-bottom-safe-area';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=338',
-  '/app.js?v=362',
+  '/style.css?v=375',
+  '/media-lounge-player.css',
+  '/app.js?v=375',
   '/tts.js?v=9',
   '/doori-live.js?v=11',
   '/assistant.js?v=13',
   '/quiz-questions.js?v=1',
   '/games.js?v=5',
-  '/live-media.js?v=7',
+  '/live-media.js?v=9',
   '/security.js?v=2',
-  '/message-cache.js?v=2',
+  '/message-cache.js?v=4',
   '/auth-translations.js?v=9',
   '/account-client.js?v=2',
   '/vendor/purify.min.js',

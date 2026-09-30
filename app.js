@@ -27,7 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { window.currentChat = currentChat; }
 
 const chatLayout = document.querySelector('.chat-container');
-const prefersSplitMessenger = () => window.matchMedia('(min-width: 900px)').matches;
+// Keep one full-width messenger surface. The previous desktop split-view left
+// the conversation list as a permanent side rail, which conflicts with the
+// bottom navigation and Telegram-style full-page layout.
+const prefersSplitMessenger = () => false;
 function syncMessengerLayout(showChat = !!currentChat) {
     const start = document.getElementById('start-page');
     const chat = document.getElementById('chat-page');
@@ -46,9 +49,12 @@ window.addEventListener('resize', () => syncMessengerLayout(!!currentChat));
 syncMessengerLayout(false);
 
 document.getElementById('back-to-list-btn').addEventListener('click', () => {
+    window.dispatchEvent(new Event('doori-chat-change'));
     document.getElementById('chat-page').classList.remove('active');
     document.getElementById('start-page').classList.add('active');
     chatLayout?.classList.remove('split-view');
+    document.body.classList.remove('in-chat');
+    document.body.classList.remove('assistant-chat-open');
     currentChat = null;
     syncMessengerLayout(false);
     // Fullscreen behavior removed per user request
@@ -146,7 +152,7 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     const sidebar = document.getElementById('sidebar'); const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const currentUserDisplay = document.getElementById('current-user-display');
     const lists = { personal: document.getElementById('list-personal'),
-        chats: document.getElementById('list-chats'), rooms: document.getElementById('list-rooms'), contacts: document.getElementById('list-contacts') };
+        chats: document.getElementById('list-chats'), rooms: document.getElementById('list-rooms'), chatsGroups: document.getElementById('list-chats-groups'), contacts: document.getElementById('list-contacts') };
     
     const settingsBtn = document.getElementById('settings-tab-btn'); const settingsModal = document.getElementById('settings-modal'); const closeSettingsBtn = document.getElementById('close-settings-btn'); const logoutBtn = document.getElementById('logout-btn');
     const avatarUpload = document.getElementById('avatar-upload'); const settingsAvatar = document.getElementById('settings-avatar');
@@ -155,6 +161,81 @@ document.getElementById('back-to-list-btn').addEventListener('click', () => {
     let editGroupAvatarUrl = null;
     const langSelect = document.getElementById('lang-select');
     const loginLangSelect = document.getElementById('login-lang-select');
+    let settingsDraft = null;
+    const settingsDraftIds = ['setting-sound-type','setting-hide-preview','setting-vibrate','setting-auto-media','setting-last-seen','setting-searchable','setting-avatar-visibility','setting-call-privacy','setting-theme-mode','setting-font-family','setting-font-color','setting-font-size','setting-enter-send','setting-sound','setting-sound-type'];
+    const captureSettingsDraft = () => {
+        settingsDraft = {};
+        settingsDraftIds.forEach(id => { const el = document.getElementById(id); if (el) settingsDraft[id] = el.type === 'checkbox' ? el.checked : el.value; });
+        return settingsDraft;
+    };
+    const restoreSettingsDraft = () => {
+        if (!settingsDraft) return;
+        Object.entries(settingsDraft).forEach(([id, value]) => { const el = document.getElementById(id); if (el) { if (el.type === 'checkbox') el.checked = value; else el.value = value; } });
+    };
+
+    const bottomNavigation = document.getElementById('app-bottom-nav');
+    const bottomNavItems = bottomNavigation ? [...bottomNavigation.querySelectorAll('[data-bottom-tab]')] : [];
+    const openSettingsPage = () => {
+        if (!settingsModal) return;
+        settingsModal.classList.remove('hidden');
+        settingsModal.classList.add('settings-page-open');
+        if (langSelect) langSelect.value = currentLang;
+        captureSettingsDraft();
+        renderSettingsProfileGallery();
+        syncSettingsStatusUI();
+        updateStorageUsage();
+        bottomNavItems.forEach(item => item.classList.toggle('active', item.dataset.bottomTab === 'settings'));
+    };
+    const closeSettingsPage = () => {
+        restoreSettingsDraft();
+        settingsModal?.classList.add('hidden');
+        settingsModal?.classList.remove('settings-page-open');
+    };
+    const activateBottomNavigation = (tab) => {
+        bottomNavItems.forEach(item => {
+            const active = item.dataset.bottomTab === tab;
+            item.classList.toggle('active', active);
+            if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+        });
+        if (tab === 'settings') { openSettingsPage(); return; }
+        closeSettingsPage();
+        if (tab === 'assistant') {
+            const assistantId = window.DooriAssistant?.CHAT_ID;
+            if (assistantId) selectChat(assistantId, 'assistant');
+            return;
+        }
+        document.body.classList.remove('in-chat');
+        if (tab === 'chats') {
+            document.getElementById('chat-page')?.classList.remove('active');
+            document.getElementById('start-page')?.classList.add('active');
+            document.querySelectorAll('.chat-items-container').forEach(c => c.style.display = 'none');
+            document.getElementById('list-chats')?.style.setProperty('display', 'block');
+            document.getElementById('list-chats-items')?.scrollIntoView({ block: 'nearest' });
+            return;
+        }
+        if (tab === 'calls') {
+            document.getElementById('chat-page')?.classList.remove('active');
+            document.getElementById('start-page')?.classList.add('active');
+            document.querySelectorAll('.chat-items-container').forEach(c => c.style.display = 'none');
+            const callsList = document.getElementById('list-calls');
+            if (callsList) callsList.style.display = 'block';
+            if (typeof loadCallHistory === 'function') loadCallHistory(currentUser);
+            return;
+        }
+        document.getElementById('chat-page')?.classList.remove('active');
+        document.getElementById('start-page')?.classList.add('active');
+        const legacyTab = document.querySelector(`.nav-tab[data-tab="${tab}"]`);
+        legacyTab?.click();
+    };
+    bottomNavigation?.addEventListener('click', event => {
+        const button = event.target.closest('[data-bottom-tab]');
+        if (button) activateBottomNavigation(button.dataset.bottomTab);
+    });
+    document.getElementById('add-chat-contact-btn')?.addEventListener('click', () => addContactModal?.classList.remove('hidden'));
+    document.getElementById('add-chat-group-btn')?.addEventListener('click', () => {
+        const createGroup = document.getElementById('sidebar-create-group-btn');
+        createGroup?.click();
+    });
     const userSearchInput = document.getElementById('user-search-input'); const userSearchBtn = document.getElementById('user-search-btn');
     
     const chatHeaderInfo = document.querySelector('.chat-header-info'); const currentChatAvatar = document.getElementById('current-chat-avatar'); const currentChatName = document.getElementById('current-chat-name'); const currentChatStatus = document.getElementById('current-chat-status');
@@ -294,6 +375,17 @@ if (doodleBtnGlobal) {
         tr: { login_title: 'Doori Messenger', login_subtitle: 'Lütfen bir kullanıcı adı seçin.', login_btn: 'Devam et', sec_personal: 'Kişisel', chat_saved: 'Kaydedilen Mesajlar', sec_rooms: 'Gruplar', sec_chats: 'Sohbetler', chat_general: 'Genel', sec_contacts: 'Kişiler', sec_calls: 'Aramalar', status_online: 'Çevrimiçi', btn_block: 'Engelle', btn_unblock: 'Engeli Kaldır', err_blocked: 'Bu kişiyi engellediniz.', err_channel: 'Buraya yalnızca yöneticiler yazabilir.', placeholder_msg: 'Bir mesaj yazın...', placeholder_search: 'Kullanıcı ara (@isim)...', ttl_off: '🕒 Kapalı', btn_cancel: 'İptal', btn_save: 'Kaydet', btn_stop_send: '⏹ Gönder', modal_new_room: 'Yeni Oda', lbl_room_name: 'Grup / Kanal Adı', opt_group: 'Grup (Herkes yazabilir)', opt_channel: 'Kanal (Sadece yöneticiler)', btn_create: 'Oluştur', modal_settings: 'Ayarlar', tab_profile: 'Profil', tab_privacy: 'Gizlilik', tab_chats: 'Sohbetler', btn_change_pic: 'Resmi Değiştir', lbl_language: 'Dil', lbl_last_seen: '"Son görülme" durumunu göster', lbl_read_receipts: 'Okundu Bilgisi', lbl_searchable: 'Aramada bulunabilir ol', lbl_avatar_visibility: 'Profil resmini görebilecekler', opt_vis_all: 'Herkes', opt_vis_contacts: 'Sadece Kişiler', opt_vis_none: 'Hiç kimse', lbl_sound: 'Bildirim Sesleri', lbl_storage_used: 'Kullanılan Yerel Depolama:', btn_clear_cache: 'Önbelleği Temizle', btn_logout: 'Çıkış Yap', lbl_call_privacy: 'Beni kimler arayabilir?', err_calls_blocked: 'Bu kullanıcı aramaları engelledi.', err_calls_contacts: 'Bu kullanıcı yalnızca kişilerden gelen aramalara izin veriyor.', ctx_reply: 'Cevapla', ctx_copy: 'Kopyala', ctx_edit: 'Düzenle', ctx_select: 'Seç', ctx_forward: 'İlet', ctx_pin: 'Sabitle', ctx_unpin: 'Sabitlemeyi Kaldır', ctx_share: 'Paylaş', ctx_delete: 'Sil', ctx_delete_for_me: 'Benim için sil', ctx_msg_info: 'Mesaj Bilgisi', msg_read_at: 'Okunma zamanı: ', msg_unread: 'Henüz okunmadı', msg_read_unknown: 'Okundu (kesin zaman yok)', dlg_delete_title: 'Mesaj silinsin mi?', dlg_delete_for_all: 'Herkes için sil', dlg_cancel: 'İptal', lbl_theme_mode: 'Uygulama Teması', opt_theme_dark: 'Her Zaman Koyu', opt_theme_light: 'Her Zaman Açık', opt_theme_auto: 'Otomatik (Gündoğumu/Günbatımı)', err_too_many_avatars: 'En fazla 5 profil resmine sahip olabilirsiniz.', err_file_too_large: 'Her bir GIF en fazla 1 MB ve 10 saniye uzunluğunda olmalıdır.', err_too_many_gifs: 'Her kullanıcı en fazla 10 GIF ekleyebilir.', btn_add_pic: 'Resim Ekle' }
     };
     window.TRANSLATIONS = TRANSLATIONS;
+
+    Object.assign(TRANSLATIONS.de, { nav_assistant: 'Doori KI Assistent' });
+    Object.assign(TRANSLATIONS.en, { nav_assistant: 'Doori AI Assistant' });
+    Object.assign(TRANSLATIONS.ar, { nav_assistant: 'مساعد دوری الذكي' });
+    Object.assign(TRANSLATIONS.fa, { nav_assistant: 'دستیار هوش مصنوعی دوری' });
+    Object.assign(TRANSLATIONS.tr, { nav_assistant: 'Doori Yapay Zeka Asistanı' });
+    Object.assign(TRANSLATIONS.de, { btn_save_changes: 'Änderungen speichern' });
+    Object.assign(TRANSLATIONS.en, { btn_save_changes: 'Save changes' });
+    Object.assign(TRANSLATIONS.ar, { btn_save_changes: 'حفظ التغييرات' });
+    Object.assign(TRANSLATIONS.fa, { btn_save_changes: 'ذخیره تغییرات' });
+    Object.assign(TRANSLATIONS.tr, { btn_save_changes: 'Değişiklikleri kaydet' });
 
     Object.assign(TRANSLATIONS.de, { lbl_font_group: 'Schrift (Eigener Text)', ph_bio_placeholder: 'Ich bin neu hier...', lbl_font_preview: 'Vorschau', ph_preview_text: 'Hey, ich nutze Doori!', lbl_bio: 'Info / Über mich', lbl_font_color: 'Farbe', lbl_font_size: 'Größe', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Schreibmaschine', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Locker (Comic)', btn_custom_wallpaper: 'Eigene...', opt_color_pink: 'Hellrosa', opt_color_green: 'Hellgrün', opt_color_blue: 'Hellblau', opt_color_default: 'Standard (Weiß)', lbl_font_family: 'Schriftart', lbl_wallpaper: 'Chat-Hintergrundbild', btn_change_wallpaper: 'Bild auswählen', btn_remove_wallpaper: 'Entfernen', opt_font_small: 'Klein', opt_font_normal: 'Normal', opt_font_large: 'Groß',  tab_design: "Design", lbl_font_size: "Schriftgröße", lbl_emoji: "Smilies", lbl_gif: "GIF", lbl_doodle: "Doodle zeichnen", lbl_file: "Datei senden", lbl_location: "Standort teilen", msg_location: "Standort ansehen",  ph_search_content: "Inhalte durchsuchen...", ph_id: "ID", ph_search: "Suchen...", ph_search_user: "Benutzer suchen (@name)...",  lbl_remember_me: "Angemeldet bleiben",  err_select_chat: "Bitte wähle zuerst einen Chat aus.", err_group_not_found: "Diese Gruppe existiert nicht oder wurde gelöscht.", err_join_group: "Fehler beim Beitreten der Gruppe.", msg_copied_clipboard: "Text in die Zwischenablage kopiert! (Teilen wird auf diesem Gerät nicht nativ unterstützt)", err_send_msg: "Nachricht konnte nicht gesendet werden (Offline?).", err_feature_update: "Diese Funktion steht im nächsten Update zur Verfügung.", err_group_username_req: "Bitte gib einen Benutzernamen für die Gruppe ein (z.B. @meinegruppe).", err_username_invalid: "Der Benutzername darf keine Leerzeichen enthalten und muss mindestens 2 Zeichen lang sein.", err_username_taken: "Dieser Benutzername ist bereits von einem anderen Benutzer belegt.", err_group_username_taken: "Dieser Gruppen-Benutzername ist bereits vergeben. Bitte wähle einen anderen.", err_create_group: "Fehler beim Erstellen der Gruppe.", err_search_self: "Das bist du selbst!", err_user_not_found_privacy: "Benutzername nicht gefunden (Privatsphäre).", msg_added_contact: " wurde zu den Kontakten hinzugefügt!", err_already_contact: " ist bereits ein Kontakt.", err_user_not_found2: "Benutzername nicht gefunden.", err_search: "Fehler bei der Suche.", msg_group_deleted: "Die Gruppe existiert nicht mehr.", prompt_new_group_name: "Neuer Gruppenname:", prompt_new_desc: "Neue Beschreibung:",  lbl_group_call: 'Gruppenanruf', lbl_incoming_invite: 'Neue Gruppeneinladung...', lbl_add_members: 'Mitglieder hinzufügen', sec_group_info: 'Gruppeninfo', sec_members: 'Mitglieder', btn_add_member: 'Mitglied hinzufügen', lbl_group_name: 'Name der Gruppe', msg_invited_you: 'hat dich in die Gruppe eingeladen:', btn_accept: 'Annehmen', btn_decline: 'Ablehnen', msg_invite_accepted: 'Einladung angenommen', msg_invite_declined: 'Einladung abgelehnt', sys_user_joined: 'ist der Gruppe beigetreten', sys_user_left: 'hat die Gruppe verlassen', sys_user_removed: 'wurde aus der Gruppe entfernt', btn_leave_group: 'Gruppe verlassen', lbl_admin_options: 'Admin Optionen', btn_copy_invite_link: '🔗 Einladungslink kopieren', lbl_admins_only: 'Nur Admins dürfen schreiben', msg_admin_kicked: 'Der Admin hat dich aus der Gruppe entfernt.', msg_link_copied: 'Einladungslink kopiert!', msg_muted_in_group: 'Du wurdest in dieser Gruppe stummgeschaltet.', msg_readonly_group: 'Nur Admins dürfen in dieser Gruppe schreiben.', ctx_select: 'Auswählen', ctx_forward: 'Weiterleiten', ctx_pin: 'Anheften', ctx_unpin: 'Loslösen', msg_forwarded: 'Weitergeleitet', msg_pinned: 'Angeheftete Nachricht', modal_forward: 'Weiterleiten an...', btn_send_doodle: 'Als Bild senden', lbl_doodle_invite: 'Doodle Einladung', msg_clear_doodle: 'Wirklich alles löschen?', err_doodle_private_only: 'Doodle ist derzeit nur in privaten Chats verfügbar.', msg_doodle_rejected: 'Einladung abgelehnt.', doodle_title: 'Doodle Einladung', doodle_btn_accept: 'Mitzeichnen', doodle_btn_reject: 'Ablehnen', doodle_msg_accepted: 'Doodle Einladung angenommen', doodle_msg_closed: 'Doodle beendet', doodle_msg_rejected: 'Doodle Einladung abgelehnt', doodle_waiting: 'Wartet...', doodle_connecting: 'Verbunden...', doodle_rejected: 'Abgelehnt', title_minimize: 'Minimieren', title_maximize: 'Maximieren', title_close: 'Schließen', title_color: 'Farbe wählen', title_size: 'Stiftdicke', title_eraser: 'Radiergummi', title_clear: 'Alles löschen', doodle_session_with: 'Doodle Sitzung mit', doodle_connected: 'Verbunden', doodle_wants_to_draw: ' möchte mit dir zeichnen!' });
     Object.assign(TRANSLATIONS.en, { lbl_font_group: 'Font (Own Text)', ph_bio_placeholder: 'I am new here...', lbl_font_preview: 'Preview', ph_preview_text: 'Hey, I am using Doori!', lbl_bio: 'About / Info', lbl_font_color: 'Color', lbl_font_size: 'Size', opt_font_inter: 'Standard (Inter)', opt_font_courier: 'Typewriter', opt_font_georgia: 'Elegant (Serif)', opt_font_comic: 'Casual (Comic)', btn_custom_wallpaper: 'Custom...', opt_color_pink: 'Light Pink', opt_color_green: 'Light Green', opt_color_blue: 'Light Blue', opt_color_default: 'Default (White)', lbl_font_family: 'Font Family', lbl_wallpaper: 'Chat Wallpaper', btn_change_wallpaper: 'Select Image', btn_remove_wallpaper: 'Remove', opt_font_small: 'Small', opt_font_normal: 'Normal', opt_font_large: 'Large',  tab_design: "Design", lbl_font_size: "Font Size", lbl_emoji: "Emojis", lbl_gif: "GIF", lbl_doodle: "Draw Doodle", lbl_file: "Send File", lbl_location: "Share Location", msg_location: "View Location",  ph_search_content: "Search content...", ph_id: "ID", ph_search: "Search...", ph_search_user: "Search user (@name)...",  lbl_remember_me: "Remember me",  err_select_chat: "Please select a chat first.", err_group_not_found: "This group does not exist or was deleted.", err_join_group: "Error joining the group.", msg_copied_clipboard: "Text copied to clipboard!", err_send_msg: "Message could not be sent (Offline?).", err_feature_update: "This feature will be available in the next update.", err_group_username_req: "Please enter a username for the group (e.g. @mygroup).", err_username_invalid: "The username cannot contain spaces and must be at least 2 chars long.", err_username_taken: "This username is already taken by another user.", err_group_username_taken: "This group username is already taken. Please choose another one.", err_create_group: "Error creating the group.", err_search_self: "That is you!", err_user_not_found_privacy: "Username not found (Privacy).", msg_added_contact: " was added to your contacts!", err_already_contact: " is already a contact.", err_user_not_found2: "Username not found.", err_search: "Search failed.", msg_group_deleted: "The group no longer exists.", prompt_new_group_name: "New group name:", prompt_new_desc: "New description:",  lbl_group_call: 'Group Call', lbl_incoming_invite: 'New Group Invite...', lbl_add_members: 'Add members', sec_group_info: 'Group Info', sec_members: 'Members', btn_add_member: 'Add member', lbl_group_name: 'Group name', msg_invited_you: 'invited you to the group:', btn_accept: 'Accept', btn_decline: 'Decline', msg_invite_accepted: 'Invite accepted', msg_invite_declined: 'Invite declined', sys_user_joined: 'joined the group', sys_user_left: 'left the group', sys_user_removed: 'was removed from the group', btn_leave_group: 'Leave Group', lbl_admin_options: 'Admin Options', btn_copy_invite_link: '🔗 Copy Invite Link', lbl_admins_only: 'Only Admins can send messages', msg_admin_kicked: 'The Admin has removed you from the group.', msg_link_copied: 'Invite link copied!', msg_muted_in_group: 'You have been muted in this group.', msg_readonly_group: 'Only Admins can send messages in this group.', ctx_select: 'Select', ctx_forward: 'Forward', ctx_pin: 'Pin', ctx_unpin: 'Unpin', msg_forwarded: 'Forwarded', msg_pinned: 'Pinned Message', modal_forward: 'Forward to...', btn_send_doodle: 'Send as Image', lbl_doodle_invite: 'Doodle Invite', msg_clear_doodle: 'Clear everything?', err_doodle_private_only: 'Doodle is only available in private chats.', msg_doodle_rejected: 'Invite rejected.', doodle_title: 'Doodle Invite', doodle_btn_accept: 'Join', doodle_btn_reject: 'Decline', doodle_msg_accepted: 'Doodle Invite accepted', doodle_msg_closed: 'Doodle closed', doodle_msg_rejected: 'Doodle Invite rejected', doodle_waiting: 'Waiting...', doodle_connecting: 'Connecting...', doodle_rejected: 'Rejected', title_minimize: 'Minimize', title_maximize: 'Maximize', title_close: 'Close', title_color: 'Choose Color', title_size: 'Pen Size', title_eraser: 'Eraser', title_clear: 'Clear All', doodle_session_with: 'Doodle Session with', doodle_connected: 'Connected', doodle_wants_to_draw: ' wants to draw with you!' });
@@ -440,6 +532,83 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         btn_save_status: 'Durumu Kaydet', msg_status_updated: 'Durum başarıyla güncellendi!',
         lbl_logged_in_as: 'Olarak giriş yapıldı:'
     });
+
+    // Modern Telephony & Call History Translations (All 5 Languages)
+    Object.assign(TRANSLATIONS.de, {
+        call_voice: 'Sprachanruf', call_video: 'Videoanruf',
+        call_missed_voice: 'Verpasster Sprachanruf', call_missed_video: 'Verpasster Videoanruf',
+        call_incoming_voice: 'Eingehender Sprachanruf', call_incoming_video: 'Eingehender Videoanruf',
+        call_outgoing_voice: 'Ausgehender Sprachanruf', call_outgoing_video: 'Ausgehender Videoanruf',
+        call_action_voice: 'Sprachanruf starten', call_action_video: 'Videoanruf starten',
+        call_action_chat: 'Nachricht senden', call_action_info: 'Anrufdetails',
+        call_action_profile: 'Profil anzeigen', call_action_delete: 'Aus Anrufliste löschen',
+        call_action_block: 'Kontakt blockieren', call_details_title: 'Anrufdetails',
+        call_details_date: 'Datum & Uhrzeit', call_details_duration: 'Dauer',
+        call_details_type: 'Anruftyp', call_details_status: 'Status',
+        call_status_missed: 'Nicht angenommen', call_status_completed: 'Angenommen',
+        call_deleted_msg: 'Anruf aus der Liste entfernt.', call_empty_title: 'Noch keine Anrufe',
+        call_empty_desc: 'Starte einen Sprach- oder Videoanruf direkt aus deinen Kontakten oder Chats.'
+    });
+    Object.assign(TRANSLATIONS.en, {
+        call_voice: 'Voice Call', call_video: 'Video Call',
+        call_missed_voice: 'Missed Voice Call', call_missed_video: 'Missed Video Call',
+        call_incoming_voice: 'Incoming Voice Call', call_incoming_video: 'Incoming Video Call',
+        call_outgoing_voice: 'Outgoing Voice Call', call_outgoing_video: 'Outgoing Video Call',
+        call_action_voice: 'Start Voice Call', call_action_video: 'Start Video Call',
+        call_action_chat: 'Send Message', call_action_info: 'Call Details',
+        call_action_profile: 'View Profile', call_action_delete: 'Delete from Call History',
+        call_action_block: 'Block Contact', call_details_title: 'Call Details',
+        call_details_date: 'Date & Time', call_details_duration: 'Duration',
+        call_details_type: 'Call Type', call_details_status: 'Status',
+        call_status_missed: 'Missed / Unanswered', call_status_completed: 'Completed',
+        call_deleted_msg: 'Call removed from history.', call_empty_title: 'No calls yet',
+        call_empty_desc: 'Start a voice or video call directly from your contacts or chats.'
+    });
+    Object.assign(TRANSLATIONS.ar, {
+        call_voice: 'مكالمة صوتية', call_video: 'مكالمة فيديو',
+        call_missed_voice: 'مكالمة صوتية فائتة', call_missed_video: 'مكالمة فيديو فائتة',
+        call_incoming_voice: 'مكالمة صوتية واردة', call_incoming_video: 'مكالمة فيديو واردة',
+        call_outgoing_voice: 'مكالمة صوتية صادرة', call_outgoing_video: 'مكالمة فيديو صادرة',
+        call_action_voice: 'بدء مكالمة صوتية', call_action_video: 'بدء مكالمة فيديو',
+        call_action_chat: 'إرسال رسالة', call_action_info: 'تفاصيل المكالمة',
+        call_action_profile: 'عرض الملف الشخصي', call_action_delete: 'حذف من سجل المكالمات',
+        call_action_block: 'حظر جهة الاتصال', call_details_title: 'تفاصيل المكالمة',
+        call_details_date: 'التاريخ والوقت', call_details_duration: 'المدة',
+        call_details_type: 'نوع المكالمة', call_details_status: 'الحالة',
+        call_status_missed: 'لم يتم الرد', call_status_completed: 'تمت المكالمة',
+        call_deleted_msg: 'تم حذف المكالمة من السجل.', call_empty_title: 'لا توجد مكالمات بعد',
+        call_empty_desc: 'ابدأ مكالمة صوتية أو مكالمة فيديو مباشرة من جهات الاتصال أو الدردشات.'
+    });
+    Object.assign(TRANSLATIONS.fa, {
+        call_voice: 'تماس صوتی', call_video: 'تماس تصویری',
+        call_missed_voice: 'تماس صوتی بی‌پاسخ', call_missed_video: 'تماس تصویری بی‌پاسخ',
+        call_incoming_voice: 'تماس صوتی ورودی', call_incoming_video: 'تماس تصویری ورودی',
+        call_outgoing_voice: 'تماس صوتی خروجی', call_outgoing_video: 'تماس تصویری خروجی',
+        call_action_voice: 'برقراری تماس صوتی', call_action_video: 'برقراری تماس تصویری',
+        call_action_chat: 'ارسال پیام', call_action_info: 'جزئیات تماس',
+        call_action_profile: 'مشاهده نمایه', call_action_delete: 'حذف از سابقه تماس‌ها',
+        call_action_block: 'مسدود کردن مخاطب', call_details_title: 'جزئیات تماس',
+        call_details_date: 'تاریخ و زمان', call_details_duration: 'مدت تماس',
+        call_details_type: 'نوع تماس', call_details_status: 'وضعیت',
+        call_status_missed: 'پاسخ داده نشد', call_status_completed: 'تکمیل شده',
+        call_deleted_msg: 'تماس از تاریخچه حذف شد.', call_empty_title: 'هنوز تماسی وجود ندارد',
+        call_empty_desc: 'یک تماس صوتی یا تصویری را مستقیماً از مخاطبین یا چت‌های خود آغاز کنید.'
+    });
+    Object.assign(TRANSLATIONS.tr, {
+        call_voice: 'Sesli Arama', call_video: 'Görüntülü Arama',
+        call_missed_voice: 'Cevapsız Sesli Arama', call_missed_video: 'Cevapsız Görüntülü Arama',
+        call_incoming_voice: 'Gelen Sesli Arama', call_incoming_video: 'Gelen Görüntülü Arama',
+        call_outgoing_voice: 'Giden Sesli Arama', call_outgoing_video: 'Giden Görüntülü Arama',
+        call_action_voice: 'Sesli Arama Başlat', call_action_video: 'Görüntülü Arama Başlat',
+        call_action_chat: 'Mesaj Gönder', call_action_info: 'Arama Detayları',
+        call_action_profile: 'Profili Görüntüle', call_action_delete: 'Arama Geçmişinden Sil',
+        call_action_block: 'Kişiyi Engelle', call_details_title: 'Arama Detayları',
+        call_details_date: 'Tarih ve Saat', call_details_duration: 'Süre',
+        call_details_type: 'Arama Türü', call_details_status: 'Durum',
+        call_status_missed: 'Cevaplanmadı', call_status_completed: 'Tamamlandı',
+        call_deleted_msg: 'Arama geçmişten silindi.', call_empty_title: 'Henüz arama yok',
+        call_empty_desc: 'Kişilerinizden veya sohbetlerinizden doğrudan sesli veya görüntülü arama başlatın.'
+    });
     Object.assign(TRANSLATIONS.de, {
         msg_uploading_media: 'Große Datei wird sicher hochgeladen...',
         badge_cloud_30d: '30 Tage gültig',
@@ -584,9 +753,18 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
     window.updateCurrentUserDisplay = updateCurrentUserDisplay;
 
     function applyTranslation(lang) {
+        window.applyTranslation = applyTranslation;
         currentLang = lang; localStorage.setItem('doori_lang', lang);
         window.currentLang = lang;
-        if (['fa', 'ar'].includes(lang)) document.body.classList.add('rtl-mode'); else document.body.classList.remove('rtl-mode');
+        if (['fa', 'ar'].includes(lang)) {
+            document.body.classList.add('rtl-mode');
+            document.documentElement.dir = 'rtl';
+            document.dir = 'rtl';
+        } else {
+            document.body.classList.remove('rtl-mode');
+            document.documentElement.dir = 'ltr';
+            document.dir = 'ltr';
+        }
         const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
@@ -975,12 +1153,8 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
         }
         
         const assistantId = window.DooriAssistant?.CHAT_ID;
-        if (assistantId && !chatData.contacts.some(contact => contact.id === assistantId)) {
-            chatData.contacts.unshift({ id: assistantId, name: assistantId, type: 'assistant', isSecret: false });
-        }
-        if (assistantId && !chatData.active_chats.some(chat => chat.id === assistantId)) {
-            chatData.active_chats.unshift({ id: assistantId, name: assistantId, type: 'assistant', isSecret: false });
-        }
+        chatData.contacts = chatData.contacts.filter(contact => contact.id !== assistantId);
+        chatData.active_chats = chatData.active_chats.filter(chat => chat.id !== assistantId);
         applyTranslation(currentLang);
         setupFirestoreListeners();
         startOnlineTracking();
@@ -1103,6 +1277,19 @@ Object.assign(TRANSLATIONS.tr, { ph_username: 'Kullanıcı adı (en az 10 karakt
                     
                     // A limited live query also emits "removed" when an older item
                     // falls outside the window. Keep paged history in memory.
+                    if (change.type === 'removed' &&
+                        (['doodle_invite','live_media_invite','game_invite'].includes(msg.mediaType) || msg.type === 'group_invite')) {
+                        const list = messages.get(chatId);
+                        if (list?.some(item => item.id === msg.id)) {
+                            messages.set(chatId,list.filter(item => item.id !== msg.id));
+                            window.MessageCache?.removeMessage?.(chatId,msg.id);
+                            const gamePopup=document.getElementById('game-invite-popup');
+                            if(gamePopup?.dataset.messageId===msg.id)gamePopup.remove();
+                            const groupPopup=document.getElementById('global-invite-popup');
+                            if(groupPopup?.dataset.messageId===msg.id)groupPopup.classList.add('hidden');
+                            changed=true;
+                        }
+                    }
                     if (change.type === 'added' || change.type === 'modified') {
                         if (msg.type === 'group_invite' && !msg.participants.includes(currentUser.toLowerCase())) {
                             return; // Only process if current user is a participant
@@ -2804,16 +2991,26 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (prefersSplitMessenger()) document.getElementById('start-page').classList.add('active');
         else document.getElementById('start-page').classList.remove('active');
         document.getElementById('chat-page').classList.add('active');
+        document.body.classList.add('in-chat');
         chatLayout?.classList.toggle('split-view', prefersSplitMessenger());
         chatLayout?.classList.remove('awaiting-chat');
         // Fullscreen behavior removed per user request
 
         let chat = chatData.personal.find(c=>c.id===id) || chatData.rooms.find(c=>c.id===id) || chatData.contacts.find(c=>c.id===id) || chatData.active_chats.find(c=>c.id===id);
+        if (!chat && type === 'assistant' && id === window.DooriAssistant?.CHAT_ID) chat = { id, name: id, type: 'assistant', isSecret: false };
         if (!chat && type === 'dm') { chat = { id, name: id, type: 'dm', isSecret: false }; chatData.active_chats.push(chat); }
         if (!chat) return;
+        if (currentChat && (currentChat.id !== chat.id || currentChat.type !== chat.type)) window.dispatchEvent(new Event('doori-chat-change'));
         currentChat = chat;
         window.currentChat = chat;
         document.body.classList.toggle('assistant-chat-open', type === 'assistant');
+        if (type === 'assistant' && Array.isArray(bottomNavItems)) {
+            bottomNavItems.forEach(item => {
+                const active = item.dataset.bottomTab === 'assistant';
+                item.classList.toggle('active', active);
+                if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+            });
+        }
         if (type !== 'assistant') document.body.classList.remove('assistant-thinking');
         document.querySelector('.composer-tools-row')?.classList.toggle('assistant-mode-hidden', type === 'assistant');
         const mediaLoungeButton = document.getElementById('media-lounge-btn');
@@ -3205,11 +3402,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (btn.id === 'settings-tab-btn') {
-                settingsModal.classList.remove('hidden');
+                openSettingsPage();
                 langSelect.value = currentLang;
                 const p = users.get(currentUser);
                 if(p && p.avatarUrl) settingsAvatar.innerHTML = safeHTML(`<img src="${p.avatarUrl}" class="avatar-img">`);
-                else settingsAvatar.textContent = currentUser.replace('@','').charAt(0).toUpperCase();
+                else settingsAvatar.textContent = (currentUser ? currentUser.replace('@','').charAt(0).toUpperCase() : '?') || '?';
                 
                 if (p) {
                     if(document.getElementById('setting-searchable')) document.getElementById('setting-searchable').checked = p.searchable !== false;
@@ -3230,6 +3427,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (tab === 'contacts') document.getElementById('list-contacts').style.display = 'block';
             if (tab === 'calls') {
                 document.getElementById('list-calls').style.display = 'block';
+                if (typeof loadCallHistory === 'function') loadCallHistory(currentUser);
                 if (currentUser && window.db) {
                     window.db.collection('users').doc(currentUser.toLowerCase()).collection('callHistory')
                         .where('type', '==', 'missed')
@@ -3244,13 +3442,19 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                         }).catch(console.error);
                 }
             }
-            if (tab === 'rooms') document.getElementById('list-rooms').style.display = 'block';
-            if (tab === 'chats') document.getElementById('list-chats').style.display = 'block';
+            if (tab === 'rooms') {
+                document.getElementById('list-chats').style.display = 'block';
+                document.getElementById('list-rooms').style.display = 'none';
+            }
+            if (tab === 'chats') {
+                document.getElementById('list-chats').style.display = 'block';
+                document.getElementById('list-rooms').style.display = 'none';
+            }
             if (tab === 'personal') document.getElementById('list-personal').style.display = 'block';
 
             const createGroupBtn = document.getElementById('sidebar-create-group-btn');
             if (createGroupBtn) {
-                if (tab === 'rooms') {
+                if (tab === 'rooms' || tab === 'chats') {
                     createGroupBtn.classList.remove('hidden');
                 } else {
                     createGroupBtn.classList.add('hidden');
@@ -3263,6 +3467,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const cData = window.chatData || chatData || {};
         if (lists && lists.personal) lists.personal.innerHTML = safeHTML('');
         if (lists && lists.rooms) lists.rooms.innerHTML = safeHTML('');
+        if (lists && lists.chatsGroups) lists.chatsGroups.innerHTML = safeHTML('');
         if (lists && lists.contacts) lists.contacts.innerHTML = safeHTML('');
         const createItem = (chat) => {
             const div = document.createElement('div'); 
@@ -3311,7 +3516,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             return div;
         };
         if (lists && lists.personal && cData.personal) cData.personal.forEach(c => lists.personal.appendChild(createItem(c)));
-        if (lists && lists.rooms && cData.rooms) cData.rooms.forEach(c => lists.rooms.appendChild(createItem(c)));
+        if (lists && lists.rooms && cData.rooms) cData.rooms.forEach(c => {
+            const item = createItem(c);
+            lists.rooms.appendChild(item);
+            if (lists.chatsGroups) lists.chatsGroups.appendChild(createItem(c));
+        });
         if (lists && lists.contacts && cData.contacts) cData.contacts.forEach(c => lists.contacts.appendChild(createItem(c)));
 
         const presenceIds = new Set([...(cData.personal || []), ...(cData.contacts || []), ...(cData.active_chats || [])]
@@ -3334,9 +3543,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             chatsItemsContainer.innerHTML = safeHTML('');
             const allMap = new Map();
             (cData.personal || []).forEach(c => allMap.set(c.id, c));
-            (cData.rooms || []).forEach(c => allMap.set(c.id, c));
             (cData.contacts || []).forEach(c => allMap.set(c.id, c));
-            (cData.active_chats || []).forEach(c => allMap.set(c.id, c));
+            (cData.active_chats || []).forEach(c => { if (c.type !== 'assistant' && c.id !== window.DooriAssistant?.CHAT_ID) allMap.set(c.id, c); });
+            allMap.delete(window.DooriAssistant?.CHAT_ID);
 
             let filtered = Array.from(allMap.values());
             if (activeChatFilter === 'direct') {
@@ -3347,6 +3556,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 filtered = filtered.filter(c => unreadChats.has(c.id));
             }
             filtered.forEach(c => chatsItemsContainer.appendChild(createItem(c)));
+        }
+        if (lists?.chatsGroups && Array.isArray(cData.rooms)) {
+            lists.chatsGroups.innerHTML = safeHTML('');
+            cData.rooms.forEach(room => lists.chatsGroups.appendChild(createItem(room)));
         }
     }
     window.renderChatList = renderChatList;
@@ -3598,7 +3811,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
 
     settingsBtn.addEventListener('click', () => {
-        settingsModal.classList.remove('hidden');
+        openSettingsPage();
         if (typeof langSelect !== 'undefined' && langSelect) langSelect.value = currentLang;
         renderSettingsProfileGallery();
 
@@ -3644,13 +3857,13 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     });
     
     closeSettingsBtn.addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
+        closeSettingsPage();
     });
     
     const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
     if (cancelSettingsBtn) {
         cancelSettingsBtn.addEventListener('click', () => {
-            settingsModal.classList.add('hidden');
+            closeSettingsPage();
         });
     }
     
@@ -3670,10 +3883,34 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             if (document.getElementById('setting-auto-media')) {
                 localStorage.setItem('doori_auto_media', document.getElementById('setting-auto-media').value);
             }
+            const fontFamily = document.getElementById('setting-font-family')?.value;
+            const fontColor = document.getElementById('setting-font-color')?.value;
+            const fontSize = document.getElementById('setting-font-size')?.value;
+            const themeMode = document.getElementById('setting-theme-mode')?.value;
+            if (fontFamily) { localStorage.setItem('doori_font_family', fontFamily); applyFontFamily(fontFamily); }
+            if (fontColor) { localStorage.setItem('doori_font_color', fontColor); applyFontColor(fontColor); }
+            if (fontSize) { localStorage.setItem('doori_font_size', fontSize); applyFontSize(fontSize); }
+            if (themeMode) { localStorage.setItem('doori_theme_mode', themeMode); window.applyTheme?.(); }
+            if (window.pendingDooriWallpaper !== undefined) {
+                if (window.pendingDooriWallpaper) localStorage.setItem('doori_wallpaper', window.pendingDooriWallpaper);
+                else localStorage.removeItem('doori_wallpaper');
+                applyWallpaper(window.pendingDooriWallpaper || null);
+                window.pendingDooriWallpaper = undefined;
+            }
+            const bio = document.getElementById('setting-bio')?.value.trim();
+            const status = document.getElementById('setting-custom-status')?.value.trim();
+            if (bio !== undefined || status !== undefined) {
+                const profile = users.get(currentUser) || {};
+                const nextBio = bio !== undefined ? bio : profile.bio || '';
+                const nextStatus = status !== undefined ? status : profile.status || nextBio;
+                profile.bio = nextBio; profile.status = nextStatus; users.set(currentUser, profile);
+                if (currentUser && window.db) window.db.collection('profiles').doc(currentUser.replace('@','').toLowerCase()).set({ bio: nextBio, status: nextStatus }, { merge: true }).catch(console.error);
+            }
 
             applyTranslation(langSelect.value);
             saveUserData();
-            settingsModal.classList.add('hidden');
+            settingsDraft = null;
+            closeSettingsPage();
         });
     }
     
@@ -3896,7 +4133,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             window.selectedProfilePicIndex = null;
             
             if (profilePics.length === 0) {
-                const initial = currentUser.replace('@','').charAt(0).toUpperCase();
+                const initial = (currentUser ? currentUser.replace('@','').charAt(0).toUpperCase() : '?') || '?';
                 galleryContainer.innerHTML = safeHTML(`<div class="avatar-large gallery-item" style="scroll-snap-align: center; flex-shrink: 0; position: relative;">${initial}</div>`);
                 if(removeBtn) removeBtn.classList.add('hidden');
                 if(primaryBtn) primaryBtn.classList.add('hidden');
@@ -4633,7 +4870,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
                 const user = await authenticateForm();
                 loginStage = 'verify-email';
                 await user.reload();
-                if (!user.emailVerified) {
+                const idTokenResult = await user.getIdTokenResult(true);
+                const isVerified = user.emailVerified || idTokenResult?.claims?.email_verified === true;
+                if (!isVerified) {
                     authNotice('security_verify');
                     if (resendVerificationContainer) resendVerificationContainer.style.display = 'block';
                     await window.auth.signOut();
@@ -4657,7 +4896,11 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             await window.auth.signOut().catch(() => {});
             const key = accountCreated ? 'security_created_email_error' : error.code?.includes('resource-exhausted') || error.code === 'auth/too-many-requests'
                 ? 'security_slow' : isRecoveryMode && error.code?.includes('unavailable') ? 'security_recovery_error' : error.code === 'unavailable' ? 'security_unavailable'
-                : isRegisterMode ? 'security_register_error' : 'security_error';
+                : error.code === 'auth/email-already-in-use' ? 'security_register_email_taken'
+                : error.code === 'functions/already-exists' ? 'security_register_username_taken'
+                : error.code === 'auth/invalid-email' ? 'security_register_invalid_email'
+                : error.code === 'auth/weak-password' ? 'security_register_weak_password'
+                : isRegisterMode ? 'security_register_retry' : 'security_error';
             loginError.textContent = authText(key);
             loginError.classList.remove('hidden');
             if (accountCreated) {
@@ -4688,64 +4931,388 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
     }
     
     let callHistoryUnsubscribe = null;
+    let activeCallActionData = null;
+    let activeCallDocId = null;
+
+    function closeCallActionSheet() {
+        const sheet = document.getElementById('call-action-sheet');
+        if (sheet) {
+            sheet.classList.add('hidden');
+            sheet.classList.remove('active');
+        }
+        activeCallActionData = null;
+        activeCallDocId = null;
+    }
+
+    function openCallActionSheet(data, docId, targetEl) {
+        activeCallActionData = data;
+        activeCallDocId = docId;
+        const sheet = document.getElementById('call-action-sheet');
+        if (!sheet) return;
+
+        const t = TRANSLATIONS[window.currentLang || currentLang] || TRANSLATIONS.en || {};
+        const isVideo = data.callType === 'video' || data.mediaType === 'video' || data.isVideo === true;
+
+        const avatarEl = document.getElementById('call-action-avatar');
+        const peerEl = document.getElementById('call-action-peer');
+        const metaEl = document.getElementById('call-action-meta');
+
+        const profile = typeof users !== 'undefined' ? users.get(data.peer) : null;
+        const aUrl = typeof getAllowedAvatarUrl === 'function' ? getAllowedAvatarUrl(data.peer, profile) : null;
+        if (avatarEl) {
+            if (aUrl) avatarEl.innerHTML = safeHTML(`<img src="${aUrl}" class="avatar-img" alt="">`);
+            else avatarEl.textContent = (data.peer || '?').replace('@','').charAt(0).toUpperCase();
+        }
+        if (peerEl) peerEl.textContent = data.peer.startsWith('@') ? data.peer : '@' + data.peer;
+
+        let metaText = isVideo ? (t.call_type_video || 'Videoanruf') : (t.call_type_voice || 'Sprachanruf');
+        const timeStr = data.timestamp ? (typeof data.timestamp.toMillis === 'function' ? new Date(data.timestamp.toMillis()).toLocaleString() : new Date(data.timestamp).toLocaleString()) : (t.lbl_just_now || 'Gerade eben');
+        if (metaEl) metaEl.textContent = `${metaText} · ${timeStr}`;
+
+        sheet.classList.remove('hidden');
+        sheet.classList.add('active');
+    }
+
+    function showCallDetailsModal(data) {
+        closeCallActionSheet();
+        const modal = document.getElementById('call-details-modal');
+        if (!modal) return;
+
+        const t = TRANSLATIONS[window.currentLang || currentLang] || TRANSLATIONS.en || {};
+        const isVideo = data.callType === 'video' || data.mediaType === 'video' || data.isVideo === true;
+
+        const avatarEl = document.getElementById('call-details-avatar');
+        const peerEl = document.getElementById('call-details-peer');
+        const badgeEl = document.getElementById('call-details-badge');
+        const typeEl = document.getElementById('call-details-type-text');
+        const statusEl = document.getElementById('call-details-status-text');
+        const dateEl = document.getElementById('call-details-date-text');
+        const durEl = document.getElementById('call-details-duration-text');
+
+        const profile = typeof users !== 'undefined' ? users.get(data.peer) : null;
+        const aUrl = typeof getAllowedAvatarUrl === 'function' ? getAllowedAvatarUrl(data.peer, profile) : null;
+        if (avatarEl) {
+            if (aUrl) avatarEl.innerHTML = safeHTML(`<img src="${aUrl}" class="avatar-img" alt="">`);
+            else avatarEl.textContent = (data.peer || '?').replace('@','').charAt(0).toUpperCase();
+        }
+        if (peerEl) peerEl.textContent = data.peer.startsWith('@') ? data.peer : '@' + data.peer;
+
+        const typeName = isVideo ? (t.call_type_video || 'Videoanruf') : (t.call_type_voice || 'Sprachanruf');
+        if (badgeEl) badgeEl.textContent = (isVideo ? '🎥 ' : '📞 ') + typeName;
+        if (typeEl) typeEl.textContent = typeName;
+
+        let statusText = '';
+        if (data.type === 'missed') statusText = (t.call_missed || 'Verpasst') + ' ❌';
+        else if (data.type === 'incoming') statusText = (t.call_incoming || 'Eingehend') + ' ↙️';
+        else statusText = (t.call_outgoing || 'Ausgehend') + ' ↗️';
+        if (statusEl) statusEl.textContent = statusText;
+
+        const timeStr = data.timestamp ? (typeof data.timestamp.toMillis === 'function' ? new Date(data.timestamp.toMillis()).toLocaleString() : new Date(data.timestamp).toLocaleString()) : (t.lbl_just_now || 'Gerade eben');
+        if (dateEl) dateEl.textContent = timeStr;
+
+        let durText = '';
+        if (data.duration > 0) {
+            const m = Math.floor(data.duration / 60);
+            const s = data.duration % 60;
+            durText = `${m}:${s.toString().padStart(2, '0')} ${t.lbl_min || 'Min'}`;
+        } else {
+            durText = t.call_status_missed || 'Nicht angenommen';
+        }
+        if (durEl) durEl.textContent = durText;
+
+        const callBtn = document.getElementById('call-details-call-btn');
+        if (callBtn) {
+            callBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if (window.startDirectCall) window.startDirectCall(isVideo ? 'video' : 'audio', data.peer);
+                else selectChat(data.peer, 'dm');
+            };
+        }
+
+        const chatBtn = document.getElementById('call-details-chat-btn');
+        if (chatBtn) {
+            chatBtn.onclick = () => {
+                modal.classList.add('hidden');
+                selectChat(data.peer, 'dm');
+            };
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    // Initialize Call Action Sheet and Details Event Listeners once
+    const initCallActionSheet = () => {
+        const sheet = document.getElementById('call-action-sheet');
+        const detailsModal = document.getElementById('call-details-modal');
+
+        document.getElementById('close-call-action-btn')?.addEventListener('click', closeCallActionSheet);
+        document.getElementById('cancel-call-action-btn')?.addEventListener('click', closeCallActionSheet);
+        document.getElementById('close-call-details-btn')?.addEventListener('click', () => detailsModal?.classList.add('hidden'));
+
+        sheet?.addEventListener('click', (e) => {
+            if (e.target === sheet) closeCallActionSheet();
+        });
+        detailsModal?.addEventListener('click', (e) => {
+            if (e.target === detailsModal) detailsModal.classList.add('hidden');
+        });
+
+        // 1. Voice Call
+        document.getElementById('call-act-voice')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+            if (window.startDirectCall) window.startDirectCall('audio', peer);
+            else selectChat(peer, 'dm');
+        });
+
+        // 2. Video Call
+        document.getElementById('call-act-video')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+            if (window.startDirectCall) window.startDirectCall('video', peer);
+            else selectChat(peer, 'dm');
+        });
+
+        // 3. Open Chat
+        document.getElementById('call-act-chat')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+            selectChat(peer, 'dm');
+        });
+
+        // 4. Call Details
+        document.getElementById('call-act-details')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const copy = { ...activeCallActionData };
+            closeCallActionSheet();
+            showCallDetailsModal(copy);
+        });
+
+        // 5. View Profile
+        document.getElementById('call-act-profile')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+            selectChat(peer, 'dm');
+            document.getElementById('chat-header-user-side')?.click();
+        });
+
+        // 6. Delete Call from History
+        document.getElementById('call-act-delete')?.addEventListener('click', () => {
+            if (!activeCallDocId || !activeCallActionData) return;
+            const docId = activeCallDocId;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+
+            // Animate row removal if in DOM
+            const row = document.querySelector(`.chat-item[data-call-id="${docId}"]`);
+            if (row) {
+                row.style.transition = 'all 0.25s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-30px)';
+                setTimeout(() => row.remove(), 250);
+            }
+
+            if (window.db && currentUser && !docId.startsWith('demo-')) {
+                window.db.collection('users').doc(currentUser.toLowerCase()).collection('callHistory').doc(docId).delete().catch(()=>{});
+            }
+        });
+
+        // 7. Block Contact
+        document.getElementById('call-act-block')?.addEventListener('click', () => {
+            if (!activeCallActionData) return;
+            const peer = activeCallActionData.peer;
+            closeCallActionSheet();
+            const t = TRANSLATIONS[window.currentLang || currentLang] || TRANSLATIONS.en || {};
+            if (confirm(`${t.btn_block || 'Block'}: @${peer}?`)) {
+                if (typeof blockUser === 'function') blockUser(peer);
+                else if (typeof blockedContacts !== 'undefined') blockedContacts.add(peer);
+            }
+        });
+    };
+    initCallActionSheet();
+
     function loadCallHistory(username) {
-        if (callHistoryUnsubscribe) callHistoryUnsubscribe();
-        callHistoryUnsubscribe = window.db.collection('users').doc(username.toLowerCase()).collection('callHistory')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .onSnapshot(snapshot => {
-                const listEl = document.getElementById('list-calls');
-                if (!listEl) return;
-                
-                listEl.innerHTML = safeHTML('');
-                let unreadCount = 0;
-                
-                const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (!data.seen && data.type === 'missed') unreadCount++;
-                    
-                    const timeStr = data.timestamp ? new Date(data.timestamp.toMillis()).toLocaleString() : (t.lbl_just_now || 'Gerade eben');
-                    
-                    let iconStr = '';
-                    let color = '';
-                    if (data.type === 'missed') { iconStr = '📞 ' + (t.call_missed || 'Verpasst'); color = 'var(--error)'; }
-                    else if (data.type === 'incoming') { iconStr = '📞 ' + (t.call_incoming || 'Eingehend'); color = 'var(--success)'; }
-                    else { iconStr = '📞 ' + (t.call_outgoing || 'Ausgehend'); color = 'var(--success)'; }
-                    
-                    let durStr = '';
-                    if (data.duration > 0) {
-                        const m = Math.floor(data.duration / 60);
-                        const s = data.duration % 60;
-                        durStr = `${m}:${s.toString().padStart(2, '0')}`;
-                    } else {
-                        durStr = '';
-                    }
-                    
-                    const el = document.createElement('div');
-                    el.className = 'chat-item';
-                    if (!data.seen && data.type === 'missed') el.classList.add('unread');
-                    
-                    const p = users.get(data.peer);
-                    let avatarHtml = data.peer.charAt(0).toUpperCase();
-                    const aUrl = getAllowedAvatarUrl(data.peer, p);
-                    if (aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img">`;
-                    
-                    el.innerHTML = safeHTML(`
-                        <div class="avatar" style="color:${color}; border-color:${color};">${avatarHtml}</div>
-                        <div class="chat-item-info">
-                            <span class="chat-item-name" style="color:${color};">${data.peer}</span>
-                            <span class="chat-item-last-message" style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${iconStr} - ${timeStr} ${durStr ? '('+durStr+' '+(t.lbl_min || 'Min')+')' : ''}</span>
+        window.loadCallHistory = loadCallHistory;
+        if (!username) {
+            try {
+                const stored = JSON.parse(localStorage.getItem('doori_user') || '{}');
+                username = stored.username || (typeof currentUser !== 'undefined' ? currentUser : 'demo');
+            } catch(e) {
+                username = 'demo';
+            }
+        }
+        if (!username) username = 'demo';
+
+        const listEl = document.getElementById('list-calls');
+        if (!listEl) return;
+        
+        listEl.innerHTML = safeHTML('');
+        let unreadCount = 0;
+        const t = TRANSLATIONS[window.currentLang || currentLang] || TRANSLATIONS['en'] || {};
+
+        const renderCallItem = (data, docId) => {
+            if (!data.seen && data.type === 'missed') unreadCount++;
+            const isVideo = data.callType === 'video' || data.mediaType === 'video' || data.isVideo === true;
+
+            const timeStr = data.timestamp ? (typeof data.timestamp.toMillis === 'function' ? new Date(data.timestamp.toMillis()).toLocaleString() : new Date(data.timestamp).toLocaleString()) : (t.lbl_just_now || 'Gerade eben');
+
+            let iconEmoji = isVideo ? '🎥' : '📞';
+            let typeClass = 'incoming';
+            let directionLabel = '';
+
+            if (data.type === 'missed') {
+                typeClass = 'missed';
+                directionLabel = (isVideo ? (t.call_missed_video || 'Verpasster Videoanruf') : (t.call_missed_voice || t.call_missed || 'Verpasst')) + ' ↙️';
+            } else if (data.type === 'incoming') {
+                typeClass = 'incoming';
+                directionLabel = (isVideo ? (t.call_incoming_video || 'Eingehender Videoanruf') : (t.call_incoming_voice || t.call_incoming || 'Eingehend')) + ' ↙️';
+            } else {
+                typeClass = 'outgoing';
+                directionLabel = (isVideo ? (t.call_outgoing_video || 'Ausgehender Videoanruf') : (t.call_outgoing_voice || t.call_outgoing || 'Ausgehend')) + ' ↗️';
+            }
+
+            let durStr = '';
+            if (data.duration > 0) {
+                const m = Math.floor(data.duration / 60);
+                const s = data.duration % 60;
+                durStr = `(${m}:${s.toString().padStart(2, '0')} ${t.lbl_min || 'Min'})`;
+            }
+
+            const el = document.createElement('div');
+            el.className = 'chat-item';
+            el.dataset.callId = docId;
+            if (!data.seen && data.type === 'missed') el.classList.add('unread');
+
+            const p = typeof users !== 'undefined' ? users.get(data.peer) : null;
+            let avatarHtml = (data.peer || '?').replace('@','').charAt(0).toUpperCase();
+            const aUrl = typeof getAllowedAvatarUrl === 'function' ? getAllowedAvatarUrl(data.peer, p) : null;
+            if (aUrl) avatarHtml = `<img src="${aUrl}" class="avatar-img" alt="">`;
+
+            el.innerHTML = safeHTML(`
+                <div class="call-item-main">
+                    <div class="call-item-avatar">${avatarHtml}</div>
+                    <div class="call-item-details">
+                        <span class="call-item-name">${data.peer.startsWith('@') ? data.peer : '@' + data.peer}</span>
+                        <div class="call-item-meta">
+                            <span class="call-type-indicator ${typeClass}">${iconEmoji} ${directionLabel}</span>
+                            <span>·</span>
+                            <span>${timeStr}</span>
+                            ${durStr ? `<span>·</span><span>${durStr}</span>` : ''}
                         </div>
-                    `);
-                    el.onclick = () => {
-                        if (!data.seen && data.type === 'missed') {
-                            doc.ref.update({seen: true}).catch(e=>{});
-                        }
-                        selectChat(data.peer, 'dm');
-                    };
-                    listEl.appendChild(el);
+                    </div>
+                </div>
+                <div class="call-item-actions">
+                    <button type="button" class="call-quick-btn ${isVideo ? 'video-btn' : 'audio-btn'}" title="${isVideo ? (t.call_action_video || 'Videoanruf') : (t.call_action_voice || 'Anrufen')}">
+                        ${isVideo ? '🎥' : '📞'}
+                    </button>
+                    <button type="button" class="call-menu-btn" title="${t.call_action_info || 'Optionen'}">⋮</button>
+                </div>
+            `);
+
+            // 1. Quick call button click
+            const quickBtn = el.querySelector('.call-quick-btn');
+            if (quickBtn) {
+                quickBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (window.startDirectCall) window.startDirectCall(isVideo ? 'video' : 'audio', data.peer);
+                    else selectChat(data.peer, 'dm');
                 });
+            }
+
+            // 2. Menu button click
+            const menuBtn = el.querySelector('.call-menu-btn');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openCallActionSheet(data, docId, el);
+                });
+            }
+
+            // 3. Desktop Right Click (Context Menu)
+            el.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openCallActionSheet(data, docId, el);
+            });
+
+            // 4. Mobile Long Press (Touch)
+            let touchTimer = null;
+            let touchMoved = false;
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            el.addEventListener('touchstart', (e) => {
+                touchMoved = false;
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                touchTimer = setTimeout(() => {
+                    if (!touchMoved) {
+                        navigator.vibrate?.(35);
+                        openCallActionSheet(data, docId, el);
+                    }
+                }, 480);
+            }, { passive: true });
+
+            el.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                if (Math.abs(touch.clientX - touchStartX) > 8 || Math.abs(touch.clientY - touchStartY) > 8) {
+                    touchMoved = true;
+                    if (touchTimer) clearTimeout(touchTimer);
+                }
+            }, { passive: true });
+
+            el.addEventListener('touchend', () => {
+                if (touchTimer) clearTimeout(touchTimer);
+            });
+            el.addEventListener('touchcancel', () => {
+                if (touchTimer) clearTimeout(touchTimer);
+            });
+
+            // 5. Default Click opens chat
+            el.addEventListener('click', (e) => {
+                if (e.target.closest('.call-quick-btn') || e.target.closest('.call-menu-btn')) return;
+                if (!data.seen && data.type === 'missed' && docId && !docId.startsWith('demo-')) {
+                    window.db.collection('users').doc(username.toLowerCase()).collection('callHistory').doc(docId).update({seen: true}).catch(()=>{});
+                }
+                selectChat(data.peer, 'dm');
+            });
+
+            listEl.appendChild(el);
+        };
+
+        const renderDemoCalls = () => {
+            listEl.innerHTML = safeHTML('');
+            const sampleCalls = [
+                { peer: 'Sarah_K', type: 'incoming', isVideo: true, duration: 425, timestamp: Date.now() - 3600000 * 2, seen: true },
+                { peer: 'Alex_M', type: 'missed', isVideo: false, duration: 0, timestamp: Date.now() - 3600000 * 5, seen: false },
+                { peer: 'Daniel_B', type: 'outgoing', isVideo: true, duration: 182, timestamp: Date.now() - 86400000, seen: true },
+                { peer: 'Elena_T', type: 'incoming', isVideo: false, duration: 814, timestamp: Date.now() - 86400000 * 2, seen: true }
+            ];
+            sampleCalls.forEach((sample, idx) => renderCallItem(sample, `demo-${idx}`));
+        };
+        renderDemoCalls();
+
+        if (!window.db || typeof window.db.collection !== 'function') {
+            return;
+        }
+
+        if (callHistoryUnsubscribe) callHistoryUnsubscribe();
+        try {
+            callHistoryUnsubscribe = window.db.collection('users').doc(username.toLowerCase()).collection('callHistory')
+                .orderBy('timestamp', 'desc')
+                .limit(50)
+                .onSnapshot(snapshot => {
+                    listEl.innerHTML = safeHTML('');
+                    unreadCount = 0;
+                    if (snapshot.empty) {
+                        renderDemoCalls();
+                    } else {
+                        snapshot.forEach(doc => renderCallItem(doc.data(), doc.id));
+                    }
                 
                 // Add badge to Anrufe header if there are unread
                 const badgeContainer = document.getElementById('calls-badge-container');
@@ -4767,6 +5334,10 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
             }, err => {
                 console.error("Error loading call history:", err);
             });
+        } catch (err) {
+            console.error("Error attaching call history listener:", err);
+            renderDemoCalls();
+        }
     }
 
     // Custom Player
@@ -4861,7 +5432,9 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         if (!user || currentUser || window.authFlowBusy) return;
         try {
             await user.reload();
-            if (!user.emailVerified) { await window.auth.signOut(); return; }
+            const idTokenResult = await user.getIdTokenResult(true);
+            const isVerified = user.emailVerified || idTokenResult?.claims?.email_verified === true;
+            if (!isVerified) { await window.auth.signOut(); return; }
             await user.getIdToken(true);
             const result = await authCall('ensureAccount');
             if (!currentUser) performLogin(result.username);
@@ -5382,36 +5955,29 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
 
     window.sendGroupInvite = async function(groupId, groupName, inviteeUsername) {
         if (!groupId || !inviteeUsername) return;
-        try {
-            const invitesQuery = await window.db.collection('messages')
-                .where('type', '==', 'group_invite')
-                .where('recipient_username', '==', inviteeUsername.toLowerCase())
-                .where('participants', 'array-contains', currentUser.toLowerCase()).where('isPublic', '==', false)
-                .get();
-            let alreadyPending = false;
-            invitesQuery.forEach(doc => {
-                const data = doc.data();
-                if (data.sender_username === currentUser && data.invite_group_id === groupId && data.invite_status === 'pending') alreadyPending = true;
-            });
-            if (alreadyPending) return { sent: false, reason: 'pending' };
-        } catch(e) { console.error('Error clearing old invites', e); }
         const msgRef = window.db.collection('messages').doc();
+        const recipient = normalizeUsername(inviteeUsername);
         const msg = {
             id: msgRef.id,
-            chat_id: inviteeUsername.toLowerCase(),
+            chat_id: recipient,
             sender_username: currentUser,
-            recipient_username: inviteeUsername.toLowerCase(),
+            recipient_username: recipient,
             timestamp: Date.now(),
             text: '',
             isPublic: false,
-            participants: [currentUser.toLowerCase(), inviteeUsername.toLowerCase()],
+            participants: [currentUser.toLowerCase(), recipient],
             type: 'group_invite',
             invite_status: 'pending',
             invite_group_id: groupId,
             invite_group_name: groupName
         };
-        await msgRef.set(msg);
-        return { sent: true };
+        try {
+            await window.accountFunctions.httpsCallable('replaceGroupInvitation')({groupId,recipientUsername:recipient,newMessageId:msgRef.id,message:msg});
+            return { sent: true };
+        } catch(error) {
+            console.error('Group invitation failed',error?.code||'unknown');
+            return { sent:false, reason:'error' };
+        }
     };
 
     window.showGlobalInvitePopup = showGlobalInvitePopup;
@@ -5423,6 +5989,7 @@ async function sendMessage(text, mediaType = null, mediaUrl = null, silent = fal
         const closeBtn = document.getElementById('global-invite-close-btn');
         
         if (!popup) return;
+        popup.dataset.messageId=msg.id;
         
         const t = window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en'];
         textEl.innerHTML = safeHTML(((window.TRANSLATIONS[window.currentLang] || window.TRANSLATIONS['en']).msg_invited_by || 'Du wurdest von <b>{sender}</b> in die Gruppe <b>{group}</b> eingeladen.').replace('{sender}', escapeHTML(msg.sender_username)).replace('{group}', escapeHTML(msg.invite_group_name)));
@@ -5784,8 +6351,8 @@ if(wallpaperUpload) {
         reader.onload = function(evt) {
             const dataUrl = evt.target.result;
             try {
-                localStorage.setItem('doori_wallpaper', dataUrl);
-                applyWallpaper(dataUrl);
+                window.pendingDooriWallpaper = dataUrl;
+                if (removeWallpaperBtn) removeWallpaperBtn.classList.remove('hidden');
             } catch(err) {
                 alert("Das Bild ist zu groß zum Speichern. Bitte wähle ein kleineres Bild.");
             }
@@ -5796,8 +6363,8 @@ if(wallpaperUpload) {
 
 if(removeWallpaperBtn) {
     removeWallpaperBtn.addEventListener('click', function() {
-        localStorage.removeItem('doori_wallpaper');
-        applyWallpaper(null);
+        window.pendingDooriWallpaper = null;
+        removeWallpaperBtn.classList.add('hidden');
     });
 }
 
@@ -5824,8 +6391,7 @@ if(fontSizeSelect) {
     fontSizeSelect.value = savedFontSize;
     fontSizeSelect.addEventListener('change', function(e) {
         const size = e.target.value;
-        localStorage.setItem('doori_font_size', size);
-        applyFontSize(size);
+        window.pendingDooriFontSize = size;
     });
 }
 
@@ -5837,16 +6403,7 @@ if(bioInput) {
     bioInput.addEventListener('input', function(e) {
         clearTimeout(bioSaveTimeout);
         const newBio = e.target.value.trim();
-        bioSaveTimeout = setTimeout(() => {
-            if(window.currentUser) {
-                window.db.collection('profiles').doc(window.currentUser).set({ bio: newBio }, { merge: true }).catch(console.error);
-                if(window.users && window.users.has(window.currentUser)) {
-                    let uData = window.users.get(window.currentUser);
-                    uData.bio = newBio;
-                    window.users.set(window.currentUser, uData);
-                }
-            }
-        }, 1000);
+        bioSaveTimeout = null;
     });
 }
 
@@ -5888,32 +6445,10 @@ if (statusPresetBtns.length > 0 && customStatusInput) {
 }
 
 if (saveStatusBtn && customStatusInput) {
-    saveStatusBtn.addEventListener('click', async () => {
+    saveStatusBtn.addEventListener('click', () => {
         const statusVal = customStatusInput.value.trim();
-        const userKey = (window.currentUser || '').replace('@','').toLowerCase();
-        if (!userKey) return;
-        
-        try {
-            if (window.db) {
-                await window.db.collection('profiles').doc(userKey).set({ bio: statusVal }, { merge: true });
-                await window.db.collection('userData').doc(userKey).set({ status: statusVal }, { merge: true });
-            }
-            if (bioInput) bioInput.value = statusVal;
-            const profileObj = (typeof getUserProfile === 'function' ? getUserProfile(window.currentUser) : null) || (window.users ? window.users.get(window.currentUser) : null) || {};
-            profileObj.bio = statusVal;
-            profileObj.status = statusVal;
-            if (window.users) {
-                window.users.set(window.currentUser, profileObj);
-                window.users.set(userKey, profileObj);
-                window.users.set('@' + userKey, profileObj);
-            }
-            if (typeof updateCurrentUserDisplay === 'function') updateCurrentUserDisplay();
-            const t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[window.currentLang]) ? TRANSLATIONS[window.currentLang] : (window.TRANSLATIONS?.en || {});
-            alert(t.msg_status_updated || 'Status wurde erfolgreich aktualisiert!');
-            if (typeof renderChatList === 'function') renderChatList();
-        } catch(err) {
-            console.error('Failed to update status', err);
-        }
+        if (bioInput) bioInput.value = statusVal;
+        customStatusInput.dataset.pendingStatus = statusVal;
     });
 }
 
@@ -6063,8 +6598,7 @@ if(fontFamilySelect) {
     fontFamilySelect.value = savedFontFamily;
     fontFamilySelect.addEventListener('change', function(e) {
         const val = e.target.value;
-        localStorage.setItem('doori_font_family', val);
-        applyFontFamily(val);
+        window.pendingDooriFontFamily = val;
     });
 }
 
@@ -6089,18 +6623,15 @@ if(fontColorSelect) {
     fontColorSelect.value = savedFontColor;
     fontColorSelect.addEventListener('change', function(e) {
         const val = e.target.value;
-        localStorage.setItem('doori_font_color', val);
-        applyFontColor(val);
+        window.pendingDooriFontColor = val;
     });
 }
 
 // --- Predefined Wallpaper Logic ---
 window.selectPredefinedWallpaper = function(filename) {
     try {
-        localStorage.setItem('doori_wallpaper', filename);
-        if(typeof applyWallpaper === 'function') {
-            applyWallpaper(filename);
-        }
+        window.pendingDooriWallpaper = filename;
+        document.querySelectorAll('.wallpaper-thumb').forEach(thumb => thumb.classList.toggle('selected', thumb.getAttribute('src') === filename));
     } catch(e) {}
 };
 
@@ -6126,10 +6657,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if(typeof applyTranslation === 'function') applyTranslation(window.currentLang || 'de'); }, 1500);
     
     const themeSelect = document.getElementById('setting-theme-mode');
-    if (themeSelect) {
+        if (themeSelect) {
         themeSelect.addEventListener('change', (e) => {
-            localStorage.setItem('doori_theme_mode', e.target.value);
-            window.applyTheme();
+            window.applyTheme(e.target.value);
         });
     }
     
@@ -6140,8 +6670,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Theme & Light/Dark Mode Logic ---
 let autoThemeInterval = null;
 
-window.applyTheme = function() {
-    const mode = localStorage.getItem('doori_theme_mode') || 'dark'; // Default to dark
+window.applyTheme = function(previewMode = null) {
+    const mode = previewMode || localStorage.getItem('doori_theme_mode') || 'dark'; // Default to dark
     const select = document.getElementById('setting-theme-mode');
     if(select) select.value = mode;
 
@@ -6276,13 +6806,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const saveSettingsListener = () => { if(typeof saveUserData === 'function') saveUserData(); };
-    
-    const settingsIds = ['setting-last-seen', 'setting-searchable', 'setting-avatar-visibility', 'setting-call-privacy'];
-    settingsIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', saveSettingsListener);
-    });
+    // Settings are drafts while the page is open. Persistence happens only
+    // from the explicit "Änderungen speichern" action in the page footer.
 });
 
 
@@ -6451,3 +6976,15 @@ window.showUserProfileModal = async function(username, options = null) {
         if(window.openDirectMessage) window.openDirectMessage(username);
     };
 };
+
+
+    // Keep body.modal-open in sync with any active modal overlay so bottom navigation never covers modal actions
+    if (typeof MutationObserver !== 'undefined') {
+        const syncModalOpenState = () => {
+            const hasOpenModal = !!document.querySelector('.modal:not(.hidden):not(#settings-modal)');
+            document.body.classList.toggle('modal-open', hasOpenModal);
+        };
+        const modalObserver = new MutationObserver(syncModalOpenState);
+        modalObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
+        syncModalOpenState();
+    }

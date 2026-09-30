@@ -41,3 +41,15 @@
 - **Cloud Functions:** `replaceActivityInvitation` in `europe-west3` deployed.
 - **Tests:** **86/86 Tests grün (100%)** (`npm.cmd test`).
 - **Build:** **38 allowlistete Public-Dateien** (`scripts/build-hosting.cjs`).
+
+## Aktualisierte Arbeitsfreigabe (2026-09-25)
+- Der Nutzer erlaubt für dieses Projekt, Tests und Builds selbstständig auszuführen.
+- Nach erfolgreich bestandenen Tests darf selbstständig deployed werden, ohne eine weitere Bestätigung einzuholen.
+- Sicherheitsgrenzen bleiben bestehen: keine Secrets ausgeben, keine Zugangsdaten speichern, keine Konten/Daten löschen oder andere irreversiblen Aktionen ohne ausdrücklichen Auftrag.
+- Arbeitsweise: sehr sparsam und effizient; keine unnötigen Wiederholungen von Tests oder Analysen. Nur gezielte, hochwertige Validierung der betroffenen Bereiche und vollständige Tests, wenn der Änderungsumfang es erfordert.
+
+## Media Lounge und Einladungen (2026-09-25, Hosting v148)
+- Media Lounge: gemeinsame Kategorie auch bei leeren Bereichen, gemeinsamer Medienindex und Play/Pause/Seek über Firestore. Neuer Video-/Musikplayer mit Play, Zeitleiste, Zeitangabe, Stummschaltung und Video-Vollbild; native Controls bleiben als Fallback. Lautstärke und Vollbild sind lokal. Anwesenheit wird pro Nutzer/Gerät geführt; wenn ein Partner geht, kann der andere allein fortfahren, die Lounge schließen oder die Sitzung beenden. Fünf Sprachen de/en/ar/fa/tr; RTL bleibt erhalten.
+- Ältere offene Doodle-/Game-/Media-Lounge-Einladungen derselben Beteiligten werden serverseitig beim nächsten Invite aus dem Chat gelöscht; pending Sessions werden ungültig, aktive/angenommene bleiben bestehen. Gruppeneinladungen werden nur für dieselbe Gruppe und denselben Empfänger ersetzt. Client entfernt gelöschte Einladungen aus In-Memory- und IndexedDB-Cache. Achtung: Bei mehr als 100 passenden alten Aktivitätseinladungen schlägt der bounded Bereinigungsversuch bewusst fehl, statt unvollständigen Erfolg zu melden.
+- Verifikation: 88/88 `npm.cmd test`, 38 erlaubte Hosting-Dateien, Syntaxchecks und `git diff --check` erfolgreich. Zusätzlicher Security-Fokustest 33/33 nach Anpassung der realen Gruppen-ID `@name`, Media-Fokustest 18/18. Es wurde kein echter Zwei-Geräte- oder iPhone-Test durchgeführt; Browser-Autoplay und Netzlatenz können perfekte Frame-Synchronität verhindern.
+- Deployment: Firestore-Indizes und Regeln veröffentlicht, `replaceActivityInvitation` und `replaceGroupInvitation` in `europe-west3` veröffentlicht, letztere für `@group`-IDs erneut aktualisiert. Hosting v148 mit `live-media.js?v=8`, `app.js?v=363`, `message-cache.js?v=3`, `style.css?v=339` veröffentlicht; Abruf der Live-HTML- und Live-Media-Assets (HTTP 200, erwarteter Inhalt) bestätigt. Änderungen sind nicht committed.
