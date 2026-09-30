@@ -112,6 +112,20 @@ test('battleship state is Firestore-compatible and can be invited', async () => 
   dom.window.close();
 });
 
+test('chess state is Firestore-compatible and can be invited', async () => {
+  const { dom, w, sessions } = client('@alice');
+  w.sendMessage = async () => true;
+  const state = w.DooriGamesTest.initial('chess');
+  assert.equal(Array.isArray(state.board), true);
+  assert.equal(state.board.length, 64);
+  assert.equal(state.turn, 0);
+  assert.equal(state.winner, null);
+  await w.DooriGamesTest.create('chess');
+  assert.equal([...sessions.values()][0].status, 'pending');
+  assert.equal([...sessions.values()][0].type, 'chess');
+  dom.window.close();
+});
+
 test('quiz offers 70 localized questions and selects 10 unique questions per duel', () => {
   const { dom, w } = client();
   for (const language of ['de', 'en', 'ar', 'fa', 'tr']) {

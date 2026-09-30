@@ -107,7 +107,7 @@ service cloud.firestore {
     request.resource.data.participants is list && request.resource.data.participants.size() == 2 &&
     key() in request.resource.data.participants &&
     request.resource.data.status == 'pending' &&
-    request.resource.data.type in ['tictactoe', 'connect4', 'memory', 'quiz', 'battleship'];
+    request.resource.data.type in ['tictactoe', 'connect4', 'memory', 'quiz', 'battleship', 'chess'];
    allow update: if verified() && key() in resource.data.participants &&
     request.resource.data.participants == resource.data.participants &&
     request.resource.data.createdBy == resource.data.createdBy &&
